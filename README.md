@@ -33,11 +33,11 @@ TBD
 
 ## TODO List
 
-- [ ] 时间待定 @wentao monitor加上对nn.linear的统计
-- [ ] 2025.06.17-2025.06.25 Firing Mechanism
-- [ ] 2025.06.23-2025.07.02 Potential LIF
-- [ ] 2025.06.17-2025.06.24 Survey Comparison以及讨论
-- [ ] 2025.06.17-2025.07.02 Toplogy实现：MS-ResNet, Spikformer V2, SpikingResFormer, QKFormer
+- [ ] TBD @wentao monitor加上对nn.linear的统计
+- [ ] 2025.06.17-2025.06.25 @changze Firing Mechanism类目下的神经元建模，能融合的都要融合进来
+- [ ] 2025.06.23-2025.07.02 @changze Potential Modulation类目下的神经元建模，能融合的都要融合进来
+- [ ] 2025.06.17-2025.06.24 @Changze @yudi 大survey中的table 1 Survey Comparison列举的survey精读，然后最后一天讨论
+- [ ] 2025.06.17-2025.07.02 @yudi Toplogy实现：MS-ResNet, Spikformer V2, SpikingResFormer, QKFormer
 
 ## Cite
 
