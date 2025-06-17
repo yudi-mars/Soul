@@ -34,7 +34,10 @@ TBD
 ## TODO List
 
 - [ ] 时间待定 @wentao monitor加上对nn.linear的统计
- 
+- [ ] 2025.06.17-2025.06.25 Firing Mechanism
+- [ ] 2025.06.23-2025.07.02 Potential LIF
+- [ ] 2025.06.17-2025.06.24 Survey Comparison以及讨论
+- [ ] 2025.06.17-2025.07.02 Toplogy实现：MS-ResNet, Spikformer V2, SpikingResFormer, QKFormer
 
 ## Cite
 
