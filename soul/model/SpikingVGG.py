@@ -71,6 +71,9 @@ class ConvMLP(nn.Module):
         )
         self.sn2 = deepcopy(lif)
 
+        # resize H, W to (1, 1)
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+
     def forward(self, x):
         # default multi-step mode, the input shape of x from Conv layers must be (T, B, C, H, W)
         T, B, C, H, W = x.shape
@@ -84,6 +87,8 @@ class ConvMLP(nn.Module):
         x = self.sn1(x)
         x = multi_time_forward(x, self.fc2)
         x = self.sn2(x)
+
+        x = multi_time_forward(x, self.avgpool)
 
         return x
 
@@ -130,7 +135,8 @@ class VGG(nn.Module):
 
     def forward_head(self, x: torch.Tensor, pre_logits: bool = False):
         x = self.pre_logits(x)
-        x = x.flatten(2).mean(0) # -> (T, B. CHW) -> (B, CHW) TODO
+        x = x.flatten(2).mean(0) # -> (T, B, CHW) -> (B, CHW)
+
         return self.head(x)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
