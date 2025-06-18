@@ -14,6 +14,6 @@ python run_soul.py \
     --weight_decay 0.0 \
     --momentum 0.9 \
     --model spikingvgg9 \
-    --neuron_type lif \
+    --neuron_type psn \
     --time_step 4 \
     --dataset_name cifar10

@@ -88,6 +88,7 @@ neuron_map = {
     "clif": CLIFNode,
     "glif": GatedLIFNode,
     "ilif": ILIFNode,
+    "psn": PSN,
     # TODO
 }
 
