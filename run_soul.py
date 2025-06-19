@@ -89,6 +89,7 @@ neuron_map = {
     "glif": GatedLIFNode,
     "ilif": ILIFNode,
     "psn": PSN,
+    "tlif": TLIFNode
     # TODO
 }
 
@@ -97,6 +98,7 @@ surrogate_map = {
     'erf': Erf(),
     'rect': Rectangular(),
     'sigmoid': FastSigmoid(),
+    'ternary': Ternary(),
     'quant': Quant(),
     'quant4': Quant4(),
     'rectangle': Rectangle(),
