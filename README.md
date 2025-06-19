@@ -39,6 +39,7 @@ TBD
     - GLIF[84]已完成
     - ALIF[85]未开源
     - PSN[86]已完成
+    - TLIF[87]已完成
 - [ ] 2025.06.23-2025.07.02 @changze Potential Modulation类目下的神经元建模，能融合的都要融合进来
 - [ ] 2025.06.17-2025.06.24 @Changze @yudi 大survey中的table 1 Survey Comparison列举的survey精读，然后最后一天讨论
 - [ ] 2025.06.17-2025.07.02 @yudi Toplogy实现：MS-ResNet, Spikformer V2, SpikingResFormer, QKFormer
