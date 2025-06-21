@@ -27,17 +27,17 @@ class BottleBlock(nn.Module):
 
         self.sn1 = deepcopy(lif)
         self.conv1 = nn.Sequential(
-            nn.Conv2d(in_channels, width, kernel_size=1, stride=stride, bias=False),
+            nn.Conv2d(in_channels, width, kernel_size=1, stride=1, bias=False),
             nn.BatchNorm2d(width),
         )
         self.sn2 = deepcopy(lif)
         self.conv2 = nn.Sequential(
-            nn.Conv2d(width, width, kernel_size=3, stride=stride, groups=groups, bias=False),
+            nn.Conv2d(width, width, kernel_size=3, stride=stride, padding=1, groups=groups, bias=False),
             nn.BatchNorm2d(width)
         )
         self.sn3 = deepcopy(lif)
         self.conv3 = nn.Sequential(
-            nn.Conv2d(width, out_channels * BottleBlock.expansion, kernel_size=1, stride=stride, bias=False),
+            nn.Conv2d(width, out_channels * BottleBlock.expansion, kernel_size=1, stride=1, bias=False),
             nn.BatchNorm2d(out_channels * BottleBlock.expansion)
         )
 
@@ -60,14 +60,13 @@ class BottleBlock(nn.Module):
 
         return x + identity
 
-
 class BasicBlock(nn.Module):
     expansion = 1
 
-    def __init__(self, lif, in_channels, out_channels, stride=1):
+    def __init__(self, lif, in_channels, out_channels, stride=1, base_width=64, groups=1):
         super().__init__()
 
-        self.sn1 = deepcopy(lif),
+        self.sn1 = deepcopy(lif)
         self.conv1 = nn.Sequential(
             nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False),
             nn.BatchNorm2d(out_channels),
@@ -105,8 +104,11 @@ class MSResNet(nn.Module):
         self.T = config['time_step']
         in_channels = config['input_channels']
 
+        self.groups = config['groups']
+        self.base_width = config['base_width']
+
         k = 1
-        self.in_planes = 64 * k
+        self.in_planes = self.base_width * k
 
         self.conv1 = nn.Sequential(
             nn.Conv2d(in_channels,
@@ -120,19 +122,19 @@ class MSResNet(nn.Module):
         self.sn1 = deepcopy(lif)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
-        self.conv2_x = self._make_layer(block, 64 * k, layers[0], 2)
-        self.conv3_x = self._make_layer(block, 128 * k, layers[1], 2)
-        self.conv4_x = self._make_layer(block, 256 * k, layers[2], 2)
-        self.conv5_x = self._make_layer(block, 512 * k, layers[3], 2)
+        self.conv2_x = self._make_layer(lif, block, 64 * k, layers[0], 2)
+        self.conv3_x = self._make_layer(lif, block, 128 * k, layers[1], 2)
+        self.conv4_x = self._make_layer(lif, block, 256 * k, layers[2], 2)
+        self.conv5_x = self._make_layer(lif, block, 512 * k, layers[3], 2)
 
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.head = nn.Linear(512 * block.expansion * k, num_classes)
 
-    def _make_layer(self, block, out_channels, num_blocks, stride):
+    def _make_layer(self, lif, block, out_channels, num_blocks, stride):
         strides = [stride] + [1] * (num_blocks - 1)
         layers = []
         for stride in strides:
-            layers.append(block(self.in_planes, out_channels, stride))
+            layers.append(block(lif, self.in_planes, out_channels, stride, self.base_width, self.groups))
             self.in_planes = out_channels * block.expansion
 
         return nn.Sequential(*layers)
