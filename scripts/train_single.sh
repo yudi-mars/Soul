@@ -1,4 +1,4 @@
-export CUDA_VISIBLE_DEVICES=0
+export CUDA_VISIBLE_DEVICES=2
 
 python run_soul.py \
     --workers 4 \
@@ -14,6 +14,6 @@ python run_soul.py \
     --weight_decay 0.0 \
     --momentum 0.9 \
     --model spikingvgg9 \
-    --neuron_type tlif \
+    --neuron_type ielif \
     --time_step 4 \
     --dataset_name cifar10
