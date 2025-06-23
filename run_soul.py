@@ -81,6 +81,7 @@ model_map = {
     'sewresnet18': SEWResNet18, 'sewresnet34': SEWResNet34, 'sewresnet50': SEWResNet50,
     'msresnet18': MSResNet18, 'msresnet34': MSResNet34, 'msresnet50': MSResNet50,
     'spikformer2': Spikformer2, 'spikformer4': Spikformer4, 'spikformer8': Spikformer8,
+    'metaspikformer2': MetaSpikformer2, 'metaspikformer4': MetaSpikformer4, 'metaspikformer8': MetaSpikformer8,
 }
 
 neuron_map = {
