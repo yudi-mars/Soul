@@ -2,7 +2,7 @@ import math
 import torch
 import torch.nn as nn
 
-class PSN(nn.Module):
+class ParallelSpikingNode(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.T = config['T']
