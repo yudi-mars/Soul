@@ -45,6 +45,7 @@ TBD
     - I-LIF[90]已实现
     - IE-LIF[91]已实现
     - ~~P-SpikeSSM [92]逆天印度人，他们整个spikessm网络的代码就不是snn，没有spiking neuron的概念~~
+    - ST-BIF @Changze **记得看下这个cvpr2025的LIF**
 - [ ] 2025.06.23-2025.07.02 @changze Potential Modulation类目下的神经元建模，能融合的都要融合进来
 - [ ] 2025.06.23-2025.06.24 @Changze 维护survey第一版的table 1
 - [x] 2025.06.17-2025.06.24 @Changze @yudi 大survey中的table 1 Survey Comparison列举的survey精读，然后最后一天讨论
