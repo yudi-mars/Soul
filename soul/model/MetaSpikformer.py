@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from copy import deepcopy
+from functools import partial
 
 from soul.neuron import functional
 
@@ -120,7 +121,7 @@ class DownSampling(nn.Module):
             x = self.encode_lif(x)
         x = self.encode_conv(x.flatten(0, 1))
         _, _, H, W = x.shape
-        x = self.encode_bn(x).reshape(T, B, -1, H, W).contiguoys()
+        x = self.encode_bn(x).reshape(T, B, -1, H, W).contiguous()
 
         return x
 
@@ -319,7 +320,7 @@ class Block(nn.Module):
         return x
 
 class MetaSpikformer(nn.Module):
-    def __init__(self, config, depths=[6, 2], embed_dims=[128, 256, 512, 640], norm_layer=nn.LayerNorm(eps=1e-6), drop_path_rate=0.0):
+    def __init__(self, config, depths=[6, 2], embed_dims=[128, 256, 512, 640], norm_layer=nn.LayerNorm, drop_path_rate=0.0):
         super().__init__()
 
         num_classes = config['num_classes']
@@ -381,7 +382,7 @@ class MetaSpikformer(nn.Module):
         self.downsample3 = DownSampling(
             lif,
             in_channels=embed_dims[1],
-            embed_dims=embed_dims[2],
+            embed_dim=embed_dims[2],
             kernel_size=3,
             stride=2,
             padding=1,
@@ -480,10 +481,10 @@ class MetaSpikformer(nn.Module):
 
 
 def MetaSpikformer2(config): # 2-256
-    return MetaSpikformer(config, depths=[1, 1], embed_dims=[64, 128, 256, 320])
+    return MetaSpikformer(config, depths=[1, 1], embed_dims=[64, 128, 256, 320], norm_layer=partial(nn.LayerNorm, eps=1e-6))
 
 def MetaSpikformer4(config): # 4-384
-    return MetaSpikformer(config, depths=[3, 1], embed_dims=[96, 192, 384, 480])
+    return MetaSpikformer(config, depths=[3, 1], embed_dims=[96, 192, 384, 480], norm_layer=partial(nn.LayerNorm, eps=1e-6))
 
 def MetaSpikformer8(config): # 8-512
-    return MetaSpikformer(config, depths=[6, 2], embed_dims=[128, 256, 512, 640]) 
+    return MetaSpikformer(config, depths=[6, 2], embed_dims=[128, 256, 512, 640], norm_layer=partial(nn.LayerNorm, eps=1e-6)) 
