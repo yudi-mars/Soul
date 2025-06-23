@@ -130,6 +130,7 @@ class VGG(nn.Module):
 
 
     def forward_features(self, x: torch.Tensor) -> torch.Tensor:
+        functional.reset_net(self)
         x = self.features(x)
         return x
 
@@ -139,9 +140,7 @@ class VGG(nn.Module):
 
         return self.head(x)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        functional.reset_net(self)
-        
+    def forward(self, x: torch.Tensor) -> torch.Tensor:        
         assert len(x.shape) in [4, 5], f'Invalid input shape {x.shape}...'
         if len(x.shape) == 4:
             x = x.unsqueeze(1).repeat(1, self.T, 1, 1, 1) # -> (B, T, C, H, W)

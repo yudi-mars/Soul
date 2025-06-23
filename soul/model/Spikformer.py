@@ -207,6 +207,8 @@ class Spikformer(nn.Module):
             nn.init.constant_(m.weight, 1.0)
 
     def forward_features(self, x):
+        functional.reset_net(self)
+
         x = self.patch_embed(x)
         for blk in self.blocks:
             x = blk(x)
@@ -217,7 +219,7 @@ class Spikformer(nn.Module):
         return self.head(x.mean(0))
 
     def forward(self, x):
-        functional.reset_net(self)
+        assert len(x.shape) in [4, 5], f'Invalid input shape {x.shape}...'
         if len(x.shape) == 4:
             x = x.unsqueeze(1).repeat(1, self.T, 1, 1, 1) # B, T, C, H, W
         x = x.transpose(0, 1) # [T, B, C, H, W]  
