@@ -82,6 +82,7 @@ model_map = {
     'msresnet18': MSResNet18, 'msresnet34': MSResNet34, 'msresnet50': MSResNet50,
     'spikformer2': Spikformer2, 'spikformer4': Spikformer4, 'spikformer8': Spikformer8,
     'metaspikformer2': MetaSpikformer2, 'metaspikformer4': MetaSpikformer4, 'metaspikformer8': MetaSpikformer8,
+    'spikingresformer192': SpikingResformer_t, 'spikingresformer256': SpikingResformer_s, 'spikingresformer384': SpikingResformer_m, 'spikingresformer512': SpikingResformer_l,
 }
 
 neuron_map = {
