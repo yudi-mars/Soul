@@ -31,20 +31,19 @@ def conv_forward_with_sparsity(X, W, b, stride=1, pad=0):
     
     # 重塑卷积核
     W_reshaped = W.view(F_out, -1)  # (F, C*KH*KW)
-    
     # 执行矩阵乘法 (高效实现)
     # 使用 bmm 避免显式转置和重塑
-    output = torch.bmm(W_reshaped.unsqueeze(0), cols)  # (1, F, C*K) @ (N, C*K, OH*OW) -> (N, F, OH*OW)
-    output = output.squeeze(0) if output.shape[0] == 1 else output
-    output = output + b.view(1, -1, 1)  # 添加偏置
+    # output = torch.bmm(cols, W_reshaped.unsqueeze(0))  # (1, F, C*K) @ (N, C*K, OH*OW) -> (N, F, OH*OW)
+    # output = output.squeeze(0) if output.shape[0] == 1 else output
+    # output = output + b.view(1, -1, 1)  # 添加偏置
     
     # 重塑为输出格式 (N, F, OH, OW)
-    output = output.view(N, F_out, OH, OW)
+    # output = output.view(N, F_out, OH, OW)
     
     # 优化后的稀疏度检测 ------------------------------------------
     # 计算输入矩阵每列的非零计数
     cols_nonzero = (cols != 0)
-    cols_nonzero_count = cols_nonzero.sum(dim=0)  # 沿批次维度求和 (C*KH*KW)
+    cols_nonzero_count = cols_nonzero.sum(dim=0).sum(1) # 沿批次维度求和 (C*KH*KW)
     
     # 计算权重矩阵每行的非零计数
     W_nonzero = (W_reshaped != 0)
@@ -59,7 +58,7 @@ def conv_forward_with_sparsity(X, W, b, stride=1, pad=0):
     # 计算有效比例
     effective_ratio = total_effective / total_multiplies if total_multiplies != 0 else torch.tensor(0.0)
     
-    return output, effective_ratio.item()
+    return effective_ratio.item()
 
 def fc_forward_with_sparsity(X,W):
     # out = X @ W + b

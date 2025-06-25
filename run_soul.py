@@ -234,9 +234,10 @@ if not config['is_distributed'] or dist.get_rank() == 0:
     total_sops = 0
     for k, v in MODULE_SOP_DICT.items():
         total_sops += v
+    avg_sops = total_sops / len(test_loader)
 
-    cost_per_op = 0.9 if config['sop'] else 4.6   # pJ on 45nm hardware
-    logger.info(f"Number of {'SOPs' if config['sop'] else 'FLOPs'} for model {config['model']} inference per {new_batch_size} sample: {total_sops / 1e6:.2f} M, theoretical energy cost: {total_sops * cost_per_op / 1e9:.2f} mj")
+    cost_per_op = config['e_ac'] if config['sop'] else config['e_mac']   # pJ on 45nm hardware
+    logger.info(f"Number of {'SOPs' if config['sop'] else 'FLOPs'} for model {config['model']} inference per sample: {avg_sops / 1e6:.2f} M, theoretical energy cost: {avg_sops * cost_per_op / 1e9:.2f} mj")
 
     # evluate the maximum actual memory usage for inference
     logger.info('Monitoring maximum memory usage for inference')
