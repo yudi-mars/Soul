@@ -1,103 +1,65 @@
 import os
 import torch
 import numpy as np
-from numpy.lib.stride_tricks import sliding_window_view
 
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 MODULE_SOP_DICT = {}
 
-def img2col(X, kernel_size, stride=1, pad=0):
-    """
-    Convert a 4D input tensor into a 2D column matrix (img2col operation).
-    Params:
-        X: Input tensor with shape (N, C, H, W)
-        kernel_size: Convolution kernel size (int or tuple)
-        stride: Stride (int or tuple)
-        pad: Padding size
-    Returns:
-        2D column matrix with shape (N*out_h*out_w, C*kh*kw)
-    """
+import torch
+import torch.nn.functional as F
 
-    N, C, H, W = X.shape
+def img2col(X, kernel_size, stride=1, pad=0):
     kh = kw = kernel_size if isinstance(kernel_size, int) else kernel_size[0]
     sh = sw = stride if isinstance(stride, int) else stride[0]
+
+    X_pad = F.pad(X, (pad, pad, pad, pad), mode='constant', value=0)
     
-    # implement padding
-    X_pad = np.pad(X, [(0,0), (0,0), (pad, pad), (pad, pad)], mode='constant')
-    
-    # calculate output shape
-    H_out = (H + 2*pad - kh) // sh + 1
-    W_out = (W + 2*pad - kw) // sw + 1
-    
-    # generate sliding window view
-    windows = sliding_window_view(X_pad, (kh, kw), axis=(2, 3))
-    
-    # slicing by step
-    windows = windows[:, :, ::sh, ::sw]
-    
-    # rebuild column-wise matrix
-    cols = windows.reshape(N, C, H_out, W_out, kh*kw)
-    cols = cols.transpose(0, 2, 3, 1, 4).reshape(N*H_out*W_out, -1)
-    
-    return cols
+    return F.unfold(X_pad, (kh, kw), stride=(sh, sw))
 
 def conv_forward_with_sparsity(X, W, b, stride=1, pad=0):
-    """
-    Implement convolutional forward propagation using img2col and compute the effective computation ratio  
-    Params:
-        X: Input data (N, C, H, W)  
-        W: Convolution kernel (F, C, KH, KW)  
-        b: Bias (F,)  
-        stride: Stride  
-        pad: Padding
-    Returns:
-        output: Convolution result (N, F, OH, OW)  
-        effective_ratio: Effective computation ratio (0.0-1.0)  
-    """
-    # img2col transformation for input
+    # 使用 unfold 实现 img2col
     cols = img2col(X, W.shape[2:], stride, pad)
     
-    # change conv kernel to 2D-matrix (including rotation 180 degree)
-    F, C, KH, KW = W.shape
-    W_rot = np.rot90(W, 2, axes=(2, 3))  #  rotate 180 degrees in H and W dim
-    W_reshaped = W_rot.reshape(F, -1).T  # shape (C*KH*KW, F)
+    # 获取维度信息
+    N, C, H, W_in = X.shape
+    F_out, _, KH, KW = W.shape
     
-    # implement matrix calculation 
-    # out = cols @ W_reshaped + b
+    # 计算输出尺寸
+    OH = (H + 2*pad - KH) // stride + 1
+    OW = (W_in + 2*pad - KW) // stride + 1
     
-    # sparsity calculation --------------------------------------------------
-    # generate nonzero masks
-    # cols_nonzero = (cols != 0)        # nonzero index for input
-    # W_nonzero = (W_reshaped != 0)     # idx of nonzero element for kernel 
+    # 重塑卷积核
+    W_reshaped = W.view(F_out, -1)  # (F, C*KH*KW)
     
-    # # count number of multiply operations
-    # effective_matrix = cols_nonzero.astype(np.int64) @ W_nonzero.astype(np.int64)
-    # total_effective = effective_matrix.sum()
-    cols_nonzero = cols != 0
-    cols_nonzero_count = np.count_nonzero(cols_nonzero, axis=0)
+    # 执行矩阵乘法 (高效实现)
+    # 使用 bmm 避免显式转置和重塑
+    output = torch.bmm(W_reshaped.unsqueeze(0), cols)  # (1, F, C*K) @ (N, C*K, OH*OW) -> (N, F, OH*OW)
+    output = output.squeeze(0) if output.shape[0] == 1 else output
+    output = output + b.view(1, -1, 1)  # 添加偏置
     
-    W_nonzero = W_reshaped != 0
-    W_nonzero_count = np.count_nonzero(W_nonzero, axis=1)
+    # 重塑为输出格式 (N, F, OH, OW)
+    output = output.view(N, F_out, OH, OW)
     
-    total_effective = np.dot(cols_nonzero_count, W_nonzero_count)
+    # 优化后的稀疏度检测 ------------------------------------------
+    # 计算输入矩阵每列的非零计数
+    cols_nonzero = (cols != 0)
+    cols_nonzero_count = cols_nonzero.sum(dim=0)  # 沿批次维度求和 (C*KH*KW)
     
-    N_samples = cols.shape[0]         # number of samples（N*OH*OW）
-    K_size = cols.shape[1]            # expanded dimension per sample（C*KH*KW）
-    F_size = W_reshaped.shape[1]      # number of filters
-    total_multiplies = N_samples * K_size * F_size
+    # 计算权重矩阵每行的非零计数
+    W_nonzero = (W_reshaped != 0)
+    W_nonzero_count = W_nonzero.sum(dim=0)  # 沿滤波器维度求和 (C*KH*KW)
     
-    # calculate effective ratio
-    effective_ratio = total_effective / total_multiplies if total_multiplies != 0 else 0.0
-    # ------------------------------------------------------------
+    # 计算总有效乘法次数
+    total_effective = torch.dot(cols_nonzero_count.float(), W_nonzero_count.float())
     
-    # # rebuild output 
-    # N, _, H, W = X.shape
-    # OH = (H + 2*pad - KH) // stride + 1
-    # OW = (W + 2*pad - KW) // stride + 1
-    # out = out.reshape(N, OH, OW, F).transpose(0, 3, 1, 2)
+    # 计算总乘法次数
+    total_multiplies = N * OH * OW * F_out * KH * KW * C
     
-    return effective_ratio
+    # 计算有效比例
+    effective_ratio = total_effective / total_multiplies if total_multiplies != 0 else torch.tensor(0.0)
+    
+    return output, effective_ratio.item()
 
 def fc_forward_with_sparsity(X,W):
     # out = X @ W + b
@@ -173,11 +135,10 @@ def ops_hook_conv(module_name, is_sop=True):
             lsar += len(torch.where(inputs == float(i))[0]) / inputs.numel() * i
         if lsar == 0:
             lsar = inputs.count_nonzero() / inputs.numel()
-        weight = m.weight.data
-        weight = weight.detach().cpu().numpy()
+        weight = m.weight
         # inputs = inputs.reshape(B,C,H,W)
         inputs = inputs.reshape(-1, C, H, W)
-        inputs = inputs.detach().cpu().numpy()
+        inputs = inputs.detach()
         lsar = conv_forward_with_sparsity(inputs,weight,0,stride,padding)
         pass
         if module_name not in MODULE_SOP_DICT.keys():
