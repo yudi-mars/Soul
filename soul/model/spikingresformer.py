@@ -265,7 +265,7 @@ class SpikingResformer(nn.Module):
                 nn.init.constant_(m.bias, 0)
 
 
-def SpikingResformer_t(config):
+def SpikingResformer192(config):
     return SpikingResformer(
         config,
         [
@@ -278,7 +278,7 @@ def SpikingResformer_t(config):
         [4, 2, 1],
     )
 
-def SpikingResformer_s(config):
+def SpikingResformer256(config):
     return SpikingResformer(
         config,
         [
@@ -290,7 +290,7 @@ def SpikingResformer_s(config):
         [4, 2, 1]
     )
 
-def SpikingResformer_m(config):
+def SpikingResformer384(config):
     return SpikingResformer(
         config,
         [
@@ -302,7 +302,7 @@ def SpikingResformer_m(config):
         [4, 2, 1]
     )
 
-def SpikingResformer_l(config):
+def SpikingResformer512(config):
     return SpikingResformer(
         config,
         [
