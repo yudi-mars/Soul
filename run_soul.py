@@ -210,7 +210,8 @@ if not config['is_distributed'] or dist.get_rank() == 0:
     logger.info(f'The size of model parameter checkpoint file: {os.path.getsize(best_model_path) / (1024 ** 2):.2f} MB')
     best_params = torch.load(
         best_model_path, 
-        map_location='cpu'
+        map_location='cpu', 
+        weights_only=True
     )
     if config['is_distributed']:
         model.module.load_state_dict(best_params)
@@ -236,10 +237,11 @@ if not config['is_distributed'] or dist.get_rank() == 0:
         total_sops += v
     avg_sops = total_sops / len(test_loader)
 
-    cost_per_op = config['e_ac'] if config['sop'] else config['e_mac']   # pJ on 45nm hardware
-    logger.info(f"Number of {'SOPs' if config['sop'] else 'FLOPs'} for model {config['model']} inference per sample: {avg_sops / 1e6:.2f} M, theoretical energy cost: {avg_sops * cost_per_op / 1e9:.2f} mj")
+    cost_per_op = config['e_ac'] if config['sop'] else config['e_mac']
+    logger.info(f"Average number of {'SOPs' if config['sop'] else 'FLOPs'} for model {config['model']} inference per sample: {avg_sops / 1e6:.2f} M")
+    logger.info(f"corresponding theoretical energy cost: {avg_sops * cost_per_op / 1e9:.2f} mj")
 
-    # evluate the maximum actual memory usage for inference
+    # evluate the maximum actual memory usage and latency for inference per sample
     logger.info('Monitoring maximum memory usage for inference')
     torch.cuda.reset_peak_memory_stats()
     start_time = time.time()

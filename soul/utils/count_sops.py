@@ -31,14 +31,6 @@ def conv_forward_with_sparsity(X, W, b, stride=1, pad=0):
     
     # 重塑卷积核
     W_reshaped = W.view(F_out, -1)  # (F, C*KH*KW)
-    # 执行矩阵乘法 (高效实现)
-    # 使用 bmm 避免显式转置和重塑
-    # output = torch.bmm(cols, W_reshaped.unsqueeze(0))  # (1, F, C*K) @ (N, C*K, OH*OW) -> (N, F, OH*OW)
-    # output = output.squeeze(0) if output.shape[0] == 1 else output
-    # output = output + b.view(1, -1, 1)  # 添加偏置
-    
-    # 重塑为输出格式 (N, F, OH, OW)
-    # output = output.view(N, F_out, OH, OW)
     
     # 优化后的稀疏度检测 ------------------------------------------
     # 计算输入矩阵每列的非零计数
@@ -76,19 +68,6 @@ def fc_forward_with_sparsity(X,W):
     # calculate effective ratio
     effective_ratio = total_effective / total_multiplies if total_multiplies != 0 else 0.0
     return effective_ratio
-# def matrix_mul(Mat_input, Mat_weight):
-#     # Mat_input: T (optional), B, L
-#     # Mat_weight: L, O 
-#     _unused_f = np.cumprod(Mat_input, axis=0)[-2]  # after Batch dim(including T)
-#     in_f = Mat_weight[0]
-#     out_f = Mat_weight[1]
-#     layer_cnt = 1.0
-#     layer_cnt *= _unused_f
-#     layer_cnt *= _unused_f
-#     layer_cnt *= in_f
-#     layer_cnt *= out_f
-#     return layer_cnt
-
 
 def batch_matrix_mul(Mat_input,Mat_weight):
     _unused_f = np.cumprod(Mat_input, axis=0)[-2]  # after Batch dim(including T)
@@ -99,20 +78,6 @@ def batch_matrix_mul(Mat_input,Mat_weight):
     layer_cnt *= in_f
     layer_cnt *= out_f
     return layer_cnt
-
-
-
-def ops_monitor(net, is_sop=False):
-    m_dict = dict(net.named_modules())
-    for key in m_dict.keys():
-        if key == "":
-            continue
-        m = m_dict[key]
-        if isinstance(m, torch.nn.Conv2d):
-            m.register_forward_hook(ops_hook_conv(key + ".weight", is_sop))
-
-        elif isinstance(m, torch.nn.Linear):
-            m.register_forward_hook(ops_hook_fc(key + ".weight",is_sop))
 
 # this function is especially prepared for lasr and ac attr
 def ops_hook_conv(module_name, is_sop=True):
@@ -170,11 +135,3 @@ def ops_hook_fc(module_name,is_sop=True):
             MODULE_SOP_DICT[module_name] += lsar * batch_matrix_mul(inputs.shape,weight.shape)
 
     return hook
-
-
-# if __name__ == "__main__":
-#     m = torch.nn.Linear(in_features=10,out_features=100)
-#     m.register_forward_hook(ops_hook_fc("fc"))
-#     input = torch.ones((1,10))
-#     m(input)
-#     print(MODULE_SOP_DICT['fc'])
