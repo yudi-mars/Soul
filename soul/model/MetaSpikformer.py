@@ -6,7 +6,7 @@ from functools import partial
 
 from soul.neuron import functional
 
-__all__ = ['MetaSpikformer', 'MetaSpikformer2', 'MetaSpikformer4', 'MetaSpikformer8']
+__all__ = ['MetaSpikformer', 'MetaSpikformer256', 'MetaSpikformer384', 'MetaSpikformer512']
 
 class BNAndPadLayer(nn.Module):
     def __init__(
@@ -480,11 +480,11 @@ class MetaSpikformer(nn.Module):
         return x
 
 
-def MetaSpikformer2(config): # 2-256
+def MetaSpikformer256(config): # 2-256
     return MetaSpikformer(config, depths=[1, 1], embed_dims=[64, 128, 256, 320], norm_layer=partial(nn.LayerNorm, eps=1e-6))
 
-def MetaSpikformer4(config): # 4-384
+def MetaSpikformer384(config): # 4-384
     return MetaSpikformer(config, depths=[3, 1], embed_dims=[96, 192, 384, 480], norm_layer=partial(nn.LayerNorm, eps=1e-6))
 
-def MetaSpikformer8(config): # 8-512
+def MetaSpikformer512(config): # 8-512
     return MetaSpikformer(config, depths=[6, 2], embed_dims=[128, 256, 512, 640], norm_layer=partial(nn.LayerNorm, eps=1e-6)) 

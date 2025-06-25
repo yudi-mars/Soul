@@ -5,7 +5,7 @@ from typing import List
 
 from soul.neuron import functional
 
-__all__ = ['SpikingResformer', 'SpikingResformer_ti', 'SpikingResformer_s', 'SpikingResformer_m', 'SpikingResformer_l']
+__all__ = ['SpikingResformer', 'SpikingResformer192', 'SpikingResformer256', 'SpikingResformer384', 'SpikingResformer512']
 
 def multi_time_forward(x_seq, stateless_module):
     y_shape = [x_seq.shape[0], x_seq.shape[1]] # [T, B]
@@ -65,9 +65,6 @@ class GWFFN(nn.Module):
         x = multi_time_forward(x, self.up)
 
         x_feat_in = x.clone()
-        # for m in self.conv:
-        #     x = m[0](x)
-        #     x = multi_time_forward(x, m[1])
         for n in range(self.num_conv):
             x = getattr(self, f'conv_lif{n}')(x)
             x = multi_time_forward(x, getattr(self, f'conv{n}'))
@@ -189,18 +186,19 @@ class SpikingResformer(nn.Module):
         group_size = config['group_size']
         mlp_ratio = config['mlp_ratio']
 
-        # self.prologue = nn.Sequential(
-        #     nn.Conv2d(in_channels, planes[0], 7, 2, 3, bias=False),
-        #     nn.BatchNorm2d(planes[0]),
-        #     nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
-        # )
-        # img_size = img_size_h // 4
-
         self.prologue = nn.Sequential(
-            nn.Conv2d(in_channels, planes[0], 3, 1, 1, bias=False),
+            nn.Conv2d(in_channels, planes[0], 7, 2, 3, bias=False),
             nn.BatchNorm2d(planes[0]),
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
         )
-        img_size = img_size_h
+        img_size = img_size_h // 4
+
+        # this is for cifar10, dvs data reproducible
+        # self.prologue = nn.Sequential(
+        #     nn.Conv2d(in_channels, planes[0], 3, 1, 1, bias=False),
+        #     nn.BatchNorm2d(planes[0]),
+        # )
+        # img_size = img_size_h
 
         assert len(planes) == len(layers) == len(num_heads) == len(patch_sizes)
 
@@ -231,7 +229,7 @@ class SpikingResformer(nn.Module):
         self.init_weight()
 
     def forward_features(self, x):
-        
+        functional.reset_net(self)
 
         x = multi_time_forward(x, self.prologue)
         x = self.layers(x)
@@ -250,8 +248,6 @@ class SpikingResformer(nn.Module):
         if len(x.shape) == 4:
             x = x.unsqueeze(1).repeat(1, self.T, 1, 1, 1) # B, T, C, H, W
         x = x.transpose(0, 1) # [T, B, C, H, W]  
-
-        functional.reset_net(self)
 
         x = self.forward_features(x) # [T, B, D]  
         x = self.forward_head(x)

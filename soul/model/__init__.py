@@ -1,6 +1,6 @@
 from .spikingvgg import SpikingVGG5, SpikingVGG9, SpikingVGG11, SpikingVGG13, SpikingVGG16, SpikingVGG19
-from .spikformer import Spikformer2, Spikformer4, Spikformer8
-from .metaspikformer import MetaSpikformer2, MetaSpikformer4, MetaSpikformer8
 from .sewresnet import SEWResNet18, SEWResNet50, SEWResNet34
 from .msresnet import MSResNet18, MSResNet34, MSResNet50
-from .spikingresformer import SpikingResformer_l, SpikingResformer_m, SpikingResformer_s, SpikingResformer_t
+from .spikformer import Spikformer256, Spikformer384, Spikformer512
+from .metaspikformer import MetaSpikformer256, MetaSpikformer384, MetaSpikformer512
+from .spikingresformer import SpikingResformer192, SpikingResformer384, SpikingResformer512, SpikingResformer256

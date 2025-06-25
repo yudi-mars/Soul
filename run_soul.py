@@ -80,9 +80,9 @@ model_map = {
     'spikingvgg5': SpikingVGG5, 'spikingvgg9': SpikingVGG9, 'spikingvgg11': SpikingVGG11, 'spikingvgg13': SpikingVGG13, 'spikingvgg16': SpikingVGG16, 'spikingvgg19': SpikingVGG19, 
     'sewresnet18': SEWResNet18, 'sewresnet34': SEWResNet34, 'sewresnet50': SEWResNet50,
     'msresnet18': MSResNet18, 'msresnet34': MSResNet34, 'msresnet50': MSResNet50,
-    'spikformer2': Spikformer2, 'spikformer4': Spikformer4, 'spikformer8': Spikformer8,
-    'metaspikformer2': MetaSpikformer2, 'metaspikformer4': MetaSpikformer4, 'metaspikformer8': MetaSpikformer8,
-    'spikingresformer192': SpikingResformer_t, 'spikingresformer256': SpikingResformer_s, 'spikingresformer384': SpikingResformer_m, 'spikingresformer512': SpikingResformer_l,
+    'spikformer256': Spikformer256, 'spikformer384': Spikformer384, 'spikformer512': Spikformer512,
+    'metaspikformer256': MetaSpikformer256, 'metaspikformer384': MetaSpikformer384, 'metaspikformer512': MetaSpikformer512,
+    'spikingresformer192': SpikingResformer192, 'spikingresformer256': SpikingResformer256, 'spikingresformer384': SpikingResformer384, 'spikingresformer512': SpikingResformer512,
 }
 
 neuron_map = {
