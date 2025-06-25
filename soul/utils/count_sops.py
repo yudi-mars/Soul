@@ -64,7 +64,7 @@ def conv_forward_with_sparsity(X, W, b, stride=1, pad=0):
     W_reshaped = W_rot.reshape(F, -1).T  # shape (C*KH*KW, F)
     
     # implement matrix calculation 
-    out = cols @ W_reshaped + b
+    # out = cols @ W_reshaped + b
     
     # sparsity calculation --------------------------------------------------
     # generate nonzero masks
@@ -84,13 +84,13 @@ def conv_forward_with_sparsity(X, W, b, stride=1, pad=0):
     effective_ratio = total_effective / total_multiplies if total_multiplies != 0 else 0.0
     # ------------------------------------------------------------
     
-    # rebuild output 
-    N, _, H, W = X.shape
-    OH = (H + 2*pad - KH) // stride + 1
-    OW = (W + 2*pad - KW) // stride + 1
-    out = out.reshape(N, OH, OW, F).transpose(0, 3, 1, 2)
+    # # rebuild output 
+    # N, _, H, W = X.shape
+    # OH = (H + 2*pad - KH) // stride + 1
+    # OW = (W + 2*pad - KW) // stride + 1
+    # out = out.reshape(N, OH, OW, F).transpose(0, 3, 1, 2)
     
-    return out, effective_ratio
+    return effective_ratio
 
 def fc_forward_with_sparsity(X,W):
     # out = X @ W + b
@@ -171,7 +171,7 @@ def ops_hook_conv(module_name, is_sop=True):
         # inputs = inputs.reshape(B,C,H,W)
         inputs = inputs.reshape(-1, C, H, W)
         inputs = inputs.detach().cpu().numpy()
-        _, lsar = conv_forward_with_sparsity(inputs,weight,0,stride,padding)
+        lsar = conv_forward_with_sparsity(inputs,weight,0,stride,padding)
         pass
         if module_name not in MODULE_SOP_DICT.keys():
             MODULE_SOP_DICT[module_name] = lsar * kn * kn * hn * wn *  in_channels * out_channels * B
