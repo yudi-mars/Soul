@@ -68,12 +68,19 @@ def conv_forward_with_sparsity(X, W, b, stride=1, pad=0):
     
     # sparsity calculation --------------------------------------------------
     # generate nonzero masks
-    cols_nonzero = (cols != 0)        # nonzero index for input
-    W_nonzero = (W_reshaped != 0)     # idx of nonzero element for kernel 
+    # cols_nonzero = (cols != 0)        # nonzero index for input
+    # W_nonzero = (W_reshaped != 0)     # idx of nonzero element for kernel 
     
-    # count number of multiply operations
-    effective_matrix = cols_nonzero.astype(np.int64) @ W_nonzero.astype(np.int64)
-    total_effective = effective_matrix.sum()
+    # # count number of multiply operations
+    # effective_matrix = cols_nonzero.astype(np.int64) @ W_nonzero.astype(np.int64)
+    # total_effective = effective_matrix.sum()
+    cols_nonzero = cols != 0
+    cols_nonzero_count = np.count_nonzero(cols_nonzero, axis=0)
+    
+    W_nonzero = W_reshaped != 0
+    W_nonzero_count = np.count_nonzero(W_nonzero, axis=1)
+    
+    total_effective = np.dot(cols_nonzero_count, W_nonzero_count)
     
     N_samples = cols.shape[0]         # number of samples（N*OH*OW）
     K_size = cols.shape[1]            # expanded dimension per sample（C*KH*KW）
