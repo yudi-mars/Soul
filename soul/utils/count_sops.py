@@ -92,6 +92,48 @@ def conv_forward_with_sparsity(X, W, b, stride=1, pad=0):
     
     return out, effective_ratio
 
+def fc_forward_with_sparsity(X,W):
+    # out = X @ W + b
+    
+    # sparsity calculation --------------------------------------------------
+    # generate nonzero masks
+    cols_nonzero = (X != 0)        # nonzero index for input
+    W_nonzero = (W != 0)     # idx of nonzero element for kernel 
+    # count number of multiply operations
+    effective_matrix = cols_nonzero.astype(np.int64) @ W_nonzero.astype(np.int64).T
+    total_effective = effective_matrix.sum()
+    
+
+    total_multiplies = batch_matrix_mul(X.shape,W.shape)
+    # calculate effective ratio
+    effective_ratio = total_effective / total_multiplies if total_multiplies != 0 else 0.0
+    return effective_ratio
+# def matrix_mul(Mat_input, Mat_weight):
+#     # Mat_input: T (optional), B, L
+#     # Mat_weight: L, O 
+#     _unused_f = np.cumprod(Mat_input, axis=0)[-2]  # after Batch dim(including T)
+#     in_f = Mat_weight[0]
+#     out_f = Mat_weight[1]
+#     layer_cnt = 1.0
+#     layer_cnt *= _unused_f
+#     layer_cnt *= _unused_f
+#     layer_cnt *= in_f
+#     layer_cnt *= out_f
+#     return layer_cnt
+
+
+def batch_matrix_mul(Mat_input,Mat_weight):
+    _unused_f = np.cumprod(Mat_input, axis=0)[-2]  # after Batch dim(including T)
+    out_f = Mat_weight[1]
+    in_f = Mat_weight[0]
+    layer_cnt = 1.0
+    layer_cnt *= _unused_f
+    layer_cnt *= in_f
+    layer_cnt *= out_f
+    return layer_cnt
+
+
+
 def ops_monitor(net, is_sop=False):
     m_dict = dict(net.named_modules())
     for key in m_dict.keys():
@@ -99,11 +141,13 @@ def ops_monitor(net, is_sop=False):
             continue
         m = m_dict[key]
         if isinstance(m, torch.nn.Conv2d):
-            m.register_forward_hook(ops_hook_fn(key + ".weight", is_sop))
+            m.register_forward_hook(ops_hook_conv(key + ".weight", is_sop))
 
+        elif isinstance(m, torch.nn.Linear):
+            m.register_forward_hook(ops_hook_fc(key + ".weight",is_sop))
 
 # this function is especially prepared for lasr and ac attr
-def ops_hook_fn(module_name, is_sop):
+def ops_hook_conv(module_name, is_sop=True):
     def hook(m, inputs, outputs):
         inputs = inputs[0]
         max_v = torch.max(inputs)
@@ -122,16 +166,48 @@ def ops_hook_fn(module_name, is_sop):
             lsar += len(torch.where(inputs == float(i))[0]) / inputs.numel() * i
         if lsar == 0:
             lsar = inputs.count_nonzero() / inputs.numel()
-        if is_sop and isinstance(m,torch.nn.Conv2d):
-            weight = m.weight.data
-            weight = weight.detach().cpu().numpy()
-            # inputs = inputs.reshape(B,C,H,W)
-            inputs = inputs.reshape(-1, C, H, W)
-            inputs = inputs.detach().cpu().numpy()
-            _, lsar = conv_forward_with_sparsity(inputs,weight,0,stride,padding)
-            pass
+        weight = m.weight.data
+        weight = weight.detach().cpu().numpy()
+        # inputs = inputs.reshape(B,C,H,W)
+        inputs = inputs.reshape(-1, C, H, W)
+        inputs = inputs.detach().cpu().numpy()
+        _, lsar = conv_forward_with_sparsity(inputs,weight,0,stride,padding)
+        pass
         if module_name not in MODULE_SOP_DICT.keys():
-            MODULE_SOP_DICT[module_name] = lsar * kn * kn * hn * wn *  in_channels * out_channels
+            MODULE_SOP_DICT[module_name] = lsar * kn * kn * hn * wn *  in_channels * out_channels * B
         else:
-            MODULE_SOP_DICT[module_name] += lsar * kn * kn * hn * wn *  in_channels * out_channels
+            MODULE_SOP_DICT[module_name] += lsar * kn * kn * hn * wn *  in_channels * out_channels * B
     return hook
+
+
+def ops_hook_fc(module_name,is_sop=True):
+    def hook(m,input,output):
+        inputs = input[0]
+        max_v = torch.max(inputs)
+        is_mac = max_v.dtype == torch.int64 or not torch.floor(max_v) == max_v
+        ran = max_v.detach().cpu().numpy().astype(int)
+        lsar = 0
+        for i in range(1, ran + 1):
+            lsar += len(torch.where(inputs == float(i))[0]) / inputs.numel() * i
+        if lsar == 0:
+            lsar = inputs.count_nonzero() / inputs.numel()
+        weight = m.weight.data
+        weight = weight.detach().cpu().numpy()
+        # inputs = inputs.reshape(B,C,H,W)
+        inputs = inputs.detach().cpu().numpy()
+        fc_forward_with_sparsity(inputs,weight)
+        pass
+        if module_name not in MODULE_SOP_DICT.keys():
+            MODULE_SOP_DICT[module_name] = lsar * batch_matrix_mul(inputs.shape,weight.shape)
+        else:
+            MODULE_SOP_DICT[module_name] += lsar * batch_matrix_mul(inputs.shape,weight.shape)
+
+    return hook
+
+
+# if __name__ == "__main__":
+#     m = torch.nn.Linear(in_features=10,out_features=100)
+#     m.register_forward_hook(ops_hook_fc("fc"))
+#     input = torch.ones((1,10))
+#     m(input)
+#     print(MODULE_SOP_DICT['fc'])
