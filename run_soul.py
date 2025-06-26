@@ -83,6 +83,7 @@ model_map = {
     'spikformer256': Spikformer256, 'spikformer384': Spikformer384, 'spikformer512': Spikformer512,
     'metaspikformer256': MetaSpikformer256, 'metaspikformer384': MetaSpikformer384, 'metaspikformer512': MetaSpikformer512,
     'spikingresformer192': SpikingResformer192, 'spikingresformer256': SpikingResformer256, 'spikingresformer384': SpikingResformer384, 'spikingresformer512': SpikingResformer512,
+    'qkformer256': QKFormer256, 'qkformer384': QKFormer384, 'qkformer512': QKFormer512,
 }
 
 neuron_map = {
