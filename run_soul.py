@@ -84,7 +84,7 @@ config['neuron'] = neuron_map[config['neuron_type'].lower()](config)
 
 model = model_map[config['model'].lower()](config)
 if global_rank == 0:
-    logger.info('\n'+ str(model))
+    logger.debug('\n'+ str(model))
 model.to(device)
 
 # calculate number of parameters
@@ -130,16 +130,16 @@ for epoch in range(1, config['epochs'] + 1):
     
     top1_meter, loss_meter = AverageMeter(), AverageMeter()
     # customize progress bar for train loader
-    loader = tqdm(train_loader, unit='batch', ncols=80) if global_rank == 0 else train_loader
+    loader = tqdm(train_loader, unit='batch', ncols=80, desc='Train: ') if global_rank == 0 else train_loader
     for inputs, targets in loader:
         inputs, targets = inputs.to(device, non_blocking=True), targets.to(device, non_blocking=True)
         optimizer.zero_grad()
 
         # encoding raw inputs for reasonable SNN operation
         assert len(inputs.shape) in [4, 5], f'Invalid input shape {inputs.shape}...'
-        if len(input.shape) == 4:
+        if len(inputs.shape) == 4:
             # (B, C, H, W) -> (T, B, C, H, W)
-            inputs = coding_map[config['coding_schema']](inputs) 
+            inputs = coding_map[config['coding_schema']](inputs, num_steps=config['time_step']) 
         else:
             # default event data shape (B, T, C, H, W) -> (T, B, C, H, W)
             inputs = inputs.transpose(0, 1)
@@ -164,9 +164,9 @@ for epoch in range(1, config['epochs'] + 1):
 
                 # encoding raw inputs for reasonable SNN operation
                 assert len(inputs.shape) in [4, 5], f'Invalid input shape {inputs.shape}...'
-                if len(input.shape) == 4:
+                if len(inputs.shape) == 4:
                     # (B, C, H, W) -> (T, B, C, H, W)
-                    inputs = coding_map[config['coding_schema']](inputs) 
+                    inputs = coding_map[config['coding_schema']](inputs, num_steps=config['time_step'])
                 else:
                     # default event data shape (B, T, C, H, W) -> (T, B, C, H, W)
                     inputs = inputs.transpose(0, 1)
@@ -210,19 +210,15 @@ if not config['is_distributed'] or dist.get_rank() == 0:
     model.to(device)
     model.eval()
 
-    new_batch_size = 1
-    test_loader = torch.utils.data.DataLoader(test_loader.dataset, batch_size=new_batch_size, shuffle=False, num_workers=0)
-
     # calculate theoretical energy cost per sample inference
     logger.info('Counting FLOPs/SOPs for theoretical inference cost')
-    from soul.utils.count_sops import ops_monitor, MODULE_SOP_DICT
     ops_monitor(model, is_sop=config['sop'])
-    for inputs, _ in tqdm(test_loader, unit='batch', ncols=80):
+    for inputs, _ in tqdm(test_loader, unit='batch', ncols=80, desc='Test: '):
         # encoding raw inputs for reasonable SNN operation
         assert len(inputs.shape) in [4, 5], f'Invalid input shape {inputs.shape}...'
-        if len(input.shape) == 4:
+        if len(inputs.shape) == 4:
             # (B, C, H, W) -> (T, B, C, H, W)
-            inputs = coding_map[config['coding_schema']](inputs) 
+            inputs = coding_map[config['coding_schema']](inputs, num_steps=config['time_step'])
         else:
             # default event data shape (B, T, C, H, W) -> (T, B, C, H, W)
             inputs = inputs.transpose(0, 1)
@@ -240,16 +236,19 @@ if not config['is_distributed'] or dist.get_rank() == 0:
     logger.info(f"corresponding theoretical energy cost: {avg_sops * cost_per_op / 1e9:.2f} mj")
 
     # evluate the maximum actual memory usage and latency for inference per sample
+    new_batch_size = 1
+    test_loader = torch.utils.data.DataLoader(test_loader.dataset, batch_size=new_batch_size, shuffle=False, num_workers=0)
+
     logger.info('Monitoring maximum memory usage for inference')
     torch.cuda.reset_peak_memory_stats()
     start_time = time.time()
     with torch.inference_mode():
-        for inputs, _ in tqdm(test_loader, unit='batch', ncols=80):
+        for inputs, _ in tqdm(test_loader, unit='batch', ncols=80, desc='Inference per sample: '):
             # encoding raw inputs for reasonable SNN operation
             assert len(inputs.shape) in [4, 5], f'Invalid input shape {inputs.shape}...'
-            if len(input.shape) == 4:
+            if len(inputs.shape) == 4:
                 # (B, C, H, W) -> (T, B, C, H, W)
-                inputs = coding_map[config['coding_schema']](inputs) 
+                inputs = coding_map[config['coding_schema']](inputs, num_steps=config['time_step'])
             else:
                 # default event data shape (B, T, C, H, W) -> (T, B, C, H, W)
                 inputs = inputs.transpose(0, 1)
