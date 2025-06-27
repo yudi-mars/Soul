@@ -6,6 +6,7 @@ from .PLIF import ParametricLIFNode
 from .PSN import ParallelSpikingNode
 from .TLIF import TLIFNode
 from .IELIF import IELIFNode
+from .LTMD import LTMD
 
 neuron_map = {
     "lif": LIFNode,
@@ -16,5 +17,6 @@ neuron_map = {
     "psn": ParallelSpikingNode,
     "tlif": TLIFNode,
     'ielif': IELIFNode,
+    'ltmd': LTMD,
     # TODO
 }

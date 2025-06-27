@@ -1,2 +1,2 @@
 lens: 4                         # (int) Number of lens
-surrogate: atan                 # (str) surrogate gradient function
+surrogate: atan                 # (str) unsed, surrogate gradient function
