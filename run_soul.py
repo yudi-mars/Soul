@@ -213,7 +213,7 @@ if not config['is_distributed'] or dist.get_rank() == 0:
     # calculate theoretical energy cost per sample inference
     logger.info('Counting FLOPs/SOPs for theoretical inference cost')
     ops_monitor(model, is_sop=config['sop'])
-    for inputs, _ in tqdm(test_loader, unit='batch', ncols=80, desc='Test: '):
+    for inputs, _ in tqdm(test_loader, unit='batch', ncols=80, desc='Count OPs: '):
         # encoding raw inputs for reasonable SNN operation
         assert len(inputs.shape) in [4, 5], f'Invalid input shape {inputs.shape}...'
         if len(inputs.shape) == 4:
