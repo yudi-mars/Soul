@@ -5,8 +5,6 @@ from functools import partial
 
 from soul.neuron import functional
 
-from timm.models.layers import to_2tuple, trunc_normal_, DropPath
-
 __all__ = ['QKFormer', 'QKFormer256', 'QKFormer384', 'QKFormer512']
 
 class PatchEmbedInit(nn.Module):
@@ -359,7 +357,7 @@ class QKFormer(nn.Module):
 
     def _init_weights(self, m):
         if isinstance(m, nn.Linear):
-            trunc_normal_(m.weight, std=.02)
+            nn.init.trunc_normal_(m.weight, std=.02)
             if isinstance(m, nn.Linear) and m.bias is not None:
                 nn.init.constant_(m.bias, 0)
         elif isinstance(m, nn.LayerNorm):
