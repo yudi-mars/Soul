@@ -35,12 +35,12 @@ TBD
 
 
 - [ ] TBD @AmazingDD run_soul独立训练、推理、算各类指标的接口
-- [ ] TBD @AmazingDD add different coding schemes for non-sequential inputs
+- [x] 2025.06.26-2025.06.27 @AmazingDD add different coding schemes for non-sequential inputs
 - [ ] 2025.06.23-2025.12.31 @Lvchangze **设计一个适合edge的STDP few-shot learning方法，input需要满足sequential的特点(即不是repeat input, 而是按time step切分图片或序列, 以一种先后顺序的输入完成learning)**
 - [ ] 2025.07.01-2025.07.31 @Lvchangze @Yudi **设计一个针对enrich data的rehearsal-based的增量学习算法（simple but effective）**
 - [ ] 2025.06.23-2025.07.02 @Changze Potential Modulation类目下的神经元建模，能融合的都要融合进来
 - [ ] 2025.06.17-2025.06.25 @changze Firing Mechanism类目下的神经元建模，能融合的都要融合进来
-    - RSN[83]未开源
+    - ~~RSN[83]未开源~~
     - GLIF[84]已完成
     - ~~ALIF[85]未开源~~
     - PSN[86]已完成

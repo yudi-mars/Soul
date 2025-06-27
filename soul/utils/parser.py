@@ -106,6 +106,13 @@ def parse_args():
         help="model name"
     )
     parser.add_argument(
+        "--coding_schema",
+        '-coding',
+        type=str,
+        default='direct',
+        help='encoding schema for static raw input'
+    )
+    parser.add_argument(
         "--neuron_type", 
         "-n", 
         type=str, 

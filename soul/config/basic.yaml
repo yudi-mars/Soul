@@ -23,3 +23,4 @@ model: spikingvgg9                # (str) The name of model to be used.
 neuron_type: lif                  # (str) neuron model for SNNs
 time_step: 4                      # (int) The number of time steps for SNNs.
 dataset_name: cifar10             # (str) The name of dataset to be used.
+coding_schema: direct             # (str) encoding schema for static raw input

@@ -76,43 +76,11 @@ train_loader, test_loader = get_loader(train_dataset, test_dataset, train_sample
 # load SNN model
 if global_rank == 0:
     logger.info(f'Load SNN model: {config["model"]} featured {config["neuron_type"].upper()} neuron...')
-model_map = {
-    'spikingvgg5': SpikingVGG5, 'spikingvgg9': SpikingVGG9, 'spikingvgg11': SpikingVGG11, 'spikingvgg13': SpikingVGG13, 'spikingvgg16': SpikingVGG16, 'spikingvgg19': SpikingVGG19, 
-    'sewresnet18': SEWResNet18, 'sewresnet34': SEWResNet34, 'sewresnet50': SEWResNet50,
-    'msresnet18': MSResNet18, 'msresnet34': MSResNet34, 'msresnet50': MSResNet50,
-    'spikformer256': Spikformer256, 'spikformer384': Spikformer384, 'spikformer512': Spikformer512,
-    'metaspikformer256': MetaSpikformer256, 'metaspikformer384': MetaSpikformer384, 'metaspikformer512': MetaSpikformer512,
-    'spikingresformer192': SpikingResformer192, 'spikingresformer256': SpikingResformer256, 'spikingresformer384': SpikingResformer384, 'spikingresformer512': SpikingResformer512,
-    'qkformer256': QKFormer256, 'qkformer384': QKFormer384, 'qkformer512': QKFormer512,
-}
 
-neuron_map = {
-    "lif": LIFNode,
-    "plif": ParametricLIFNode,
-    "clif": CLIFNode,
-    "glif": GatedLIFNode,
-    "ilif": ILIFNode,
-    "psn": ParallelSpikingNode,
-    "tlif": TLIFNode,
-    'ielif': IELIFNode,
-    # TODO
-}
-
-surrogate_map = {
-    'atan': ATan(),
-    'erf': Erf(),
-    'rect': Rectangular(),
-    'sigmoid': FastSigmoid(),
-    'ternary': Ternary(),
-    'quant': Quant(),
-    'quant4': Quant4(),
-    'rectangle': Rectangle(),
-}
 if global_rank == 0:
     logger.debug(f'surrogate function: {config["surrogate"]}')
 config['surrogate_function'] = surrogate_map[config['surrogate']]
 config['neuron'] = neuron_map[config['neuron_type'].lower()](config) 
-
 
 model = model_map[config['model'].lower()](config)
 if global_rank == 0:
@@ -166,6 +134,16 @@ for epoch in range(1, config['epochs'] + 1):
     for inputs, targets in loader:
         inputs, targets = inputs.to(device, non_blocking=True), targets.to(device, non_blocking=True)
         optimizer.zero_grad()
+
+        # encoding raw inputs for reasonable SNN operation
+        assert len(inputs.shape) in [4, 5], f'Invalid input shape {inputs.shape}...'
+        if len(input.shape) == 4:
+            # (B, C, H, W) -> (T, B, C, H, W)
+            inputs = coding_map[config['coding_schema']](inputs) 
+        else:
+            # default event data shape (B, T, C, H, W) -> (T, B, C, H, W)
+            inputs = inputs.transpose(0, 1)
+
         outputs = model(inputs)
         acc1 = accuracy(outputs, targets, topk=(1,))[0]
 
@@ -183,6 +161,16 @@ for epoch in range(1, config['epochs'] + 1):
         with torch.no_grad():
             for inputs, targets in test_loader:
                 inputs, targets = inputs.to(device, non_blocking=True), targets.to(device, non_blocking=True)
+
+                # encoding raw inputs for reasonable SNN operation
+                assert len(inputs.shape) in [4, 5], f'Invalid input shape {inputs.shape}...'
+                if len(input.shape) == 4:
+                    # (B, C, H, W) -> (T, B, C, H, W)
+                    inputs = coding_map[config['coding_schema']](inputs) 
+                else:
+                    # default event data shape (B, T, C, H, W) -> (T, B, C, H, W)
+                    inputs = inputs.transpose(0, 1)
+
                 outputs = model(inputs)
                 acc1 = accuracy(outputs, targets, topk=(1,))[0]
                 loss = criterion(outputs, targets)

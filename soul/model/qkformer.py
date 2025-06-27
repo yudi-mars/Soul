@@ -387,11 +387,6 @@ class QKFormer(nn.Module):
         return self.head(x.mean(0))
 
     def forward(self, x):
-        assert len(x.shape) in [4, 5], f'Invalid input shape {x.shape}...'
-        if len(x.shape) == 4:
-            x = x.unsqueeze(1).repeat(1, self.T, 1, 1, 1) # B, T, C, H, W
-        x = x.transpose(0, 1) # [T, B, C, H, W]  
-
         x = self.forward_features(x) # [T, B, D]  
         x = self.forward_head(x)
 
