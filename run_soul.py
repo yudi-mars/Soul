@@ -218,6 +218,15 @@ if not config['is_distributed'] or dist.get_rank() == 0:
     from soul.utils.count_sops import ops_monitor, MODULE_SOP_DICT
     ops_monitor(model, is_sop=config['sop'])
     for inputs, _ in tqdm(test_loader, unit='batch', ncols=80):
+        # encoding raw inputs for reasonable SNN operation
+        assert len(inputs.shape) in [4, 5], f'Invalid input shape {inputs.shape}...'
+        if len(input.shape) == 4:
+            # (B, C, H, W) -> (T, B, C, H, W)
+            inputs = coding_map[config['coding_schema']](inputs) 
+        else:
+            # default event data shape (B, T, C, H, W) -> (T, B, C, H, W)
+            inputs = inputs.transpose(0, 1)
+
         inputs = inputs.to(device)
         _ = model(inputs)
 
@@ -236,6 +245,15 @@ if not config['is_distributed'] or dist.get_rank() == 0:
     start_time = time.time()
     with torch.inference_mode():
         for inputs, _ in tqdm(test_loader, unit='batch', ncols=80):
+            # encoding raw inputs for reasonable SNN operation
+            assert len(inputs.shape) in [4, 5], f'Invalid input shape {inputs.shape}...'
+            if len(input.shape) == 4:
+                # (B, C, H, W) -> (T, B, C, H, W)
+                inputs = coding_map[config['coding_schema']](inputs) 
+            else:
+                # default event data shape (B, T, C, H, W) -> (T, B, C, H, W)
+                inputs = inputs.transpose(0, 1)
+
             inputs = inputs.to(device)
             _ = model(inputs)  
     end_time = time.time() 
