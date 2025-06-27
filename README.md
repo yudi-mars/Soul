@@ -59,7 +59,7 @@ TBD
     - I-LIF[67]已实现
     - IE-LIF[23]已实现
     - ~~P-SpikeSSM [69]逆天印度人，他们整个spikessm网络的代码就不是snn，没有spiking neuron的概念~~
-    - ST-BIF @Changze **记得看下这个cvpr2025的LIF**
+    - ST-BIF @Changze **记得看下这个cvpr2025的LIF** 他给了代码链接，但是进去是404，估计还没上传
 - [x] 2025.06.25-2025.06.27 @wentao ~~monitor加上对nn.linear的统计,SOP统计中conv相关hook速度很慢，需要优化~~
 - [x] 2025.06.23-2025.06.24 @Changze 维护survey第一版的table 1
 - [x] 2025.06.17-2025.06.24 @Changze @yudi 大survey中的table 1 Survey Comparison列举的survey精读，然后最后一天讨论
