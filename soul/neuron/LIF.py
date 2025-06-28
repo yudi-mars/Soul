@@ -4,7 +4,7 @@ from soul.neuron import base
 
 class BaseNode(base.MemoryModule):
     def __init__(self, v_threshold, v_reset, surrogate_function, detach_reset=False,
-                 step_mode='s', backend='torch', store_v_seq=False):
+                 step_mode='m', backend='torch', store_v_seq=False):
         assert isinstance(v_reset, float) or v_reset is None
         assert isinstance(v_threshold, float)
         assert isinstance(detach_reset, bool)

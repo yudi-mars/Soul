@@ -40,7 +40,7 @@ TBD
 - [ ] 2025.07.01-2025.07.31 @Lvchangze @Yudi **设计一个针对enrich data的rehearsal-based的增量学习算法（simple but effective）**
 - [ ] 2025.06.23-2025.07.02 @Changze Potential Modulation类目下的神经元建模，能融合的都要融合进来
     - PLIF[70] 已经完成
-    - SRIF[71] guoyufei的，我需要再看看，他代码太复杂
+    - SRIF[71] guoyufei的，发现无法“即插即用”，需要指定input dim和output dim
     - LTMD [72] 已实现
     - BDETT [73] 未开源
     - DTA-TTFS [74] 未开源
