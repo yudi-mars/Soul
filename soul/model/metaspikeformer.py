@@ -1,6 +1,4 @@
-import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from copy import deepcopy
 
 from soul.neuron import functional
@@ -164,7 +162,6 @@ class Attention(nn.Module):
 
         self.proj_linear = nn.Linear(dim, dim)
         self.proj_bn = nn.BatchNorm1d(dim)
-        self.proj_lif = deepcopy(lif)
 
     def forward(self, x):
         x = self.head_lif(x)
@@ -196,7 +193,6 @@ class Attention(nn.Module):
         x = self.attn_lif(x)
         x = x.flatten(0, 1)
         x = self.proj_bn(self.proj_linear(x).transpose(-1, -2)).transpose(-1, -2).reshape(T, B, N, C)
-        x = self.proj_lif(x)
 
         x = x.transpose(2, 3).reshape(T, B, C, H, W).contiguous()
 
@@ -369,11 +365,11 @@ class MetaSpikeformer(nn.Module):
         return x
 
 
-def MetaSpikformer256(config): # 2-256
+def MetaSpikeformer256(config): # 2-256
     return MetaSpikeformer(config, depths=[1, 1], embed_dims=[64, 128, 256, 320])
 
-def MetaSpikformer384(config): # 4-384
+def MetaSpikeformer384(config): # 4-384
     return MetaSpikeformer(config, depths=[2, 2], embed_dims=[96, 192, 384, 480])
 
-def MetaSpikformer512(config): # 8-512
+def MetaSpikeformer512(config): # 8-512
     return MetaSpikeformer(config, depths=[6, 2], embed_dims=[128, 256, 512, 640]) 
