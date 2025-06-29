@@ -2,103 +2,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from copy import deepcopy
-from functools import partial
 
 from soul.neuron import functional
 
-__all__ = ['MetaSpikformer', 'MetaSpikformer256', 'MetaSpikformer384', 'MetaSpikformer512']
-
-class BNAndPadLayer(nn.Module):
-    def __init__(
-        self,
-        pad_pixels,
-        num_features,
-        eps=1e-5,
-        momentum=0.1,
-        affine=True,
-        track_running_stats=True,
-    ):
-        super(BNAndPadLayer, self).__init__()
-        self.bn = nn.BatchNorm2d(
-            num_features, eps, momentum, affine, track_running_stats
-        )
-        self.pad_pixels = pad_pixels
-
-    def forward(self, input):
-        output = self.bn(input)
-        if self.pad_pixels > 0:
-            if self.bn.affine:
-                pad_values = (
-                    self.bn.bias.detach()
-                    - self.bn.running_mean
-                    * self.bn.weight.detach()
-                    / torch.sqrt(self.bn.running_var + self.bn.eps)
-                )
-            else:
-                pad_values = -self.bn.running_mean / torch.sqrt(
-                    self.bn.running_var + self.bn.eps
-                )
-            output = F.pad(output, [self.pad_pixels] * 4)
-            pad_values = pad_values.view(1, -1, 1, 1)
-            output[:, :, 0 : self.pad_pixels, :] = pad_values
-            output[:, :, -self.pad_pixels :, :] = pad_values
-            output[:, :, :, 0 : self.pad_pixels] = pad_values
-            output[:, :, :, -self.pad_pixels :] = pad_values
-        return output
-
-    @property
-    def weight(self):
-        return self.bn.weight
-
-    @property
-    def bias(self):
-        return self.bn.bias
-
-    @property
-    def running_mean(self):
-        return self.bn.running_mean
-
-    @property
-    def running_var(self):
-        return self.bn.running_var
-
-    @property
-    def eps(self):
-        return self.bn.eps
-
-def drop_path(x, drop_prob: float = 0., training: bool = False, scale_by_keep: bool = True):
-    """Drop paths (Stochastic Depth) per sample (when applied in main path of residual blocks).
-
-    This is the same as the DropConnect impl I created for EfficientNet, etc networks, however,
-    the original name is misleading as 'Drop Connect' is a different form of dropout in a separate paper...
-    See discussion: https://github.com/tensorflow/tpu/issues/494#issuecomment-532968956 ... I've opted for
-    changing the layer and argument names to 'drop path' rather than mix DropConnect as a layer name and use
-    'survival rate' as the argument.
-
-    """
-    if drop_prob == 0. or not training:
-        return x
-    keep_prob = 1 - drop_prob
-    shape = (x.shape[0],) + (1,) * (x.ndim - 1)  # work with diff dim tensors, not just 2D ConvNets
-    random_tensor = x.new_empty(shape).bernoulli_(keep_prob)
-    if keep_prob > 0.0 and scale_by_keep:
-        random_tensor.div_(keep_prob)
-    return x * random_tensor
-
-
-class DropPath(nn.Module):
-    """Drop paths (Stochastic Depth) per sample  (when applied in main path of residual blocks).
-    """
-    def __init__(self, drop_prob: float = 0., scale_by_keep: bool = True):
-        super(DropPath, self).__init__()
-        self.drop_prob = drop_prob
-        self.scale_by_keep = scale_by_keep
-
-    def forward(self, x):
-        return drop_path(x, self.drop_prob, self.training, self.scale_by_keep)
-
-    def extra_repr(self):
-        return f'drop_prob={round(self.drop_prob,3):0.3f}'
+__all__ = ['MetaSpikeformer', 'MetaSpikeformer256', 'MetaSpikeformer384', 'MetaSpikeformer512']
     
 class DownSampling(nn.Module):
     def __init__(self, lif, in_channels, embed_dim, kernel_size=3, stride=2, padding=1, first_layer=True):
@@ -124,23 +31,6 @@ class DownSampling(nn.Module):
         x = self.encode_bn(x).reshape(T, B, -1, H, W).contiguous()
 
         return x
-
-class RepConv(nn.Module):
-    def __init__(self, in_channel, out_channel, bias=False):
-        super().__init__()
-
-        conv1x1 = nn.Conv2d(in_channel, in_channel, kernel_size=1, stride=1, padding=0, bias=False, groups=1)
-        bn = BNAndPadLayer(pad_pixels=1, num_features=in_channel)
-        conv3x3 = nn.Sequential(
-            nn.Conv2d(in_channel, in_channel, kernel_size=3, stride=1, padding=0, groups=in_channel, bias=False),
-            nn.Conv2d(in_channel, out_channel, kernel_size=1, stride=1, padding=0, groups=1, bias=False),
-            nn.BatchNorm2d(out_channel),
-        )
-
-        self.body = nn.Sequential(conv1x1, bn, conv3x3)
-
-    def forward(self, x):
-        return self.body(x)
 
 class SepConv(nn.Module):
     r"""
@@ -177,9 +67,11 @@ class SepConv(nn.Module):
     def forward(self, x):
         T, B, C, H, W = x.shape
         x = self.lif1(x)
-        x = self.bn1(self.pwconv1(x.flatten(0, 1))).reshape(T, B, -1, H, W)
+        x = x.flatten(0, 1)
+        x = self.bn1(self.pwconv1(x)).reshape(T, B, -1, H, W)
         x = self.lif2(x)
-        x = self.dwconv(x.flatten(0, 1))
+        x = x.flatten(0, 1)
+        x = self.dwconv(x)
         x = self.bn2(self.pwconv2(x)).reshape(T, B, -1, H, W)
 
         return x
@@ -254,9 +146,14 @@ class Attention(nn.Module):
         self.scale = 0.125
 
         self.head_lif = deepcopy(lif)
-        self.q_conv = nn.Sequential(RepConv(dim, dim, bias=False), nn.BatchNorm2d(dim))
-        self.k_conv = nn.Sequential(RepConv(dim, dim, bias=False), nn.BatchNorm2d(dim))
-        self.v_conv = nn.Sequential(RepConv(dim, dim, bias=False), nn.BatchNorm2d(dim))
+
+        self.q_linear = nn.Linear(dim, dim)
+        self.q_bn = nn.BatchNorm1d(dim)
+        self.k_linear = nn.Linear(dim, dim)
+        self.k_bn = nn.BatchNorm1d(dim)
+        self.v_linear = nn.Linear(dim, dim)
+        self.v_bn = nn.BatchNorm1d(dim)
+
 
         self.q_lif = deepcopy(lif)
         self.k_lif = deepcopy(lif)
@@ -265,51 +162,51 @@ class Attention(nn.Module):
         self.attn_lif = deepcopy(lif)
         self.attn_lif.v_threshold = 0.5
 
-        self.proj_conv = nn.Sequential(
-            RepConv(dim, dim, bias=False),
-            nn.BatchNorm2d(dim),
-        )
+        self.proj_linear = nn.Linear(dim, dim)
+        self.proj_bn = nn.BatchNorm1d(dim)
+        self.proj_lif = deepcopy(lif)
 
     def forward(self, x):
+        x = self.head_lif(x)
+
         T, B, C, H, W = x.shape
         N = H * W
 
-        x = self.head_lif(x)
+        x = x.reshape(T, B, C, N).transpose(-1, -2)
 
-        q = self.q_conv(x.flatten(0, 1)).reshape(T, B, C, H, W)
-        k = self.k_conv(x.flatten(0, 1)).reshape(T, B, C, H, W)
-        v = self.v_conv(x.flatten(0, 1)).reshape(T, B, C, H, W)
+        x_for_qkv = x.flatten(0, 1)  # TB, N, C
+        q_linear_out = self.q_linear(x_for_qkv)  # [TB, N, C]
+        q_linear_out = self.q_bn(q_linear_out. transpose(-1, -2)).transpose(-1, -2).reshape(T, B, N, C).contiguous()
+        q_linear_out = self.q_lif(q_linear_out)
+        q = q_linear_out.reshape(T, B, N, self.num_heads, C // self.num_heads).permute(0, 1, 3, 2, 4).contiguous()
 
-        q = self.q_lif(q).flatten(3) # -> (T, B, C, N)
-        q = q.transpose(-1, -2).reshape(
-            T, B, N, self.num_heads, C // self.num_heads).permute(0, 1, 3, 2, 4).contiguous()
+        k_linear_out = self.k_linear(x_for_qkv)
+        k_linear_out = self.k_bn(k_linear_out. transpose(-1, -2)).transpose(-1, -2).reshape(T, B, N, C).contiguous()
+        k_linear_out = self.k_lif(k_linear_out)
+        k = k_linear_out.reshape(T, B, N, self.num_heads, C // self.num_heads).permute(0, 1, 3, 2, 4).contiguous()
 
-        k = self.k_lif(k).flatten(3)
-        k = k.transpose(-1, -2).reshape(
-            T, B, N, self.num_heads, C // self.num_heads).permute(0, 1, 3, 2, 4).contiguous()
-        
-        v = self.v_lif(k).flatten(3)
-        v = v.transpose(-1, -2).reshape(
-            T, B, N, self.num_heads, C // self.num_heads).permute(0, 1, 3, 2, 4).contiguous()
-        
-        x = k.transpose(-2, -1) @ v
-        x = (q @ x) * self.scale
+        v_linear_out = self.v_linear(x_for_qkv)
+        v_linear_out = self.v_bn(v_linear_out. transpose(-1, -2)).transpose(-1, -2).reshape(T, B, N, C).contiguous()
+        v_linear_out = self.v_lif(v_linear_out)
+        v = v_linear_out.reshape(T, B, N, self.num_heads, C // self.num_heads).permute(0, 1, 3, 2, 4).contiguous()
 
-        x = x.transpose(3, 4).reshape(T, B, C, N).contiguous()
-        x = self.attn_lif(x).reshape(T, B, C, H, W)
-        x = x.reshape(T, B, C, H, W)
+        attn = (q @ k.transpose(-2, -1)) * self.scale
+        x = attn @ v
+        x = x.transpose(2, 3).reshape(T, B, N, C).contiguous()
+        x = self.attn_lif(x)
         x = x.flatten(0, 1)
-        x = self.proj_conv(x).reshape(T, B, C, H, W)
+        x = self.proj_bn(self.proj_linear(x).transpose(-1, -2)).transpose(-1, -2).reshape(T, B, N, C)
+        x = self.proj_lif(x)
+
+        x = x.transpose(2, 3).reshape(T, B, C, H, W).contiguous()
 
         return x
     
 class Block(nn.Module):
-    def __init__(self, lif, dim, num_heads, mlp_ratio=4.0, drop_path=0.0, norm_layer=nn.LayerNorm):
+    def __init__(self, lif, dim, num_heads, mlp_ratio=4.0):
         super().__init__()
 
         self.attn = Attention(lif, dim, num_heads=num_heads)
-
-        self.drop_path = DropPath(drop_prob=drop_path) if drop_path > 0.0 else nn.Identity()
         mlp_hidden_dim = int(dim * mlp_ratio)
         self.mlp = MLP(lif, in_features=dim, hidden_features=mlp_hidden_dim)
 
@@ -319,8 +216,8 @@ class Block(nn.Module):
 
         return x
 
-class MetaSpikformer(nn.Module):
-    def __init__(self, config, depths=[6, 2], embed_dims=[128, 256, 512, 640], norm_layer=nn.LayerNorm, drop_path_rate=0.0):
+class MetaSpikeformer(nn.Module):
+    def __init__(self, config, depths=[6, 2], embed_dims=[128, 256, 512, 640]):
         super().__init__()
 
         num_classes = config['num_classes']
@@ -330,8 +227,6 @@ class MetaSpikformer(nn.Module):
 
         mlp_ratio = config['mlp_ratio']
         num_heads = config['num_heads']
-
-        dpr = [x.item() for x in torch.linspace(0, drop_path_rate, sum(depths))]
 
         self.downsample1_1 = DownSampling(
             lif, 
@@ -394,9 +289,7 @@ class MetaSpikformer(nn.Module):
                 lif, 
                 dim=embed_dims[2], 
                 num_heads=num_heads, 
-                mlp_ratio=mlp_ratio,
-                drop_path=dpr[j],
-                norm_layer=norm_layer,
+                mlp_ratio=mlp_ratio
             ) for j in range(depths[0])
         ])
 
@@ -411,12 +304,11 @@ class MetaSpikformer(nn.Module):
         )
 
         self.block4 = nn.ModuleList([
-            Block(lif, 
-                  dim=embed_dims[3], 
-                  num_heads=num_heads, 
-                  mlp_ratio=mlp_ratio,
-                  drop_path=dpr[j],
-                  norm_layer=norm_layer,
+            Block(
+                lif, 
+                dim=embed_dims[3], 
+                num_heads=num_heads, 
+                mlp_ratio=mlp_ratio
             ) for j in range(depths[1])
         ])
 
@@ -464,6 +356,7 @@ class MetaSpikformer(nn.Module):
     def forward_head(self, x):
         x = x.flatten(3).mean(3) # ->(T, B, C)
         x = self.lif(x).mean(0) # -> (B, C)
+
         x = self.head(x) # -> (B, num_cls)
 
         return x
@@ -477,10 +370,10 @@ class MetaSpikformer(nn.Module):
 
 
 def MetaSpikformer256(config): # 2-256
-    return MetaSpikformer(config, depths=[1, 1], embed_dims=[64, 128, 256, 320], norm_layer=partial(nn.LayerNorm, eps=1e-6))
+    return MetaSpikeformer(config, depths=[1, 1], embed_dims=[64, 128, 256, 320])
 
 def MetaSpikformer384(config): # 4-384
-    return MetaSpikformer(config, depths=[3, 1], embed_dims=[96, 192, 384, 480], norm_layer=partial(nn.LayerNorm, eps=1e-6))
+    return MetaSpikeformer(config, depths=[2, 2], embed_dims=[96, 192, 384, 480])
 
 def MetaSpikformer512(config): # 8-512
-    return MetaSpikformer(config, depths=[6, 2], embed_dims=[128, 256, 512, 640], norm_layer=partial(nn.LayerNorm, eps=1e-6)) 
+    return MetaSpikeformer(config, depths=[6, 2], embed_dims=[128, 256, 512, 640]) 
