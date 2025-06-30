@@ -1,4 +1,4 @@
-![Soul Logo](assets/logo-code.jpg)
+![Soul Logo](./assets/code-logo.jpg)
 
 --------------------------------------------------------------------------------
 
