@@ -6,13 +6,19 @@
 
 # Soul
 
-SNN-based open source toolkit for foundation model benchmarking.
+*“I have always been convinced that the only way to get artificial intelligence to work is to do the computation in a way similar to the human brain.”——Geoffrey Hinton*
 
-Coming Soon...
+
+SOUL (brevity for **S**NN-based **O**pen so**U**rce too**L**kit) is developed based on Python and PyTorch for reproducing and developing SNN-based algorithms in a unified, comprehensive and efficient framework for research purpose and practical deployment at the edge.
 
 ## Overview
 
 TBD
+
+## Feature
+
+- 特色1
+- 特色2
 
 ## Requirements
 
