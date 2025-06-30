@@ -1,3 +1,7 @@
+![Soul Logo](assets/logo-code.jpg)
+
+--------------------------------------------------------------------------------
+
 # Soul
 
 SNN-based open source toolkit for foundation model benchmarking.
