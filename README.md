@@ -1,4 +1,6 @@
-![Soul Logo](./assets/code-logo.jpg)
+<p align="center">
+    <img src="./assets/code-logo.jpg" width="50%">
+</p>
 
 --------------------------------------------------------------------------------
 
