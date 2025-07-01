@@ -40,12 +40,12 @@ TBD
 
 ### Documentation
 
-TBD @Cajol1e Helin后面来做这个部分的事情
+<!-- TBD @Cajol1e Helin后面来做这个部分的事情-->
 
 
 ## TODO List
 
-
+<!-- 
 - [ ] TBD @AmazingDD run_soul独立训练、推理、算各类指标的接口
 - [ ] TBD @TWTcodeKing 目前count_sops还无法对transformer相关模型进行统计(或者统计很慢), 需要优化调整
 - [x] 2025.06.26-2025.06.27 @AmazingDD add different coding schemes for non-sequential inputs
@@ -79,7 +79,7 @@ TBD @Cajol1e Helin后面来做这个部分的事情
 - [x] 2025.06.17-2025.07.02 @yudi Toplogy实现：~~MS-ResNet~~, ~~Spike-driven Transformer V2 (meta-spikformer)~~, ~~SpikingResFormer~~, ~~QKFormer~~
 - [x] 2025.06.17-2025.06.19 Survey hybrid learning章节补充
 - [x] 2025.06.19-2025.06.22 Survey 重新整理hardware software部分，并与future direction合并扩写
-
+-->
 
 ## Cite
 
