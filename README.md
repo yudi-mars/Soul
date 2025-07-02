@@ -56,7 +56,6 @@ TBD 后面学生来做这个部分的事情
 
 - [ ] TBD @AmazingDD run_soul独立训练、推理、算各类指标的接口
 - [ ] TBD @TWTcodeKing 目前count_sops还无法对transformer相关模型进行统计(或者统计很慢), 需要优化调整
-- [x] 2025.06.26-2025.06.27 @AmazingDD add different coding schemes for non-sequential inputs
 - [ ] 2025.07.01-2025.07.31 @Lvchangze @Yudi **设计一个针对enrich data的rehearsal-based的增量学习算法（simple but effective）**
 - [ ] 2025.06.23-2025.07.02 @Changze Potential Modulation类目下的神经元建模，能融合的都要融合进来
     - PLIF[70] 已经完成
@@ -68,19 +67,11 @@ TBD 后面学生来做这个部分的事情
     - ABN [76] 未开源
     - DA-LIF [77] 未开源
     - Smooth LIF [78] 未开源
-- [ ] 2025.06.17-2025.06.25 @changze Firing Mechanism类目下的神经元建模，能融合的都要融合进来
-    - ~~RSN[61]未开源~~
-    - GLIF[62]已完成
-    - ~~ALIF[63]未开源~~
-    - PSN[64]已完成
-    - TLIF[65]已完成
-    - ~~DCIS[]这篇不是神经元，而是一个特殊的卷积结构 (已在survey删除)~~
-    - ~~T-RevSNN[66]官方代码中的神经元实现和I-LIF完全相同，其实就是整数脉冲，都是man yao做的~~
-    - I-LIF[67]已实现
-    - IE-LIF[23]已实现
-    - ~~P-SpikeSSM [69]逆天印度人，他们整个spikessm网络的代码就不是snn，没有spiking neuron的概念~~
-    - ST-BIF @Changze **记得看下这个cvpr2025的LIF** 他给了代码链接，但是进去是404，估计还没上传
-- [x] 2025.06.17-2025.07.02 @yudi Toplogy实现：~~MS-ResNet~~, ~~Spike-driven Transformer V2 (meta-spikformer)~~, ~~SpikingResFormer~~, ~~QKFormer~~
+- [ ] Audio @changze, HAR @yudi的应用， （调研）整理文章，看看有哪些baseline的模型可以加入，soul可能有functiuonal或者场景的参数进行区分
+- [ ] 目前的训练方式只有rate learning，@changze 我们需要ANN2SNN（为vgg，resnet，spikformer至少挑选一个对应可行的资源消耗没那么严重的ANN2SNN训练方法）
+- [ ] lightweight的方法: @changze @yudi (1) KD~2023cvpr 为vgg，resnet，spikformer提供一个可行的蒸馏方案 (2) NAS: 如果目前只支持vgg，那就先只支持直通网络，但是要确认一些别的方法（比如乐透奖）（3）quantization接口（4）prune： structure pruning支持GPU/neuromorphic， unstructure pruning支持neuromorphic （目前提供GPU模拟即可）
+- [ ] @chnagze @yudi STDP训练方法/temporal learning@yudi 提供一个好用的方案，我们目前可以给个GPU方案，但这个模块以后肯定是要只针对neuromorphic chip的部署】
+
 -->
 
 ## Cite
