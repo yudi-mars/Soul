@@ -17,8 +17,10 @@ TBD
 
 ## Feature
 
-- 特色1
-- 特色2
+TBD 
+
+- feature 1
+- feature 2
 
 ## Requirements
 
