@@ -11,6 +11,11 @@
 
 SOUL (**S**NN-based **O**pen so**U**rce too**L**kit) is developed based on Python and PyTorch for reproducing and developing SNN-based brain-inspired computing algorithms in a unified, comprehensive, and efficient framework for research purposes and practical deployment at the edge.
 
+
+我们的Soul已经囊括了大部分edge intelligence的application
+
+列下数据集和modality，声音数据集，xx传感器数据集。。。。
+
 ## Overview
 
 TBD
