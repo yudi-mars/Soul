@@ -63,6 +63,17 @@ TBD 后面学生来做这个部分的事情
 
 随着更多模态数据的引入, Soul执行需要额外的参数来对不同应用场景进行区分, 此外各类训练方式的引入也会对Soul的原本设计造成影响，架构可能要再变动下 @yudi，要随时沟通！
 
+cv/cifar10.py
+har/uci.py
+一个dataset一个data.py
+
+model/cv
+model/har
+
+neuron/cv
+neuron/har
+可能换成这种结构
+
 以主流edge applicaiton为主（老三样）, 
 但是举例一些特殊的应用，如果有开源数据的话 就跑一跑结果调通验证未来可行性
 
