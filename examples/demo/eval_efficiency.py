@@ -1,5 +1,5 @@
 '''
-Latency counter for SNN model inference towards samples one-by-one
+on-device(GPU) energy comsumption monitor for SNN model inference towards samples one-by-one
 '''
 
 import os
@@ -58,8 +58,14 @@ model.load_state_dict(best_params)
 model.to(device)
 model.eval()
 
-print('Monitoring inference latency for inference')
-start_time = time.time()
+print('Monitoring energy cost for inference')
+
+printFullReport(getDevice())
+pl = PowerLogger(interval=0.05)
+pl.start()
+time.sleep(5)
+pl.recordEvent(name='Process Start')
+
 with torch.inference_mode():
     for inputs, _ in tqdm(test_loader, unit='batch', ncols=80, desc='Inference per sample: '):
         # encoding raw inputs for reasonable SNN operation
@@ -73,7 +79,11 @@ with torch.inference_mode():
 
         inputs = inputs.to(device)
         model(inputs)  
-end_time = time.time() 
 
-latency = (end_time - start_time) / len(test_loader)
-print(f'Latency for inference one sample with {config["model"]}: {latency * 1000:.2f} ms')
+time.sleep(5)
+pl.stop()
+total_cost = pl.showDataTraces()
+print(str(pl.eventLog))
+printFullReport(getDevice())
+
+print(f'energy cost for inference one sample with {config["model"]}: {total_cost / len(test_loader):.2f} J')

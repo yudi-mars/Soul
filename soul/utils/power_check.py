@@ -1,10 +1,10 @@
 import os
-import csv
+# import csv
 import time
 import threading
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 __all__ = ['PowerLogger', 'getDevice', 'printFullReport']
 
@@ -313,40 +313,45 @@ class PowerLogger:
         
         for t in range(len(label_names)): 
             print(f'{label_names[t]}: {energies[t] / 1e3:.4f} J')
-        print(f'Sum: {np.sum(energies) / 1e3:.4f} J')
 
-        os.makedirs(f'./energy_logs/{filename}', exist_ok=True)
+        total_cost = np.sum(energies) / 1e3
 
-        if self.figsave:
-            for t in range(len(label_names)): 
-                plt.plot(Ts, Ps[t], label=f'{label_names[t]} ({energies[t] / 1e3:.4f} J)', linestyle=styles[t])
-                print(f'{label_names[t]} ({energies[t] / 1e3:.4f} J)')
+        print(f'Sum: {total_cost:.4f} J')
 
-            plt.xlabel('time [s]')
-            plt.ylabel(_valTypesFull[_valTypes.index(valType)])
-            plt.grid(True)
-            ln = plt.legend(loc='center left', bbox_to_anchor=(1.04,0.5))
+        # os.makedirs(f'./energy_logs/{filename}', exist_ok=True)
 
-            plt.title('%s trace (NVPModel: %s)' % (valType, os.popen("nvpmodel -q | grep 'Power Mode'").read()[15:-1]))
+        # if self.figsave:
+        #     for t in range(len(label_names)): 
+        #         plt.plot(Ts, Ps[t], label=f'{label_names[t]} ({energies[t] / 1e3:.4f} J)', linestyle=styles[t])
+        #         print(f'{label_names[t]} ({energies[t] / 1e3:.4f} J)')
 
-            if showEvents:
-                for t, _ in self.eventLog:
-                    plt.axvline(x=t, color='black', linestyle='-.')
+        #     plt.xlabel('time [s]')
+        #     plt.ylabel(_valTypesFull[_valTypes.index(valType)])
+        #     plt.grid(True)
+        #     ln = plt.legend(loc='center left', bbox_to_anchor=(1.04,0.5))
 
-            plt.savefig(
-                f'energy_logs/{filename}/{valType}_total.png', 
-                bbox_extra_artists=(ln,), 
-                bbox_inches='tight'
-            )
-            plt.close()
+        #     plt.title('%s trace (NVPModel: %s)' % (valType, os.popen("nvpmodel -q | grep 'Power Mode'").read()[15:-1]))
 
-        if self.csvwrite: 
-            with open(f'energy_logs/{filename}/{valType}.csv', 'w') as f:
-                csvf = csv.writer(f)
-                csvf.writerow(['time'] + label_names)
-                for i in range(len(Ts)):
-                    csvf.writerow([Ts[i]] + [Ps[j][i] for j in range(len(label_names))])
-                csvf.writerow([0] + energies)
+        #     if showEvents:
+        #         for t, _ in self.eventLog:
+        #             plt.axvline(x=t, color='black', linestyle='-.')
+
+        #     plt.savefig(
+        #         f'energy_logs/{filename}/{valType}_total.png', 
+        #         bbox_extra_artists=(ln,), 
+        #         bbox_inches='tight'
+        #     )
+        #     plt.close()
+
+        # if self.csvwrite: 
+        #     with open(f'energy_logs/{filename}/{valType}.csv', 'w') as f:
+        #         csvf = csv.writer(f)
+        #         csvf.writerow(['time'] + label_names)
+        #         for i in range(len(Ts)):
+        #             csvf.writerow([Ts[i]] + [Ps[j][i] for j in range(len(label_names))])
+        #         csvf.writerow([0] + energies)
+
+        return total_cost
 
     def getTotalEnergy(self, nodeName='', valType='power'):
         """Integrate the power consumption over time."""
