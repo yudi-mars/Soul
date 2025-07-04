@@ -1,13 +1,12 @@
+'''
+Count SOPs and estimate theoretical energy cost for SNNs
+'''
+
 import os
-import time
 import torch.utils
 from tqdm import tqdm
 
 import torch
-import torch.nn as nn
-import torch.optim as optim
-import torch.distributed as dist
-from torch.nn.parallel import DistributedDataParallel as DDP
 
 from soul.model import *
 from soul.neuron import *
@@ -41,40 +40,14 @@ test_loader = test_loader = torch.utils.data.DataLoader(
 )
 
 print(f'Load SNN model: {config["model"]} featured {config["neuron_type"].upper()} neuron...')
-
-model_map = {
-    'spikingvgg5': SpikingVGG5, 'spikingvgg9': SpikingVGG9, 'spikingvgg11': SpikingVGG11, 'spikingvgg13': SpikingVGG13, 'spikingvgg16': SpikingVGG16, 'spikingvgg19': SpikingVGG19, 
-    'sewresnet18': SEWResNet18, 'sewresnet34': SEWResNet34, 'sewresnet50': SEWResNet50,
-    'msresnet18': MSResNet18, 'msresnet34': MSResNet34, 'msresnet50': MSResNet50,
-    'spikformer2': Spikformer2, 'spikformer4': Spikformer4, 'spikformer8': Spikformer8,
-}
-
-neuron_map = {
-    "lif": LIFNode,
-    "plif": ParametricLIFNode,
-    "clif": CLIFNode,
-    "glif": GatedLIFNode,
-    "ilif": ILIFNode,
-    # TODO
-}
-
-surrogate_map = {
-    'atan': ATan(),
-    'erf': Erf(),
-    'rect': Rectangular(),
-    'sigmoid': FastSigmoid(),
-    'quant': Quant(),
-    'quant4': Quant4(),
-    'rectangle': Rectangle(),
-}
-
 print(f'surrogate function: {config["surrogate"]}')
 config['surrogate_function'] = surrogate_map[config['surrogate']]
 config['neuron'] = neuron_map[config['neuron_type'].lower()](config) 
 
+# init model
 model = model_map[config['model'].lower()](config)
-print('\n'+ str(model))
 
+# load model state dict
 best_model_path = os.path.join(config['model_dir'], f'best_{config["model"].lower()}_{config["neuron_type"].lower()}_{config["dataset_name"].lower()}_{config["seed"]}.pt')
 best_params = torch.load(
     best_model_path, 
@@ -82,17 +55,30 @@ best_params = torch.load(
 )
 model.load_state_dict(best_params)
 model.to(device)
-
 model.eval()
-top1_meter = AverageMeter()
-with torch.no_grad():
-    for inputs, targets in test_loader:
-        inputs, targets = inputs.to(device, non_blocking=True), targets.to(device, non_blocking=True)
-        outputs = model(inputs)
-        acc1 = accuracy(outputs, targets, topk=(1,))[0]
 
-        top1_meter.update(acc1.item(), targets.numel())
+# calculate theoretical energy cost per sample inference
+print('Counting FLOPs/SOPs for theoretical inference cost')
+ops_monitor(model, is_sop=config['sop'])
+for inputs, _ in tqdm(test_loader, unit='batch', ncols=80, desc='Count OPs: '):
+    # encoding raw inputs for reasonable SNN operation
+    assert len(inputs.shape) in [4, 5], f'Invalid input shape {inputs.shape}...'
+    if len(inputs.shape) == 4:
+        # (B, C, H, W) -> (T, B, C, H, W)
+        inputs = coding_map[config['coding_schema']](inputs, num_steps=config['time_step'])
+    else:
+        # default event data shape (B, T, C, H, W) -> (T, B, C, H, W)
+        inputs = inputs.transpose(0, 1)
 
-test_acc = top1_meter.avg
-print(f'Test accuracy: {test_acc:.2f}%')
+    inputs = inputs.to(device)
+    _ = model(inputs)
+
+total_sops = 0
+for k, v in MODULE_SOP_DICT.items():
+    total_sops += v
+avg_sops = total_sops / len(test_loader)
+
+cost_per_op = config['e_ac'] if config['sop'] else config['e_mac']
+print(f"Average number of {'SOPs' if config['sop'] else 'FLOPs'} for model {config['model']} inference per sample: {avg_sops / 1e6:.2f} M")
+print(f"corresponding theoretical energy cost: {avg_sops * cost_per_op / 1e9:.2f} mj")
 
