@@ -113,8 +113,8 @@ neuron/har
 
 ### 科研任务
 - [ ] 2025.07.01-2025.07.31 @Lvchangze @Yudi **设计一个针对enrich data的rehearsal-based的增量学习算法（simple but effective）**
-- [ ] 2025.07.01-2025.08.31 @changze STDP训练方法调研 提供一个好用的方案，目前可以给个GPU方案，但需要给出neuromorphic chip的部署基本逻辑
-- [ ] 2025.07.01-2025.08.31 @yudi  temporal learning 提供一个好用的方案，可以GPU方针，但需要给出neuromorphic chip的部署基本逻辑
+- [ ] 2025.07.01-2025.08.31 @changze @yudi STDP训练方法调研 提供一个好用的方案，目前可以给个GPU方案，但需要给出neuromorphic chip的部署基本逻辑(STDP的特色，至少是可以避免一定的人工打标签的模型无监督更新，存在一定的特色)
+- [x] ~~2025.07.01-2025.08.31 @yudi  temporal learning 提供一个好用的方案，可以GPU方针，但需要给出neuromorphic chip的部署基本逻辑~~tempporal learning这个方向本身只是训练方法，内在要求其实和ANN差别不大，无法完全彰显SNN的特色，哪怕是有能在neuromorphic上高效运行的潜能，也并不代表其可完全替代或补全ANN的对应功能
 
 
 ## Cite
