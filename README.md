@@ -17,10 +17,12 @@ SOUL (**S**NN-based **O**pen so**U**rce too**L**kit) is developed based on Pytho
 列下数据集和modality，声音数据集，xx传感器数据集。。。。
 
 
-motion sensing (设备内的陀螺仪、磁针等采集的): UCI HAR, Opportunity/MotionSense, Shoaib, HHAR | model: SenseHAR, DCNN (CNN, DNN, DCNN这三个模型应该是简单的特征提取实现), 再来2个模型差不多了
+motion sensing (设备内的陀螺仪、磁针等采集的): UCI HAR, Opportunity/MotionSense, Shoaib, HHAR | model: SenseHAR, DCNN, spikeBIOT/HART
     模型的文献参考
      - Deep convolutional neural networks on multi-channel time series for human activity recognition (IJCAI'15)
      - SenseHAR: a robust virtual activity sensor for smartphones and wearables (Sensys'19)
+     - BIOT: Biosignal Transformer for Cross-data Learning in the Wild (NeurIPs'23)
+     - Lightweight transformers for human activity recognition on mobile devices （arxiv备选）
 vision sensing (一般指的是各种照相机：rgb camera，~~depth camera~~， dvs camera应该也算这里)
 acoustic sensing(麦克风、扬声器等收集):(数据集以keyword/event detection、emotion recognition为例?) GSC(google speech recognition), UrbanSound8k这两个肯定可以算 ｜模型有哪些？@Changze
 
