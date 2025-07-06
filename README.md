@@ -17,7 +17,7 @@ SOUL (**S**NN-based **O**pen so**U**rce too**L**kit) is developed based on Pytho
 列下数据集和modality，声音数据集，xx传感器数据集。。。。
 
 
-1. motion sensing (设备内的陀螺仪、磁针等采集的): UCI HAR, Opportunity/MotionSense, Shoaib, HHAR | model: SenseHAR, DCNN, spikeBIOT/HART
+1. motion sensing (设备内的陀螺仪、磁针等采集的): UCI HAR, Opportunity（待定）/MotionSense, Shoaib, HHAR | model: SenseHAR, DCNN, spikeBIOT/HART
 
 模型的文献参考
     
