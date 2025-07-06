@@ -17,14 +17,22 @@ SOUL (**S**NN-based **O**pen so**U**rce too**L**kit) is developed based on Pytho
 列下数据集和modality，声音数据集，xx传感器数据集。。。。
 
 
-motion sensing (设备内的陀螺仪、磁针等采集的): UCI HAR, Opportunity/MotionSense, Shoaib, HHAR | model: SenseHAR, DCNN, spikeBIOT/HART
-    模型的文献参考
-     - Deep convolutional neural networks on multi-channel time series for human activity recognition (IJCAI'15)
-     - SenseHAR: a robust virtual activity sensor for smartphones and wearables (Sensys'19)
-     - BIOT: Biosignal Transformer for Cross-data Learning in the Wild (NeurIPs'23)
-     - Lightweight transformers for human activity recognition on mobile devices （arxiv备选）
-vision sensing (一般指的是各种照相机：rgb camera，~~depth camera~~， dvs camera应该也算这里)
-acoustic sensing(麦克风、扬声器等收集):(数据集以keyword/event detection、emotion recognition为例?) GSC(google speech recognition), UrbanSound8k这两个肯定可以算 ｜模型有哪些？@Changze
+1. motion sensing (设备内的陀螺仪、磁针等采集的): UCI HAR, Opportunity/MotionSense, Shoaib, HHAR | model: SenseHAR, DCNN, spikeBIOT/HART
+
+模型的文献参考
+    
+- Deep convolutional neural networks on multi-channel time series for human activity recognition (IJCAI'15)
+- SenseHAR: a robust virtual activity sensor for smartphones and wearables (Sensys'19)
+- BIOT: Biosignal Transformer for Cross-data Learning in the Wild (NeurIPs'23)
+- Lightweight transformers for human activity recognition on mobile devices （arxiv备选）
+   
+2. vision sensing (一般指的是各种照相机：rgb camera，~~depth camera~~， dvs camera应该也算这里)
+
+**新、sota且典型模型都已经在soul里实现了，我们数据集有cifar10, cifar100, imagenet, dvs-gesture, cifar10-dvs,模型有msresnet,sewresnet,vgg系列,qkformer,spikformer,metaspikeformer,spikingresformer**
+
+3. acoustic sensing(麦克风、扬声器等收集):(数据集以keyword/event detection、emotion recognition为例?) GSC(google speech recognition), UrbanSound8k这两个肯定可以算 ｜模型有哪些？
+
+_TBD @Changze_
 
 ## Overview
 
@@ -96,7 +104,7 @@ neuron/har
 - [ ] 2025.07.02-2025.07.15 Speech Recognition相关文献调研、模型以及数据加载复现以及融入Soul的难点评估 @changze
 - [ ] 2025.07.10-2025.07.31 @changze 我们需要ANN2SNN（为vgg，resnet，spikformer至少挑选一个对应可行的资源消耗没那么严重的ANN2SNN训练方法）**从cloud service的视角展示可行性，最后cloud端给边缘端发送模型** / offload with incremental learning看看有没有可能
 - [ ] 2025.07.20-2025.07.31 @changze lightweight的方法: ANN->SNN的蒸馏方法~2023cvpr 为vgg，resnet，spikformer提供一个可行的蒸馏方案 **与ANN2SNN同理**
-- [ ] 2025.07.20-2025.07.31 @changze lightweight的方法: **NAS**: 如果目前只支持vgg，那就先只支持直通网络,~~但是要确认一些别的方法（比如乐透奖Panda 2022那篇ECCV）看看哪种方法开销更小~~**主要展示的是当前这个NAS方向是如何和我们的Soul融合适配的！**  example导向
+- [ ] 2025.07.20-2025.07.31 @changze lightweight的方法: **NAS**: 如果目前只支持vgg，那就先只支持直通网络,~~但是要确认一些别的方法（比如乐透奖Panda 2022那篇ECCV）看看哪种方法开销更小~~**主要展示的是当前这个NAS方向是如何和我们的Soul融合适配的！**  example(case)导向
 - [ ] 2025.07.25-2025.07.31 @changze quantization接口  **主要展示的是当前这个prune方向是如何和我们的Soul融合适配的！**
 - [ ] 2025.07.11-2025.07.31 @yudi @helin prune：以example的形式展示，不是融进Soul里，针对GPU系列的设备提供一个可行方案，如structure pruning，以VGG直通网络为例，支持GPU上优化~~neuromorphic~~， ~~unstructure pruning支持neuromorphic （目前提供GPU模拟即可）~~ **主要展示的是当前这个prune方向是如何和我们的Soul融合适配的！**
 - [ ] 2025.07.02-2025.07.15 Human Activity Recognition相关模型，数据加载模块融入Soul @yudi
