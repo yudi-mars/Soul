@@ -7,7 +7,7 @@ from .PSN import ParallelSpikingNode
 from .TLIF import TLIFNode
 from .IELIF import IELIFNode
 from .LTMD import LTMD
-from .SRIF import SRIFLIFNode
+# from .SRIF import SRIFLIFNode
 
 neuron_map = {
     "lif": LIFNode,
@@ -19,6 +19,6 @@ neuron_map = {
     "tlif": TLIFNode,
     'ielif': IELIFNode,
     'ltmd': LTMD,
-    'srif': SRIFLIFNode
+    # 'srif': SRIFLIFNode
     # TODO
 }

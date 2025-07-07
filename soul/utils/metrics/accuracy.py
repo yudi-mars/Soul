@@ -1,7 +1,3 @@
-import torch
-
-from .count_sops import MODULE_SOP_DICT, ops_hook_conv, ops_hook_fc
-
 class AverageMeter:
     """Computes and stores the average and current value"""
     def __init__(self):
@@ -27,15 +23,3 @@ def accuracy(output, target, topk=(1,)):
     pred = pred.t()
     correct = pred.eq(target.reshape(1, -1).expand_as(pred))
     return [correct[:min(k, maxk)].reshape(-1).float().sum(0) * 100. / batch_size for k in topk]
-
-def ops_monitor(net, is_sop=False):
-    m_dict = dict(net.named_modules())
-    for key in m_dict.keys():
-        if key == "":
-            continue
-        m = m_dict[key]
-        if isinstance(m, torch.nn.Conv2d):
-            m.register_forward_hook(ops_hook_conv(key + ".weight", is_sop))
-
-        elif isinstance(m, torch.nn.Linear):
-            m.register_forward_hook(ops_hook_fc(key + ".weight",is_sop))

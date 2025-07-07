@@ -99,6 +99,8 @@ neuron/har
 
 ### 工程任务
 
+- [ ] TBD @yudi data.py的功能模块需要拆分，分数据集进行处理会不会更好?
+- [ ] TBD neuron对于不同场景会不会有特殊化的处理？@changze 这个需要商讨下
 - [x] 2025.07.03-2025.07.05 @yudi run_soul独立训练、推理、算各类指标的接口,提供一些单一功能的执行文件
 - [x] ~~2025.07.05-TBD @wentao 目前count_sops还无法对transformer相关模型进行统计(或者统计很慢), 需要优化调整~~
 - [ ] 2025.07.02-2025.07.15 Speech Recognition相关文献调研、模型以及数据加载复现以及融入Soul的难点评估 @changze

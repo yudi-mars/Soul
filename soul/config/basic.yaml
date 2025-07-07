@@ -6,8 +6,9 @@ log_dir: ./logs/                  # (str) The path of logs.
 model_dir: ./saved_models/        # (str) The path of saved models from Soul.
 data_dir: ~/data/                 # (str) The path of input datasets.
 sop: false                        # (bool) Energy cost simulation for neuromorphic chip
-e_ac: 0.9                         # (float) energy cost/pJ for AC operation on assumed 45nm hardware
-e_mac: 4.6                        # (float) energy cost/pJ for MAC operation on assumed 45nm hardware
+e_ac: 0.9                         # (float) Energy cost/pJ for AC operation on assumed 45nm hardware
+e_mac: 4.6                        # (float) Energy cost/pJ for MAC operation on assumed 45nm hardware
+application: vision               # (str) Default application scenario for soul
 
 # Training Settings
 epochs: 150                       # (int) The number of training epochs.

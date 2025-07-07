@@ -126,6 +126,13 @@ def parse_args():
         default=4, 
         help="number of time steps"
     )
+    parser.add_argument(
+        "--application",
+        "-app",
+        type=str,
+        default='vision',
+        help='application scenario for soul. Optional: vision, motion, acoustic'
+    )
     
     args = parser.parse_args()
     return args
@@ -134,27 +141,29 @@ def parse_args():
 def init_config():
     current_path = os.path.dirname(os.path.realpath(__file__))
     
-    # load basic yaml
+    # load default basic yaml
     overall_init_file = os.path.join(current_path, "../config/basic.yaml")
     config = yaml.safe_load(open(overall_init_file, 'r', encoding="utf-8"))
     
-    # update args
+    # update args for user-specific settings from console
     args = parse_args()
     config.update(vars(args))
+
+    # Application specific config
+    app_dir = config['application']
+
+    # load neuron specific yaml TODO neuron also need specify application scenario??
+    target_config_file = os.path.join(current_path, f"../config/neuron/{config['neuron_type'].lower()}.yaml")
+    neuron_default_config = yaml.safe_load(open(target_config_file, 'r', encoding="utf-8"))
+    config.update(neuron_default_config)
     # load model specific yaml
     match = re.match(r'^([a-zA-Z]+)', config['model'])
     if match:
         model_cofig_name = match.group(1)
     else:
         raise NotImplementedError(f'No yaml config for model: {config["model"]}')
-    target_config_file = os.path.join(current_path, f"../config/model/{model_cofig_name.lower()}.yaml")
-        
+    target_config_file = os.path.join(current_path, f"../config/model/{app_dir}/{model_cofig_name.lower()}.yaml")
     model_default_config = yaml.safe_load(open(target_config_file, 'r', encoding="utf-8"))
     config.update(model_default_config)
 
-    # load neuron specific yaml
-    target_config_file = os.path.join(current_path, f"../config/neuron/{config['neuron_type'].lower()}.yaml")
-    neuron_default_config = yaml.safe_load(open(target_config_file, 'r', encoding="utf-8"))
-    config.update(neuron_default_config)
-    
     return config

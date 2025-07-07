@@ -1,13 +1,24 @@
 import os
-import torch
 import numpy as np
-import time
+
+import torch
+import torch.nn.functional as F
+
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 MODULE_SOP_DICT = {}
 
-import torch
-import torch.nn.functional as F
+def ops_monitor(net, is_sop=False):
+    m_dict = dict(net.named_modules())
+    for key in m_dict.keys():
+        if key == "":
+            continue
+        m = m_dict[key]
+        if isinstance(m, torch.nn.Conv2d):
+            m.register_forward_hook(ops_hook_conv(key + ".weight", is_sop))
+
+        elif isinstance(m, torch.nn.Linear):
+            m.register_forward_hook(ops_hook_fc(key + ".weight",is_sop))
 
 def img2col(X, kernel_size, stride=1, pad=0):
     kh = kw = kernel_size if isinstance(kernel_size, int) else kernel_size[0]
