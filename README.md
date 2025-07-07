@@ -120,13 +120,22 @@ neuron/har
     - ~~ABN [76] 未开源~~
     - ~~DA-LIF [77] 未开源~~
     - ~~Smooth LIF [78] 未开源~~
-- [ ] 2025.12.01-TBD **终版要为每个文件添加一定的注释信息，包含输入输出代码说明，代码引用，以及必要的参考文献**
+- [ ] 2025.12.01-TBD **终版要为每个文件添加一定的注释信息，包含输入输出代码说明，代码引用，以及必要的参考文献** 代码内参考文献可以用spikingvgg.py开头的示例为参考 !!!!!!
 
 ### 科研任务
 - [ ] 2025.07.01-2025.07.31 @Lvchangze @Yudi **设计一个针对enrich data的rehearsal-based的增量学习算法（simple but effective）**
 - [ ] 2025.07.01-2025.08.31 @changze @yudi STDP训练方法调研 提供一个好用的方案，目前可以给个GPU方案，但需要给出neuromorphic chip的部署基本逻辑(STDP的特色，至少是可以避免一定的人工打标签的模型无监督更新，存在一定的特色)
 - [x] ~~2025.07.01-2025.08.31 @yudi  temporal learning 提供一个好用的方案，可以GPU方针，但需要给出neuromorphic chip的部署基本逻辑~~tempporal learning这个方向本身只是训练方法，内在要求其实和ANN差别不大，无法完全彰显SNN的特色，哪怕是有能在neuromorphic上高效运行的潜能，也并不代表其可完全替代或补全ANN的对应功能
 
+## Acknowledgment
+
+We would like to express our sincere gratitude to the developers and contributors of the following open-source projects, which have greatly inspired and supported this work:
+
+- [snntorch](https://github.com/jeshraghian/snntorch): Provided excellent modular design patterns for surrogate functions and input encoding schema that influenced our architecture.
+- [SpikingJelly](https://github.com/fangwei123456/spikingjelly): Served as a reference for implementing spiking neuron and loading DVS dataset.
+
+Their valuable work laid the foundation for some key components of our project.
+We also appreciate the broader open-source community for fostering a collaborative and innovative ecosystem for EdgeSNN.
 
 ## Cite
 
