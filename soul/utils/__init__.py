@@ -1,4 +1,4 @@
-from .data import load_data, get_loader
+from .data import *
 from .metrics import *
 from .parser import init_config
 from .random import init_seed
@@ -22,5 +22,5 @@ coding_map = {
     'direct': direct_coding,
     'rate': rate_coding,
     'temporal': temporal_coding,
-    # TODO more coding methods
+    # TODO more coding methods for future work
 }
