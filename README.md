@@ -45,11 +45,6 @@ TBD
 - feature 1
 - feature 2
 
-## Requirements
-
-```
-TBD
-```
 
 ## How to run
 ### Command in Console 
@@ -71,6 +66,29 @@ TBD
     ```shell
     ./scripts/train_ddp.sh
     ```
+
+## Dataset
+
+### Vision Sensing
+
+- [CIFAR10/100](https://www.cs.utoronto.ca/~kriz/learning-features-2009-TR.pdf) [[Download Link](https://www.cs.toronto.edu/~kriz/cifar.html)]
+- [Tiny-ImageNet](https://ieeexplore.ieee.org/abstract/document/5206848/) [[Download Link](https://www.kaggle.com/c/tiny-imagenet)]
+- [CIFAR10-DVS](https://www.frontiersin.org/journals/neuroscience/articles/10.3389/fnins.2017.00309/full) [[Download Link](https://figshare.com/articles/dataset/CIFAR10-DVS_New/4724671)]
+- [DVS-Gesture](https://ieeexplore.ieee.org/document/8100264) [[Download Link](https://ibm.ent.box.com/s/3hiq58ww1pbbjrinh367ykfdf60xsfm8/folder/50167556794)]
+
+### Motion Sensing
+
+- [UCI](https://www.sciencedirect.com/science/article/abs/pii/S0925231215010930) [[Download Link](https://archive.ics.uci.edu/dataset/240/human+activity+recognition+using+smartphones)]
+- [HHAR](https://dl.acm.org/doi/10.1145/2809695.2809718) [[Download Link](https://archive.ics.uci.edu/dataset/344/heterogeneity+activity+recognition)] *Note: Only Phone-related data is used in this repository*
+- [MotionSense](https://dl.acm.org/doi/10.1145/3302505.3310068) [[Download Link](https://www.kaggle.com/datasets/malekzadeh/motionsense-dataset)]
+- [Shoaib](https://www.mdpi.com/1424-8220/14/6/10146) [[Download Link](https://www.researchgate.net/publication/266384007_Sensors_Activity_Recognition_DataSet)]
+
+### Acoustic Sensing
+
+- [Google Speech Commands](https://arxiv.org/abs/1804.03209) [[Download Link](https://www.researchgate.net/publication/266384007_Sensors_Activity_Recognition_DataSet)]
+- [UrbanSound](https://dl.acm.org/doi/10.1145/2647868.2655045) [[Download Link](https://urbansounddataset.weebly.com/)]
+- TODO @changze
+- TODO @changze
 
 ## Documentation
 
