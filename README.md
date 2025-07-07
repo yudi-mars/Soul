@@ -48,6 +48,7 @@ TBD
 
 ## How to run
 ### Command in Console 
+
 - Running `Soul` with a single GPU in default settings
     ```shell
     CUDA_VISIBLE_DEVICES=[GPU ID] python run_soul.py
@@ -57,11 +58,14 @@ TBD
     ```shell
     CUDA_VISIBLE_DEVICES=[GPU ID1],[GPU ID2],... torchrun --nproc_per_node=[Number of used GPU] run_soul.py
     ```
+
 ### Shell scripts
+
 - Running `Soul` with a single GPU in default settings
     ```shell
     ./scripts/train_single.sh
     ```
+    
 - Running `Soul` with multiple GPUs in default settings
     ```shell
     ./scripts/train_ddp.sh
