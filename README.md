@@ -120,6 +120,7 @@ neuron/har
     - ~~ABN [76] 未开源~~
     - ~~DA-LIF [77] 未开源~~
     - ~~Smooth LIF [78] 未开源~~
+- [ ] 2025.12.01-TBD **终版要为每个文件添加一定的注释信息，包含输入输出代码说明，代码引用，以及必要的参考文献**
 
 ### 科研任务
 - [ ] 2025.07.01-2025.07.31 @Lvchangze @Yudi **设计一个针对enrich data的rehearsal-based的增量学习算法（simple but effective）**
