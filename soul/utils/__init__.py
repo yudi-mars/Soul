@@ -5,4 +5,3 @@ from .random import init_seed
 from .log import setup_logger
 from .utility import *
 from .surrogate import surrogate_map
-from .coding import coding_map

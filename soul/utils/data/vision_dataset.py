@@ -1,25 +1,293 @@
-'''
-Extraction from spikingjelly
-'''
-from torchvision.datasets.utils import extract_archive
-from torchvision.datasets import DatasetFolder
+import os
+import time
+import math
+import struct
+import pickle
+import multiprocessing
+from concurrent.futures import ThreadPoolExecutor
 from typing import Callable, Dict, Optional, Tuple, Union
 from abc import abstractmethod
-import struct
+import cv2 as cv
 import numpy as np
-from torchvision.datasets import utils
-import os
-from concurrent.futures import ThreadPoolExecutor
-import time
-from torchvision import transforms
-import torch
+import pandas as pd
 from matplotlib import pyplot as plt
-import math
-np_savez = np.savez_compressed
+
+import torch
+from torchvision.io import read_image
+from torchvision.datasets import utils
+from torchvision import datasets, transforms
 from torchvision.datasets.utils import extract_archive
-import multiprocessing
+from torchvision.datasets import DatasetFolder
 
+np_savez = np.savez_compressed
 
+class VisionData(object):
+    train_trsf = []
+    test_trsf = []
+    common_trsf = []
+
+    input_shape = None, None, None
+    num_classes = None
+
+    data_source = None
+
+    def __init__(self, data_dir, T):
+        self.data_dir = data_dir
+        self.T = T
+
+    def download_data(self):
+        raise NotImplementedError
+    
+class iCIFAR10(VisionData):
+    train_trsf = [
+        transforms.RandomCrop(32, padding=4),
+        transforms.RandomHorizontalFlip(p=0.5),
+        transforms.ToTensor(),
+    ]
+    test_trsf = [transforms.ToTensor()]
+    common_trsf = [
+        transforms.Normalize(mean=(0.4914, 0.4822, 0.4465), std=(0.2023, 0.1994, 0.2010)),
+    ]
+
+    input_shape = 3, 32, 32
+    num_classes = 10
+
+    data_source = 'npy'
+
+    def __init__(self, data_dir, T):
+        super().__init__(data_dir, T)
+
+    def download_data(self):
+        train_dataset = datasets.CIFAR10(f'{self.data_dir}', train=True, download=True)
+        test_dataset = datasets.CIFAR10(f'{self.data_dir}', train=False, download=True)
+
+        self.train_data, self.train_targets = train_dataset.data, np.array(train_dataset.targets)
+        self.test_data, self.test_targets = test_dataset.data, np.array(test_dataset.targets)
+
+class iCIFAR100(VisionData):
+    train_trsf = [
+        transforms.RandomCrop(32, padding=4),
+        transforms.RandomHorizontalFlip(),
+        transforms.ColorJitter(brightness=63 / 255),
+        transforms.ToTensor()
+    ]
+    test_trsf = [transforms.ToTensor()]
+    common_trsf = [
+        transforms.Normalize(mean=(0.5071, 0.4867, 0.4408), std=(0.2675, 0.2565, 0.2761)),
+    ]
+
+    input_shape = 3, 32, 32
+    num_classes = 100
+
+    data_source = 'npy'
+
+    def __init__(self, data_dir, T):
+        super().__init__(data_dir, T)
+
+    def download_data(self):
+        train_dataset = datasets.CIFAR100(f'{self.data_dir}', train=True, download=True)
+        test_dataset = datasets.CIFAR100(f'{self.data_dir}', train=False, download=True)
+
+        self.train_data, self.train_targets = train_dataset.data, np.array(train_dataset.targets)
+        self.test_data, self.test_targets = test_dataset.data, np.array(test_dataset.targets)
+
+class iTinyImageNet(VisionData):
+    train_trsf = [
+        transforms.RandomResizedCrop(224, antialias=True),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+    ]
+    test_trsf = [
+        transforms.Resize(256, antialias=True),
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
+    ]
+    common_trsf = [
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ]
+
+    input_shape = 3, 224, 224
+    num_classes = 200
+
+    data_source = 'npy'
+
+    def __init__(self, data_dir, T):
+        super().__init__(data_dir, T)
+
+    def _print_progress_bar(self, iteration, total, prefix='', suffix='', decimals=1, length=100, fill='█', printEnd="\r"):
+        percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
+        filledLength = int(length * iteration // total)
+        bar = fill * filledLength + '-' * (length - filledLength)
+        print(f'\r{prefix} |{bar}| {percent}% {suffix}', end = printEnd)
+        # Print New Line on Complete
+        if iteration == total: 
+            print()
+
+    def _pickle_data(self, data, label, filename):
+        outfile = open(filename, 'wb')
+        pickle.dump((data, label), outfile)
+        outfile.close()
+
+    def _reshape_data(self, data):
+        B, C, H, W = data.shape
+        return data.reshape(B, H, W, C).numpy()
+
+    def download_data(self):
+        labels_str = [f.name for f in os.scandir(os.path.join(self.data_dir, 'train')) if f.is_dir()]
+
+        # train set
+        file_path = os.path.join(self.data_dir, 'train_dataset.pkl')
+        if os.path.exists(file_path):
+            with open(file_path, 'rb') as f:
+                self.train_data, self.train_targets = pickle.load(f)
+        else:
+            print('Caching ImageNet Training dataset...')
+            train_data = torch.Tensor().type(torch.ByteTensor)
+            labels = []
+            i = 1
+            for root, dirs, files in os.walk(os.path.join(self.data_dir, 'train')):
+                if root.find('images') != -1:
+                    one_class = torch.Tensor().type(torch.ByteTensor)
+                    for name in files:
+                        img = read_image(root + os.sep + name)
+                        if img.shape[0] == 1:
+                            img = torch.tensor(cv.cvtColor(img.permute(1, 2, 0).numpy(), cv.COLOR_GRAY2RGB)).permute(2, 0, 1)
+                        one_class = torch.cat((one_class, img), 0)
+                        labels.append(i - 1)
+                        # first_image = False
+
+                    one_class = one_class.reshape(-1, 3, 64, 64)
+                    self._print_progress_bar(i, self.NUM_CLASSES, prefix = 'Progress:', suffix = 'Complete')
+                    i += 1
+                    train_data = torch.cat((train_data, one_class), 0)
+
+            self._pickle_data(train_data, torch.Tensor(labels), file_path)
+
+            with open(file_path, 'rb') as f:
+                self.train_data, self.train_targets = pickle.load(f)
+
+        # test set
+        file_path = os.path.join(self.data_dir, 'val_dataset.pkl')
+        if os.path.exists(file_path):
+            with open(file_path, 'rb') as f:
+                self.test_data, self.test_targets = pickle.load(f)
+        else:
+            print('Caching ImageNet Testing dataset...')
+            val_data = torch.Tensor().type(torch.ByteTensor)
+            
+            labels = []
+            val_annotations = pd.read_csv(os.path.join(self.data_dir, 'val', 'val_annotations.txt'), sep='\t', names=['filename', 'label_str', 'x_min', 'y_min', 'x_max', 'y_max'])
+            num_imgs = len(os.listdir(os.path.join(self.data_dir, 'val', 'images')))
+
+            i = 1
+            for name in os.listdir(os.path.join(self.data_dir, 'val', 'images')):
+                img = read_image(os.path.join(self.data_dir, 'val', 'images') + os.sep + name)
+                if img.shape[0] == 1:
+                    img = torch.tensor(cv.cvtColor(img.permute(1, 2, 0).numpy(), cv.COLOR_GRAY2RGB)).permute(2, 0, 1)
+                val_data = torch.cat((val_data, img), 0)
+                class_name = val_annotations.loc[val_annotations['filename'] == name]['label_str'].item()
+                labels.append(labels_str.index(class_name))
+                self._print_progress_bar(i, num_imgs, prefix = 'Progress:', suffix = 'Complete')
+                i += 1
+
+            self._pickle_data(val_data.reshape(-1, 3, 64, 64), torch.Tensor(labels), file_path)
+
+            with open(file_path, 'rb') as f:
+                self.test_data, self.test_targets = pickle.load(f)
+
+        self.train_targets = self.train_targets.type(torch.LongTensor)
+        self.test_targets = self.test_targets.type(torch.LongTensor)
+
+        # reshape (B, C, H, W) to (B, H, W, C) same as torch
+        self.train_data = self._reshape_data(self.train_data)
+        self.test_data = self._reshape_data(self.test_data)
+
+class iCIFAR10DVS(VisionData):
+    train_trsf = []
+    test_trsf = []
+    common_trsf = [
+        transforms.Resize(size=(48, 48), interpolation=transforms.InterpolationMode.NEAREST),
+    ]
+
+    input_shape = 2, 48, 48
+    num_classes = 10
+
+    data_source = 'dvs'
+
+    def __init__(self, data_dir, T):
+        super().__init__(data_dir, T)
+
+    def download_data(self):
+        CIFAR10DVS(self.data_dir, data_type='frame', frames_number=self.T, split_by='number')
+
+        self.filepath = os.path.join(self.data_dir, f'frames_number_{self.T}_split_by_number')
+        self.clslist = os.listdir(self.filepath)
+        self.clslist.sort()
+
+        self.train_data = []
+        self.train_targets = []
+        self.test_data = []
+        self.test_targets = []
+
+        for i, cls in enumerate(self.clslist):
+            file_list = os.listdir(os.path.join(self.filepath, cls))
+            num_file = len(file_list)
+
+            cut_idx = int(num_file * 0.9)
+            train_file_list = file_list[:cut_idx]
+            test_split_list = file_list[cut_idx:]
+
+            for file in file_list:
+                if file in train_file_list:
+                    self.train_data.append(os.path.join(self.filepath, cls, file))
+                    self.train_targets.append(i)
+                if file in test_split_list:
+                    self.test_data.append(os.path.join(self.filepath, cls, file))
+                    self.test_targets.append(i)
+
+class iDVSGesture(VisionData):
+    train_trsf = []
+    test_trsf = []
+    common_trsf = [
+        transforms.Resize(size=(48, 48), interpolation=transforms.InterpolationMode.NEAREST),
+    ]
+
+    input_shape = 2, 48, 48
+    num_classes = 11
+
+    data_source = 'dvs'
+
+    def __init__(self, data_dir, T):
+        super().__init__(data_dir, T)
+
+    def download_data(self):
+        DVS128Gesture(self.data_dir, data_type='frame', train=True, frames_number=self.T, split_by='number')
+
+        self.filepath = os.path.join(self.data_dir, f'frames_number_{self.T}_split_by_number')
+        
+
+        self.train_data = []
+        self.train_targets = []
+        self.test_data = []
+        self.test_targets = []
+
+        self.clslist = os.listdir(os.path.join(self.filepath, 'train'))
+        self.clslist.sort()
+
+        for i, cls in enumerate(self.clslist):
+            file_list = os.listdir(os.path.join(self.filepath, 'train', cls))
+            for file in file_list:
+                self.train_data.append(os.path.join(self.filepath, 'train', cls, file))
+                self.train_targets.append(i)
+
+            file_list = os.listdir(os.path.join(self.filepath, 'test', cls))
+            for file in file_list:
+                self.test_data.append(os.path.join(self.filepath, 'test', cls, file))
+                self.test_targets.append(i)
+
+# =========================================================================================================================================================
+# ============================================================ SpikingJelly DVS Proessing Code ============================================================
+# =========================================================================================================================================================
 def play_frame(x: Union[torch.Tensor, np.ndarray], save_gif_to: str = None) -> None:
     '''
     :param x: frames with ``shape=[T, 2, H, W]``

@@ -55,14 +55,13 @@ if global_rank == 0:
     init_seed(config["seed"])
     logger.info('=' * 50)
 
-# load data
+# load data TODO
 if global_rank == 0:
     logger.info('Load data...')
-train_dataset, test_dataset, config['input_channels'], config['input_height'], config['input_width'], config['num_classes'] = load_data(
-    dataset_dir=config['data_dir'], 
-    dataset_type=config['dataset_name'], 
-    T=config['time_step']
-)
+dm = DataManager(config)
+config = dm.update_config()
+train_dataset, test_dataset = dm.get_dataset()
+
 if config['is_distributed']:
     train_sampler = torch.utils.data.DistributedSampler(train_dataset)
     # define the batch size per gpu, usually we define the numer of process equal to the number of used gpus
@@ -71,7 +70,23 @@ if config['is_distributed']:
 else:
     train_sampler = None
 
-train_loader, test_loader = get_loader(train_dataset, test_dataset, train_sampler, config)
+# load dataloader
+train_loader = torch.utils.data.DataLoader(
+    train_dataset, 
+    batch_size=config['batch_size'], 
+    shuffle= False if config['is_distributed'] else True,
+    sampler=train_sampler, 
+    num_workers=config['workers'], 
+    pin_memory=True
+)
+
+test_loader = torch.utils.data.DataLoader(
+    test_dataset,
+    batch_size=config['batch_size'], 
+    shuffle=False,
+    num_workers=config['workers'], 
+    pin_memory=True
+)
 
 # load SNN model
 if global_rank == 0:
@@ -89,7 +104,7 @@ model.to(device)
 
 # calculate number of parameters
 if global_rank == 0:
-    n_parameters = sum(p.numel() for p in model.parameters() if hasattr(p, 'requires_grad'))
+    n_parameters = count_parameters(model, trainable=True) 
     logger.info(f"Number of params for model {config['model']}: {n_parameters / 1e6:.2f} M")
 
 if config['is_distributed']:
@@ -135,14 +150,8 @@ for epoch in range(1, config['epochs'] + 1):
         inputs, targets = inputs.to(device, non_blocking=True), targets.to(device, non_blocking=True)
         optimizer.zero_grad()
 
-        # encoding raw inputs for reasonable SNN operation
-        assert len(inputs.shape) in [4, 5], f'Invalid input shape {inputs.shape}...'
-        if len(inputs.shape) == 4:
-            # (B, C, H, W) -> (T, B, C, H, W)
-            inputs = coding_map[config['coding_schema']](inputs, num_steps=config['time_step']) 
-        else:
-            # default event data shape (B, T, C, H, W) -> (T, B, C, H, W)
-            inputs = inputs.transpose(0, 1)
+        # default data shape (B, T, input_size) -> (T, B, input_size)
+        inputs = inputs.transpose(0, 1)
 
         outputs = model(inputs)
         acc1 = accuracy(outputs, targets, topk=(1,))[0]
@@ -162,14 +171,8 @@ for epoch in range(1, config['epochs'] + 1):
             for inputs, targets in test_loader:
                 inputs, targets = inputs.to(device, non_blocking=True), targets.to(device, non_blocking=True)
 
-                # encoding raw inputs for reasonable SNN operation
-                assert len(inputs.shape) in [4, 5], f'Invalid input shape {inputs.shape}...'
-                if len(inputs.shape) == 4:
-                    # (B, C, H, W) -> (T, B, C, H, W)
-                    inputs = coding_map[config['coding_schema']](inputs, num_steps=config['time_step'])
-                else:
-                    # default event data shape (B, T, C, H, W) -> (T, B, C, H, W)
-                    inputs = inputs.transpose(0, 1)
+                # default data shape (B, T, input_size) -> (T, B, input_size)
+                inputs = inputs.transpose(0, 1)
 
                 outputs = model(inputs)
                 acc1 = accuracy(outputs, targets, topk=(1,))[0]
@@ -180,7 +183,7 @@ for epoch in range(1, config['epochs'] + 1):
 
         test_acc = top1_meter.avg
 
-        logger.info(f"[Epoch {epoch}] Train Loss: {loss_meter.avg:.4f}, Acc: {top1_meter.avg:.2f}%; Test Loss: {loss_meter.avg:.4f}, Acc: {test_acc:.2f}%")
+        logger.info(f"[Epoch {epoch}] Train Loss: {loss_meter.avg:.4f}, Train Acc: {top1_meter.avg:.2f}%; Test Loss: {loss_meter.avg:.4f}, Test Acc: {test_acc:.2f}%")
         if test_acc > best_acc:
             ensure_dir(config['model_dir'])
 
@@ -214,16 +217,8 @@ if not config['is_distributed'] or dist.get_rank() == 0:
     logger.info('Counting FLOPs/SOPs for theoretical inference cost')
     ops_monitor(model, is_sop=config['sop'])
     for inputs, _ in tqdm(test_loader, unit='batch', ncols=80, desc='Count OPs: '):
-        # encoding raw inputs for reasonable SNN operation
-        assert len(inputs.shape) in [4, 5], f'Invalid input shape {inputs.shape}...'
-        if len(inputs.shape) == 4:
-            # (B, C, H, W) -> (T, B, C, H, W)
-            inputs = coding_map[config['coding_schema']](inputs, num_steps=config['time_step'])
-        else:
-            # default event data shape (B, T, C, H, W) -> (T, B, C, H, W)
-            inputs = inputs.transpose(0, 1)
-
-        inputs = inputs.to(device)
+        # default data shape (B, T, input_size) -> (T, B, input_size)
+        inputs = inputs.transpose(0, 1).to(device)
         _ = model(inputs)
 
     total_sops = 0
@@ -244,16 +239,8 @@ if not config['is_distributed'] or dist.get_rank() == 0:
     start_time = time.time()
     with torch.inference_mode():
         for inputs, _ in tqdm(test_loader, unit='batch', ncols=80, desc='Inference per sample: '):
-            # encoding raw inputs for reasonable SNN operation
-            assert len(inputs.shape) in [4, 5], f'Invalid input shape {inputs.shape}...'
-            if len(inputs.shape) == 4:
-                # (B, C, H, W) -> (T, B, C, H, W)
-                inputs = coding_map[config['coding_schema']](inputs, num_steps=config['time_step'])
-            else:
-                # default event data shape (B, T, C, H, W) -> (T, B, C, H, W)
-                inputs = inputs.transpose(0, 1)
-
-            inputs = inputs.to(device)
+            # default data shape (B, T, input_size) -> (T, B, input_size)
+            inputs = inputs.transpose(0, 1).to(device)
             _ = model(inputs)  
     end_time = time.time() 
     final_max_mem = torch.cuda.max_memory_allocated()
