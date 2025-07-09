@@ -1,4 +1,4 @@
-from .data import *
+from .data import DataManager
 from .metrics import *
 from .parser import init_config
 from .random import init_seed
