@@ -1,13 +1,24 @@
+# Soul: A Toolbox for Building Spiking Neural Networks for Edge Intelligence
+
 <p align="center">
     <img src="./assets/code-logo.jpg" width="50%">
 </p>
 
 --------------------------------------------------------------------------------
 
-# Soul
-
 *“I have always been convinced that the only way to get artificial intelligence to work is to do the computation in a way similar to the human brain.”——Geoffrey Hinton*
 
+<p align="center">
+  <a href="#Overview">Overview</a> •
+  <a href="#Feature">Feature</a> •
+  <a href="#how-to-run">How to Run</a> •
+  <a href="#dataset-support">Dataset Support</a> •
+  <a href="#Results-Visualization">Results Visualization</a> •
+  <a href="#documentation">Documentation</a> •
+  <a href="#license">License</a> •
+  <a href="#Acknowledgments">Acknowledgments</a> •
+  <a href="#Contact">Contact</a>
+</p>
 
 SOUL (**S**NN-based **O**pen so**U**rce too**L**kit) is developed based on Python and PyTorch for reproducing and developing SNN-based brain-inspired computing algorithms in a unified, comprehensive, and efficient framework for research purposes and practical deployment at the edge.
 
@@ -46,7 +57,7 @@ TBD
 - feature 2
 
 
-## How to run
+## How to Run
 ### Command in Console 
 
 - Running `Soul` with a single GPU in default settings
@@ -71,7 +82,7 @@ TBD
     ./scripts/train_ddp.sh
     ```
 
-## Dataset
+## Dataset Support
 
 ### Vision Sensing
 
@@ -94,9 +105,13 @@ TBD
 - TODO @changze
 - TODO @changze
 
+## Results Visualization
+
+TBD 终版前给一个结果展示，比如ESBench的一些结果列上去
+
 ## Documentation
 
-TBD 后面学生来做这个部分的事情
+TBD 后面学生来做这个部分的事情 (Sphinx Documentation)
 
 
 ## TODO List
@@ -142,18 +157,29 @@ har/uci.py
 - [ ] 2025.07.01-2025.08.31 @changze @yudi STDP训练方法调研 提供一个好用的方案，目前可以给个GPU方案，但需要给出neuromorphic chip的部署基本逻辑(STDP的特色，至少是可以避免一定的人工打标签的模型无监督更新，存在一定的特色)
 - [x] ~~2025.07.01-2025.08.31 @yudi  temporal learning 提供一个好用的方案，可以GPU方针，但需要给出neuromorphic chip的部署基本逻辑~~tempporal learning这个方向本身只是训练方法，内在要求其实和ANN差别不大，无法完全彰显SNN的特色，哪怕是有能在neuromorphic上高效运行的潜能，也并不代表其可完全替代或补全ANN的对应功能
 
+## Cite
+
+```
+TBD
+```
+
+## License
+
+Please check the [Apache License](./LICENSE) that is listed in this repository.
+
 ## Acknowledgment
 
 We want to express our sincere gratitude to the developers and contributors of the following open-source projects, which have greatly inspired and supported this work:
 
 - [snntorch](https://github.com/jeshraghian/snntorch): Provided excellent modular design patterns for surrogate functions and input encoding schema that influenced our architecture.
 - [SpikingJelly](https://github.com/fangwei123456/spikingjelly): Served as a reference for implementing spiking neuron and loading DVS dataset.
+- [PyCIL](https://github.com/LAMDA-CL/PyCIL): Provided a clear and extensible data loading module for conventional dataset, which served as a valuable reference for our dataset handling.
 
 Their valuable work laid the foundation for some key components of our project.
 We also appreciate the broader open-source community for fostering a collaborative and innovative ecosystem for EdgeSNN.
 
-## Cite
+## Contact
 
-```
-TBD
-```
+If there are any questions, please feel free to propose new features by opening an issue or contact with the author: **Di Yu**([yudi2023@zju.edu.cn](mailto:yudi2023@zju.edu.cn)), **Changze Lv**([czlv24@m.fudan.edu.cn](mailto:czlv24@m.fudan.edu.cn)), and **Wentao Tong**([toldzera@zju.edu.cn](mailto:toldzera@zju.edu.cn)).
+
+Enjoy the code!
