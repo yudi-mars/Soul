@@ -10,14 +10,14 @@
 
 <p align="center">
   <a href="#Overview">Overview</a> •
-  <a href="#Feature">Feature</a> •
+  <!-- <a href="#Feature">Feature</a> • -->
   <a href="#how-to-run">How to Run</a> •
   <a href="#dataset-support">Dataset Support</a> •
   <a href="#Results-Visualization">Results Visualization</a> •
   <a href="#documentation">Documentation</a> •
-  <a href="#license">License</a> •
-  <a href="#Acknowledgments">Acknowledgments</a> •
-  <a href="#Contact">Contact</a>
+  <!-- <a href="#license">License</a> • -->
+  <!-- <a href="#Acknowledgments">Acknowledgments</a> •
+  <a href="#Contact">Contact</a> -->
 </p>
 
 SOUL (**S**NN-based **O**pen so**U**rce too**L**kit) is developed based on Python and PyTorch for reproducing and developing SNN-based brain-inspired computing algorithms in a unified, comprehensive, and efficient framework for research purposes and practical deployment at the edge.
@@ -49,7 +49,7 @@ _TBD @Changze_
 
 TBD
 
-## Feature
+### Feature
 
 TBD 
 
@@ -167,7 +167,7 @@ TBD
 
 Please check the [Apache License](./LICENSE) that is listed in this repository.
 
-## Acknowledgment
+## Acknowledgments
 
 We want to express our sincere gratitude to the developers and contributors of the following open-source projects, which have greatly inspired and supported this work:
 
