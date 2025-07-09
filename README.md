@@ -1,4 +1,4 @@
-# Soul: A Toolbox for Building Spiking Neural Networks for Edge Intelligence
+# Soul: A Toolbox for Developing Edge Intelligence Applications with Spiking Neural Networks
 
 <p align="center">
     <img src="./assets/code-logo.jpg" width="50%">
