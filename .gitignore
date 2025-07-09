@@ -7,7 +7,7 @@ saved_models/
 spikingjelly/
 # C extensions
 *.so
-./data/
+*data/
 *.pth
 # Distribution / packaging
 .Python
