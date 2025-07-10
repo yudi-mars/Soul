@@ -6,6 +6,7 @@ from torchvision import transforms
 from torch.utils.data import Dataset
 
 from .vision_dataset import iCIFAR10, iCIFAR100, iTinyImageNet, iCIFAR10DVS, iDVSGesture
+from .motion_dataset import iUCIHAR
 from soul.utils.coding import coding_map
 
 class DummyDataset(Dataset):
@@ -41,6 +42,8 @@ class DummyDataset(Dataset):
             return Image.fromarray(path) # PIL.image from array, shape (C, H, W)
         elif source == 'vision-dvs':
             return torch.from_numpy(np.load(path)['frames']).float() # directly to Tensor with shape (T, C, H, W)
+        elif source == 'motion-npy':
+            return path
         else:
             return path
 
@@ -116,5 +119,7 @@ def _get_idata(dataset_name, dataset_dir, T):
         return iCIFAR10DVS(dataset_dir, T)
     elif name == 'dvsgesture':
         return iDVSGesture(dataset_dir, T)
+    elif name == 'ucihar':
+        return iUCIHAR(dataset_dir, T)
     else:
         raise NotImplementedError("Unknown dataset {}.".format(dataset_name))

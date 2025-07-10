@@ -126,13 +126,6 @@ def parse_args():
         default=4, 
         help="number of time steps"
     )
-    parser.add_argument(
-        "--application",
-        "-app",
-        type=str,
-        default='vision',
-        help='application scenario for soul. Optional: vision, motion, acoustic'
-    )
     
     args = parser.parse_args()
     return args
@@ -149,7 +142,15 @@ def init_config():
     args = parse_args()
     config.update(vars(args))
 
-    # Application specific config
+    # double-check application specific config
+    if config['dataset_name'].lower() in ['ucihar', 'hhar', 'motionsense', 'shoaib']:
+        config['application'] = 'motion'
+    elif config['dataset_name'].lower() in ['cifar10', 'cifar100', 'imagenet', 'dvsgesture', 'cifar10dvs']:
+        config['application'] = 'vision'
+    elif config['dataset_name'].lower() in ['gsc', 'urbansound', ]: # TODO
+        config['application'] = 'acoustic' 
+    else:
+        raise ValueError(f'Unsupport sensing modality: {config["dataset_name"]}')
     app_dir = config['application']
 
     # load neuron specific yaml TODO neuron also need specify application scenario??
