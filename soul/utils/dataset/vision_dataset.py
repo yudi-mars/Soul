@@ -17,6 +17,7 @@ References:
 import os
 import time
 import math
+import random
 import struct
 import pickle
 import multiprocessing
@@ -36,6 +37,27 @@ from torchvision.datasets.utils import extract_archive
 from torchvision.datasets import DatasetFolder
 
 np_savez = np.savez_compressed
+
+class DVSAugment:
+    def __init__(self, degree=30, radius=5):
+        self.radius = radius
+
+        self.rotate = transforms.RandomRotation(degrees=degree)
+        self.shearx = transforms.RandomAffine(degrees=0, shear=(-degree, degree))
+
+    def __call__(self, x):
+        choices = ['roll', 'rotate', 'shear']
+        aug = np.random.choice(choices)
+        if aug == 'roll':
+            off1 = random.randint(-self.radius, self.radius)
+            off2 = random.randint(-self.radius, self.radius)
+            x = torch.roll(x, shifts=(off1, off2), dims=(2, 3))
+        if aug == 'rotate':
+            x = self.rotate(x)
+        if aug == 'shear':
+            x = self.shearx(x)
+
+        return x
 
 class VisionData(object):
     train_trsf = []
@@ -219,9 +241,11 @@ class iTinyImageNet(VisionData):
         self.test_data = self._reshape_data(self.test_data)
 
 class iCIFAR10DVS(VisionData):
-    train_trsf = []
-    test_trsf = []
-    common_trsf = [
+    train_trsf = [
+        transforms.Resize(size=(48, 48), interpolation=transforms.InterpolationMode.NEAREST),
+        DVSAugment(degree=30, radius=5), 
+    ]
+    test_trsf = [
         transforms.Resize(size=(48, 48), interpolation=transforms.InterpolationMode.NEAREST),
     ]
 
@@ -262,13 +286,15 @@ class iCIFAR10DVS(VisionData):
                     self.test_targets.append(i)
 
 class iDVSGesture(VisionData):
-    train_trsf = []
-    test_trsf = []
-    common_trsf = [
-        transforms.Resize(size=(48, 48), interpolation=transforms.InterpolationMode.NEAREST),
+    train_trsf = [
+        transforms.Resize(size=(64, 64), interpolation=transforms.InterpolationMode.NEAREST),
+        DVSAugment(degree=15, radius=3), 
+    ]
+    test_trsf = [
+        transforms.Resize(size=(64, 64), interpolation=transforms.InterpolationMode.NEAREST),
     ]
 
-    input_shape = 2, 48, 48
+    input_shape = 2, 64, 64
     num_classes = 11
 
     data_source = 'dvs'
