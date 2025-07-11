@@ -6,111 +6,17 @@ Description:
     Load data from motion sensor with some data augmentation operations
 
 References:
-    - Yang, H. et al., "Empirical Evaluation of Data Augmentations for Biobehavioral Time Series Data with Deep Learning", 2022.
-      https://github.com/comp-well-org/Data_Augmentation_for_Biobehavioral_Time_Series_Data
-    - A le Guennec et al., "Data Augmentation for Time Series Classification using Convolutional Neural Networks", 2016
+    - Malekzadeh, M. et al, "Mobile Sensor Data Anonymization", 2019.
+    https://github.com/mmalekzadeh/motion-sense
 '''
 import os
-import random
 import numpy as np
 import pandas as pd
-from scipy.interpolate import CubicSpline
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 
-import torch
-
-# ============================== Transformation Methods ==============================
-class Standardize(object):
-    def __init__(self, mean, std, eps=1e-5):
-        self.mean = mean
-        self.std = std
-        self.eps = eps
-
-    def __call__(self, x):
-        x = torch.tensor(x, dtype=torch.float32)
-        return (x - self.mean) / (self.std + self.eps)
+import torch        
     
-class Negate(object):
-    '''
-    Flip signals to correct for sensor orientation offsets.
-    '''
-    def __call__(self, x):
-        return -x
-    
-class Scale:
-    '''
-    Randomly scale signals to simulate variations in motion intensity
-    '''
-    def __init__(self, sigma=0.1):
-        self.sigma = sigma
-
-    def __call__(self, x):
-        factor = torch.randn(1).item() * self.sigma + 1.0
-        return x * factor
-    
-class RandomCropResize(object):
-    ''' 
-    Simulate variations in sampling rate and sequence length to handle dynamic frequencies and durations. 
-    '''
-    def __init__(self, scale=(0.8, 1.0)):
-        self.scale = scale
-
-    def __call__(self, x):
-        L = x.size(0) # (D)
-        newL = int(L * random.uniform(*self.scale))
-        start = random.randint(0, L - newL)
-        cropped = x[start:start + newL]
-        return torch.nn.functional.interpolate(
-            cropped.unsqueeze(0).unsqueeze(0),
-            size=L, 
-            mode='linear', 
-            align_corners=False
-        ).squeeze()
-    
-class AddNoise:
-    '''
-    Adding synthetic sensor noise to enhance robustness against real-world signal perturbations
-    '''
-    def __init__(self, sigma=0.05):
-        self.sigma = sigma
-
-    def __call__(self, x):
-        return x + torch.randn_like(x) * self.sigma
-    
-class Permutation:
-    '''
-    Shuffling signal segments to increase temporal randomness and improve generalization.
-    '''
-    def __init__(self, n_segments=4):
-        self.n_segments = n_segments
-
-    def __call__(self, x):
-        L = x.size(0)
-        segs = torch.chunk(x, self.n_segments, dim=0)
-        perm = random.sample(segs, len(segs))
-        return torch.cat(perm, dim=0)
-    
-class TimeWarp:
-    '''
-    Use time warping to mimic speed variability in motion.
-    '''
-    def __init__(self, sigma=0.2, knot=4):
-        self.sigma = sigma
-        self.knot = knot
-
-    def __call__(self, x):
-        x_np = x.numpy()
-        L = x_np.shape[0]
-        xx = np.arange(L)
-        random_warp = np.cumsum(
-            np.random.randn(self.knot) * self.sigma
-        )
-        warp_steps = np.interp(xx, np.linspace(0, L-1, num=self.knot), random_warp)
-        tt = xx + warp_steps
-        cs = CubicSpline(xx, x_np)
-        warped = cs(tt)
-        return torch.from_numpy(warped).float()
-    
-# ============================== Customized Dataset ==============================
 class MotionData(object):
     train_trsf = []
     test_trsf = []
@@ -129,7 +35,7 @@ class MotionData(object):
         raise NotImplementedError
 
 class iUCIHAR(MotionData):
-    data_source = 'npy'
+    data_source = 'tensor'
 
     def __init__(self, data_dir, T):
         super().__init__(data_dir, T)
@@ -169,21 +75,93 @@ class iUCIHAR(MotionData):
         mean = self.train_data.mean(axis=0) # (D, )
         std = self.train_data.std(axis=0) # (D, )
 
-        self.train_trsf = [
-            Standardize(mean, std),
-            # AddNoise(0.02),
-            # Scale(0.1),
-            # Permutation(4),
-            # RandomCropResize((0.8, 1.0)),
-        ]
+        self.train_data = torch.tensor(self.train_data, dtype=torch.float32)
+        self.train_data = (self.train_data - mean) / (std + 1e-5)
 
-        self.test_trsf = [
-            Standardize(mean, std),
-        ]
+        self.test_data = torch.tensor(self.test_data, dtype=torch.float32)
+        self.test_data = (self.test_data - mean) / (std + 1e-5)
+
+        # (B, D) -> (B, 1, D) for window dimension
+        self.train_data = self.train_data.unsqueeze(1) 
+        self.test_data = self.test_data.unsqueeze(1) 
 
 class iMotionSense(MotionData):
+    data_source = 'tensor'
+
     def __init__(self, data_dir, T):
         super().__init__(data_dir, T)
+
+    def _segment_signals(self, df, window_size=250, step_size=125):
+        cols = [c for c in df.columns if c not in ('activity','subject','Unnamed: 0')]
+        X, y = [], []
+        for subj in df['subject'].unique():
+            sub = df[df['subject'] == subj]
+            for act in sub['activity'].unique():
+                seg = sub[sub['activity']==act][cols].values
+                
+                for i in range(0, len(seg) - window_size + 1, step_size):
+                    X.append(seg[i:i + window_size].transpose(0, 1))
+                    y.append(act)
+        return np.array(X), np.array(y)
+
+    def download_data(self):
+        '''
+        the A_DeviceMotiondata is mostly recommended to be used
+        MotionSense/
+        ├── A_DeviceMotion_data/
+        │   ├── dws1
+        │   ├── dws2
+        │   ├── ...
+        │   └── wlk_15
+        ├── data_subjects_info.csv
+        └── ...
+        '''
+        # self.data_dir = ~/data/MotionSense/
+
+        # load data
+        data = []
+        for trial_folder in os.listdir(os.path.join(self.data_dir, 'A_DeviceMotion_data')):
+            trial_path = os.path.join(self.data_dir, "A_DeviceMotion_data", trial_folder)
+            if os.path.isdir(trial_path):
+                act = trial_folder # e.g., wlk_7
+                for fname in os.listdir(trial_path):
+                    if fname.endswith(".csv"):
+                        df = pd.read_csv(os.path.join(trial_path, fname))
+                        df['activity'] = act.split('_')[0]
+                        df['subject'] = fname.replace('.csv','')
+                        data.append(df)
+        df = pd.concat(data, ignore_index=True)
+
+        X, y = self._segment_signals(df, 250, 125)
+        X = X.swapaxes(1, 2) # (B, D, C) -> (B, C, D)
+
+        # categorize label
+        le = LabelEncoder()
+        y_encoded = le.fit_transform(y)
+        
+        # load train & test data
+        self.train_data, self.test_data, self.train_targets, self.test_targets = train_test_split(
+            X, y_encoded, test_size=0.2, stratify=y_encoded, random_state=self.seed
+        )
+
+        # normalize
+        scaler = StandardScaler()
+        B, C, D = self.train_data.shape
+        X_train_flat = self.train_data.reshape(B, C * D)
+        X_train_scaled = scaler.fit_transform(X_train_flat)
+        self.train_data = X_train_scaled.reshape(B, C, D)
+
+        B, C, D = self.test_data.shape
+        X_test_flat = self.test_data.reshape(B, C * D)
+        X_test_scaled = scaler.transform(X_test_flat)
+        self.test_data = X_test_scaled.reshape(B, C, D)
+
+        # to tensor 
+        self.train_data = torch.tensor(self.train_data, dtype=torch.float32) # (B, C, D)
+        self.test_data = torch.tensor(self.test_data, dtype=torch.float32)
+
+        self.train_targets = torch.tensor(self.train_targets, dtype=torch.long) # (B)
+        self.test_targets = torch.tensor(self.test_targets, dtype=torch.long)
 
 class iHHAR(MotionData):
     def __init__(self, data_dir, T):

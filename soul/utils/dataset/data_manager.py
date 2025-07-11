@@ -6,7 +6,7 @@ from torchvision import transforms
 from torch.utils.data import Dataset
 
 from .vision_dataset import iCIFAR10, iCIFAR100, iTinyImageNet, iCIFAR10DVS, iDVSGesture
-from .motion_dataset import iUCIHAR
+from .motion_dataset import iUCIHAR, iMotionSense
 from soul.utils.coding import coding_map
 
 class DummyDataset(Dataset):
@@ -26,7 +26,10 @@ class DummyDataset(Dataset):
     
     def __getitem__(self, index):
 
-        x = self.trsf(self._file_loader(self.inputs[index], self.source))
+        if self.trsf:
+            x = self.trsf(self._file_loader(self.inputs[index], self.source))
+        else:
+            x = self._file_loader(self.inputs[index], self.source)
         if 'dvs' not in self.source: # TODO maybe other sensing also donot need encoding
             x = coding_map[self.encode](x, num_steps=self.T)
         y = self.labels[index]
@@ -42,8 +45,8 @@ class DummyDataset(Dataset):
             return Image.fromarray(path) # PIL.image from array, shape (C, H, W)
         elif source == 'vision-dvs':
             return torch.from_numpy(np.load(path)['frames']).float() # directly to Tensor with shape (T, C, H, W)
-        elif source == 'motion-npy':
-            return path
+        # elif source == 'motion-npy':
+        #     return path
         else:
             return path
 
@@ -56,6 +59,7 @@ class DataManager(object):
 
     def _setup_data(self):
         idata = _get_idata(self.config['dataset_name'], self.config['data_dir'], self.config['time_step'])
+        idata.seed = self.config['seed']
         idata.download_data()
 
         # data
@@ -121,5 +125,7 @@ def _get_idata(dataset_name, dataset_dir, T):
         return iDVSGesture(dataset_dir, T)
     elif name == 'ucihar':
         return iUCIHAR(dataset_dir, T)
+    elif name == 'motionsense':
+        return iMotionSense(dataset_dir, T)
     else:
         raise NotImplementedError("Unknown dataset {}.".format(dataset_name))
