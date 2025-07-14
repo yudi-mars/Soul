@@ -299,13 +299,16 @@ class iHHAR(MotionData):
 
         # load data collected by phone-accelerometer (As an example)
         df = pd.read_csv(os.path.join(self.data_dir, 'Phones_accelerometer.csv'))
+        print('finish loading HHAR phone accelerometer file...')
         df = df[['Creation_Time', 'x', 'y', 'z', 'User', 'gt']].copy()
         df.columns = ['timestamp', 'ax', 'ay', 'az', 'user', 'activity']
         df['timestamp'] = pd.to_datetime(df['timestamp'])
         df.sort_values(by=['user', 'activity', 'timestamp'], ascending=[True, True, False], inplace=True)
+        print('finish sorting...')
 
         # segment data
         X, y = self._segment_signals(df, 200, 100)
+        print('finish buiding sequences...')
 
         # categorize label
         le = LabelEncoder()
