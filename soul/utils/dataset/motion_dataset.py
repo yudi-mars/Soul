@@ -6,8 +6,10 @@ Description:
     Load data from motion sensor with some data augmentation operations
 
 References:
-    - Malekzadeh, M. et al, "Mobile Sensor Data Anonymization", 2019.
+    - Malekzadeh, M. et al., "Mobile Sensor Data Anonymization", 2019.
     https://github.com/mmalekzadeh/motion-sense
+    - Riccardo Presotto et al., "Combining Public Human Activity Recognition Datasets to Mitigate Labeled Data Scarcity", 2023
+    https://github.com/getalp/SmartComp2023-HAR-Supervised-Pretraining
 '''
 import os
 import numpy as np
@@ -173,7 +175,7 @@ class iShoaib(MotionData):
     def __init__(self, data_dir, T):
         super().__init__(data_dir, T)
 
-    def _segment_shoaib(self, fname, window_size=250, step=125):
+    def _segment_signals(self, fname, window_size=250, step=125):
         segments = []
         labels = []
         feature_cols = [
@@ -225,7 +227,7 @@ class iShoaib(MotionData):
             if fname.endswith('.csv'):
                 print(f'Processing {fname}...')
                 # slice signal
-                participant_X, participant_y = self._segment_shoaib(fname, 250, 125)
+                participant_X, participant_y = self._segment_signals(fname, 250, 125)
                 X.append(participant_X)
                 y.append(participant_y)
 
@@ -264,5 +266,73 @@ class iShoaib(MotionData):
         print(f'train data shape: {self.train_data.shape}, test data shape: {self.test_data.shape}')
 
 class iHHAR(MotionData):
+    data_source = 'tensor'
+
     def __init__(self, data_dir, T):
         super().__init__(data_dir, T)
+
+    def _segment_signals(self, df, window_size=200, step=100):
+        segments, labels = [], []
+        for user in df['user'].unique():
+            temp = df[df['user'] == user]
+            for activity, grp in temp.groupby('activity'):
+                X = grp[['ax', 'ay', 'az']].values.astype(np.float32)
+                for start in range(0, len(grp) - window_size + 1, step):
+                    seg = X[start:start + window_size]
+                    segments.append(seg) # one specific segment 
+                    labels.append(activity)
+
+        X_windows = np.array(segments).swapaxes(1, 2) # (B, D, C) -> (B, C, D)
+        y_windows = np.array(labels) # (B)
+
+        return X_windows, y_windows
+
+    def download_data(self):
+        '''
+        we only implement the Accelerometer data collected by phone as an example, the other data in HHAR can be processed in a similar way
+
+        hhar/
+        ├── readme.txt
+        └── Phone_accelerometer.txt
+        '''
+        # self.data_dir = ~/data/hhar/
+
+        # load data collected by phone-accelerometer (As an example)
+        df = pd.read_csv(os.path.join(self.data_dir, 'Phones_accelerometer.csv'))
+        df = df[['Creation_Time', 'x', 'y', 'z', 'User', 'gt']].copy()
+        df.columns = ['timestamp', 'ax', 'ay', 'az', 'user', 'activity']
+        df['timestamp'] = pd.to_datetime(df['timestamp'])
+        df.sort_values(by=['user', 'activity', 'timestamp'], ascending=[True, True, False], inplace=True)
+
+        # segment data
+        X, y = self._segment_signals(df, 200, 100)
+
+        # categorize label
+        le = LabelEncoder()
+        y_encoded = le.fit_transform(y)
+
+        # load train & test data
+        self.train_data, self.test_data, self.train_targets, self.test_targets = train_test_split(
+            X, y_encoded, test_size=0.2, stratify=y_encoded, random_state=self.seed
+        )
+
+        # normalize
+        scaler = StandardScaler()
+        B, C, D = self.train_data.shape
+        X_train_flat = self.train_data.reshape(B, C * D)
+        X_train_scaled = scaler.fit_transform(X_train_flat)
+        self.train_data = X_train_scaled.reshape(B, C, D)
+
+        B, C, D = self.test_data.shape
+        X_test_flat = self.test_data.reshape(B, C * D)
+        X_test_scaled = scaler.transform(X_test_flat)
+        self.test_data = X_test_scaled.reshape(B, C, D)
+
+        # to tensor 
+        self.train_data = torch.tensor(self.train_data, dtype=torch.float32) # (B, C, D)
+        self.test_data = torch.tensor(self.test_data, dtype=torch.float32)
+
+        self.train_targets = torch.tensor(self.train_targets, dtype=torch.long) # (B)
+        self.test_targets = torch.tensor(self.test_targets, dtype=torch.long)
+
+        print(f'train data shape: {self.train_data.shape}, test data shape: {self.test_data.shape}')
