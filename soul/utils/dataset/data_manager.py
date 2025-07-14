@@ -6,7 +6,7 @@ from torchvision import transforms
 from torch.utils.data import Dataset
 
 from .vision_dataset import iCIFAR10, iCIFAR100, iTinyImageNet, iCIFAR10DVS, iDVSGesture
-from .motion_dataset import iUCIHAR, iMotionSense
+from .motion_dataset import iUCIHAR, iMotionSense, iShoaib, iHHAR
 from soul.utils.coding import coding_map
 
 class DummyDataset(Dataset):
@@ -127,5 +127,9 @@ def _get_idata(dataset_name, dataset_dir, T):
         return iUCIHAR(dataset_dir, T)
     elif name == 'motionsense':
         return iMotionSense(dataset_dir, T)
+    elif name == 'shoaib':
+        return iShoaib(dataset_dir, T)
+    elif name == 'hhar':
+        return iHHAR(dataset_dir, T)
     else:
         raise NotImplementedError("Unknown dataset {}.".format(dataset_name))

@@ -124,8 +124,10 @@ class iMotionSense(MotionData):
             trial_path = os.path.join(self.data_dir, "A_DeviceMotion_data", trial_folder)
             if os.path.isdir(trial_path):
                 act = trial_folder # e.g., wlk_7
+                # print(f'Processing activity: {act}...')
                 for fname in os.listdir(trial_path):
                     if fname.endswith(".csv"):
+                        # print(f'Processing {fname}...')
                         df = pd.read_csv(os.path.join(trial_path, fname))
                         df['activity'] = act.split('_')[0]
                         df['subject'] = fname.replace('.csv','')
@@ -163,11 +165,104 @@ class iMotionSense(MotionData):
         self.train_targets = torch.tensor(self.train_targets, dtype=torch.long) # (B)
         self.test_targets = torch.tensor(self.test_targets, dtype=torch.long)
 
+        print(f'train data shape: {self.train_data.shape}, test data shape: {self.test_data.shape}')
+
+class iShoaib(MotionData):
+    data_source = 'tensor'
+
+    def __init__(self, data_dir, T):
+        super().__init__(data_dir, T)
+
+    def _segment_shoaib(self, fname, window_size=250, step=125):
+        segments = []
+        labels = []
+        feature_cols = [
+            'Ax', 'Ay', 'Az', 
+            'Lx', 'Ly', 'Lz', 
+            'Gx', 'Gy', 'Gz', 
+            'Mx', 'My', 'Mz', 
+        ]
+        # for each participant
+        df = pd.read_csv(os.path.join(self.data_dir, fname), header=[0, 1])
+        # only the last column contains corresponding label for each line
+        activities = df.values[:, -1]
+        # 5 position, then divided the original datafrom into 5 pieces
+        n_splits = 5 
+        cols_per_split = df.shape[1] // n_splits
+        dfs = [df.iloc[:, i * cols_per_split:(i + 1) * cols_per_split] for i in range(n_splits)]
+
+        # for data at each position
+        for d in dfs: 
+            d.columns = ['timestamp'] + feature_cols + ['activity']
+            d['activity'] = activities
+
+            # for each activity
+            for activity, grp in d.groupby('activity'):
+                X = grp[feature_cols].values
+                for start in range(0, len(grp) - window_size + 1, step):
+                    seg = X[start:start + window_size]
+                    segments.append(seg) # one specific segment 
+                    labels.append(activity)
+
+        X_windows = np.array(segments).swapaxes(1, 2) # (B, D, C) -> (B, C, D)
+        y_windows = np.array(labels) # (B)
+
+        return X_windows, y_windows
+
+    def download_data(self):
+        '''
+        after unzip the rar file, the shoaib data structure should be:
+        shoaib/
+        ├── Participant_1.csv
+        ├── Participant_2.csv
+        ├── ...
+        ├── Participant_10.csv
+        └── readme.txt
+        '''
+        # self.data_dir = ~/data/shoaib/
+        X, y = [], []
+        for fname in os.listdir(self.data_dir):
+            if fname.endswith('.csv'):
+                print(f'Processing {fname}...')
+                # slice signal
+                participant_X, participant_y = self._segment_shoaib(fname, 250, 125)
+                X.append(participant_X)
+                y.append(participant_y)
+
+        # summarize all data
+        X = np.concatenate(X, axis=0) # (B, C, D)
+        y = np.concatenate(y, axis=0) # (B)
+        
+        # categorize label y
+        le = LabelEncoder()
+        y_encoded = le.fit_transform(y)
+
+        # load train & test data
+        self.train_data, self.test_data, self.train_targets, self.test_targets = train_test_split(
+            X, y_encoded, test_size=0.2, stratify=y_encoded, random_state=self.seed
+        )
+
+        # normalize
+        scaler = StandardScaler()
+        B, C, D = self.train_data.shape
+        X_train_flat = self.train_data.reshape(B, C * D)
+        X_train_scaled = scaler.fit_transform(X_train_flat)
+        self.train_data = X_train_scaled.reshape(B, C, D)
+
+        B, C, D = self.test_data.shape
+        X_test_flat = self.test_data.reshape(B, C * D)
+        X_test_scaled = scaler.transform(X_test_flat)
+        self.test_data = X_test_scaled.reshape(B, C, D)
+
+        # to tensor 
+        self.train_data = torch.tensor(self.train_data, dtype=torch.float32) # (B, C, D)
+        self.test_data = torch.tensor(self.test_data, dtype=torch.float32)
+
+        self.train_targets = torch.tensor(self.train_targets, dtype=torch.long) # (B)
+        self.test_targets = torch.tensor(self.test_targets, dtype=torch.long)
+
+        print(f'train data shape: {self.train_data.shape}, test data shape: {self.test_data.shape}')
+
 class iHHAR(MotionData):
     def __init__(self, data_dir, T):
         super().__init__(data_dir, T)
-
-class iShoaib(MotionData):
-    def __init__(self, data_dir, T):
-        super().__init__(data_dir, T)
-
