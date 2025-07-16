@@ -183,7 +183,7 @@ for epoch in range(1, config['epochs'] + 1):
 
         test_acc = top1_meter.avg
 
-        logger.info(f"[Epoch {epoch}] Train Loss: {loss_meter.avg:.4f}, Train Acc: {top1_meter.avg:.2f}%; Test Loss: {loss_meter.avg:.4f}, Test Acc: {test_acc:.2f}%")
+        logger.info(f"[Epoch {epoch:3d}/{config['epochs']}] Train Loss: {loss_meter.avg:.4f}, Train Acc: {top1_meter.avg:.2f}%; Test Loss: {loss_meter.avg:.4f}, Test Acc: {test_acc:.2f}%")
         if test_acc > best_acc:
             ensure_dir(config['model_dir'])
 
