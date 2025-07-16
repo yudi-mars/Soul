@@ -58,7 +58,13 @@ class DataManager(object):
         self._setup_data()
 
     def _setup_data(self):
-        idata = _get_idata(self.config['dataset_name'], self.config['data_dir'], self.config['time_step'])
+        idata = _get_idata(
+            self.config['dataset_name'], 
+            self.config['data_dir'], 
+            self.config['time_step'],
+            self.config['window_size'],
+            self.config['step_size'],
+        )
         idata.seed = self.config['seed']
         idata.download_data()
 
@@ -83,8 +89,7 @@ class DataManager(object):
         if self.config['application'] == 'vision':
             self.config['input_channels'], self.config['input_height'], self.config['input_width'] = self.input_shape
         elif self.config['application'] == 'motion':
-            # TODO
-            pass
+            self.config['input_channels'], self.config['input_dim'] = self.input_shape
         elif self.config['application'] == 'acoustic':
             # TODO
             pass
@@ -111,7 +116,7 @@ class DataManager(object):
         y = self._train_targets
         return np.sum(np.where(y == index))
 
-def _get_idata(dataset_name, dataset_dir, T):
+def _get_idata(dataset_name, dataset_dir, T, window_size=None, step_size=None):
     name = dataset_name.lower()
     if name == 'cifar10':
         return iCIFAR10(dataset_dir, T)
@@ -124,12 +129,12 @@ def _get_idata(dataset_name, dataset_dir, T):
     elif name == 'dvsgesture':
         return iDVSGesture(dataset_dir, T)
     elif name == 'ucihar':
-        return iUCIHAR(dataset_dir, T)
+        return iUCIHAR(dataset_dir, T, window_size, step_size)
     elif name == 'motionsense':
-        return iMotionSense(dataset_dir, T)
+        return iMotionSense(dataset_dir, T, window_size, step_size)
     elif name == 'shoaib':
-        return iShoaib(dataset_dir, T)
+        return iShoaib(dataset_dir, T, window_size, step_size)
     elif name == 'hhar':
-        return iHHAR(dataset_dir, T)
+        return iHHAR(dataset_dir, T, window_size, step_size)
     else:
         raise NotImplementedError("Unknown dataset {}.".format(dataset_name))

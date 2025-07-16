@@ -3,7 +3,9 @@ Filename: motion_dataset.py
 Author: Di Yu <yudi2023@zju.edu.cn>
 Date Created: 2025-07-10
 Description:
-    Load data from motion sensor with some data augmentation operations
+    Load data from motion sensor. For those data without preprocessing, 
+    we refer to the processing method of UCI HAR and samling in fixed-width 
+    sliding windows with 128 readings/window and 50% overlap.
 
 References:
     - Malekzadeh, M. et al., "Mobile Sensor Data Anonymization", 2019.
@@ -29,9 +31,12 @@ class MotionData(object):
 
     data_source = None
 
-    def __init__(self, data_dir, T):
+    def __init__(self, data_dir, T, window_size=None, step_size=None):
         self.data_dir = data_dir
         self.T = T
+
+        self.window_size = window_size
+        self.step_size = step_size
 
     def download_data(self):
         raise NotImplementedError
@@ -39,8 +44,8 @@ class MotionData(object):
 class iUCIHAR(MotionData):
     data_source = 'tensor'
 
-    def __init__(self, data_dir, T):
-        super().__init__(data_dir, T)
+    def __init__(self, data_dir, T, window_size, step_size):
+        super().__init__(data_dir, T, window_size, step_size)
 
     def download_data(self):
         # self.data_dir = ~/data/ucihar/
@@ -87,11 +92,15 @@ class iUCIHAR(MotionData):
         self.train_data = self.train_data.unsqueeze(1) 
         self.test_data = self.test_data.unsqueeze(1) 
 
+        print(f'train data shape: {self.train_data.shape}, test data shape: {self.test_data.shape}')
+
+
 class iMotionSense(MotionData):
     data_source = 'tensor'
+    num_classes = 6
 
-    def __init__(self, data_dir, T):
-        super().__init__(data_dir, T)
+    def __init__(self, data_dir, T, window_size, step_size):
+        super().__init__(data_dir, T, window_size, step_size)
 
     def _segment_signals(self, df, window_size=250, step_size=125):
         cols = [c for c in df.columns if c not in ('activity','subject','Unnamed: 0')]
@@ -119,6 +128,8 @@ class iMotionSense(MotionData):
         └── ...
         '''
         # self.data_dir = ~/data/MotionSense/
+        window_size = self.window_size
+        step_size = self.step_size
 
         # load data
         data = []
@@ -136,7 +147,7 @@ class iMotionSense(MotionData):
                         data.append(df)
         df = pd.concat(data, ignore_index=True)
 
-        X, y = self._segment_signals(df, 250, 125)
+        X, y = self._segment_signals(df, window_size, step_size)
         X = X.swapaxes(1, 2) # (B, D, C) -> (B, C, D)
 
         # categorize label
@@ -169,11 +180,14 @@ class iMotionSense(MotionData):
 
         print(f'train data shape: {self.train_data.shape}, test data shape: {self.test_data.shape}')
 
+        self.input_shape = (12, window_size)
+
 class iShoaib(MotionData):
     data_source = 'tensor'
+    num_classes = 8
 
-    def __init__(self, data_dir, T):
-        super().__init__(data_dir, T)
+    def __init__(self, data_dir, T, window_size, step_size):
+        super().__init__(data_dir, T, window_size, step_size)
 
     def _segment_signals(self, fname, window_size=250, step=125):
         segments = []
@@ -222,12 +236,15 @@ class iShoaib(MotionData):
         └── readme.txt
         '''
         # self.data_dir = ~/data/shoaib/
+        window_size = self.window_size
+        step_size = self.step_size
+
         X, y = [], []
         for fname in os.listdir(self.data_dir):
             if fname.endswith('.csv'):
                 print(f'Processing {fname}...')
                 # slice signal
-                participant_X, participant_y = self._segment_signals(fname, 250, 125)
+                participant_X, participant_y = self._segment_signals(fname, window_size, step_size)
                 X.append(participant_X)
                 y.append(participant_y)
 
@@ -265,11 +282,14 @@ class iShoaib(MotionData):
 
         print(f'train data shape: {self.train_data.shape}, test data shape: {self.test_data.shape}')
 
+        self.input_shape = (12, window_size)
+
 class iHHAR(MotionData):
     data_source = 'tensor'
+    num_classes = 6
 
-    def __init__(self, data_dir, T):
-        super().__init__(data_dir, T)
+    def __init__(self, data_dir, T, window_size, step_size):
+        super().__init__(data_dir, T, window_size, step_size)
 
     def _segment_signals(self, df, window_size=200, step=100):
         segments, labels = [], []
@@ -296,6 +316,8 @@ class iHHAR(MotionData):
         └── Phone_accelerometer.txt
         '''
         # self.data_dir = ~/data/hhar/
+        window_size = self.window_size
+        step_size = self.step_size
 
         # load data collected by phone-accelerometer (As an example)
         df = pd.read_csv(os.path.join(self.data_dir, 'Phones_accelerometer.csv'))
@@ -307,7 +329,7 @@ class iHHAR(MotionData):
         print('finish sorting...')
 
         # segment data
-        X, y = self._segment_signals(df, 200, 100)
+        X, y = self._segment_signals(df, window_size, step_size)
         print('finish buiding sequences...')
 
         # categorize label
@@ -339,3 +361,5 @@ class iHHAR(MotionData):
         self.test_targets = torch.tensor(self.test_targets, dtype=torch.long)
 
         print(f'train data shape: {self.train_data.shape}, test data shape: {self.test_data.shape}')
+
+        self.input_shape = (3, window_size)
