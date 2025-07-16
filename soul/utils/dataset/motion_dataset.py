@@ -43,6 +43,7 @@ class MotionData(object):
 
 class iUCIHAR(MotionData):
     data_source = 'tensor'
+    num_classes = 6
 
     def __init__(self, data_dir, T, window_size, step_size):
         super().__init__(data_dir, T, window_size, step_size)
@@ -93,6 +94,8 @@ class iUCIHAR(MotionData):
         self.test_data = self.test_data.unsqueeze(1) 
 
         print(f'train data shape: {self.train_data.shape}, test data shape: {self.test_data.shape}')
+
+        self.input_shape = (1, 561)
 
 
 class iMotionSense(MotionData):
