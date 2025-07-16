@@ -1,0 +1,2 @@
+embedding_dim: 128          # (int) embedding dimension for each device
+mlp_hidden_dim: 400          # (int) hidden dimension for intermediate layers in application model
