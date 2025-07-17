@@ -6,11 +6,11 @@ Description:
     Load data from motion sensor with some data augmentation operations
 
 References:
-    - Wei Fang et al., "SpikingJelly: An open-source machine learning infrastructure platform for spike-based intelligence", 2023.
+    - Wei Fang et al., "SpikingJelly: An open-source machine learning infrastructure platform for spike-based intelligence", Science Advances'2023.
     https://github.com/fangwei123456/spikingjelly
-    - Da-Wei Zhou et al., "Class-Incremental Learning: A Survey", 2024.
+    - Da-Wei Zhou et al., "Class-Incremental Learning: A Survey", TPAMI'2024.
     https://github.com/LAMDA-CL/PyCIL
-    - Yuhang Li et al., "Neuromorphic Data Augmentation for Training Spiking Neural Networks", 2022.
+    - Yuhang Li et al., "Neuromorphic Data Augmentation for Training Spiking Neural Networks", ECCV'2022.
     https://github.com/Intelligent-Computing-Lab-Panda/NDA_SNN
     
 '''

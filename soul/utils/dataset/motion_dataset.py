@@ -8,9 +8,9 @@ Description:
     sliding windows with 128 readings/window and 50% overlap.
 
 References:
-    - Malekzadeh, M. et al., "Mobile Sensor Data Anonymization", 2019.
+    - Malekzadeh, M. et al., "Mobile Sensor Data Anonymization", IoTDI'2019.
     https://github.com/mmalekzadeh/motion-sense
-    - Riccardo Presotto et al., "Combining Public Human Activity Recognition Datasets to Mitigate Labeled Data Scarcity", 2023
+    - Riccardo Presotto et al., "Combining Public Human Activity Recognition Datasets to Mitigate Labeled Data Scarcity", SMARTCOMP'2023
     https://github.com/getalp/SmartComp2023-HAR-Supervised-Pretraining
 '''
 import os
