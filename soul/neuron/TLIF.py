@@ -1,5 +1,15 @@
+"""
+Filename: TLIF.py
+Author: Changze Lv <czlv24@m.fudan.edu.cn>
+Date Created: 2025-05-17
+Description:
+    implementation for LIF variants for Spiking Neural Networks.
+
+References:
+    - Yufei Guo et al., "Ternary spike: Learning ternary spikes for spiking neural networks", AAAI'2024.
+    https://github.com/yfguo91/Ternary-Spike
+"""
 import torch
-import torch.nn as nn
 from typing import Callable
 from abc import abstractmethod
 from soul.neuron.base import MemoryModule

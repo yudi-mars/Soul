@@ -1,8 +1,16 @@
+"""
+Filename: LTMD.py
+Author: Changze Lv <czlv24@m.fudan.edu.cn>
+Date Created: 2025-05-09
+Description:
+    implementation for LIF variants for Spiking Neural Networks.
+
+References:
+    - Siqi Wang et al., "LTMD: Learning Improvement of Spiking Neural Networks with Learnable Thresholding Neurons and Moderate Dropout", NeurIPs'2022.
+    https://github.com/sq117/LTMD
+"""
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-import math
 
 class SpikeAct(torch.autograd.Function):
 

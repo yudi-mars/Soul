@@ -1,6 +1,14 @@
-'''
-Extraction from spikingjelly
-'''
+"""
+Filename: functional.py
+Author: Changze Lv <czlv24@m.fudan.edu.cn>
+Date Created: 2025-04-21
+Description:
+    implementation of resent function for the membran potential of spiking neurons after forward.
+
+References:
+    - Wei Fang et al., "SpikingJelly: An open-source machine learning infrastructure platform for spike-based intelligence", Science Advances'2023.
+    https://github.com/fangwei123456/spikingjelly
+"""
 import torch.nn as nn
 from soul.neuron import base
 import logging

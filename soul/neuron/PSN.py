@@ -1,3 +1,14 @@
+"""
+Filename: PSN.py
+Author: Changze Lv <czlv24@m.fudan.edu.cn>
+Date Created: 2025-05-13
+Description:
+    implementation for LIF variants for Spiking Neural Networks.
+
+References:
+    - Wei Fang et al., "Parallel Spiking Neurons with High Efficiency and Ability to Learn Long-term Dependencies", NeurIPs'2023.
+    https://github.com/fangwei123456/Parallel-Spiking-Neuron
+"""
 import math
 import torch
 import torch.nn as nn

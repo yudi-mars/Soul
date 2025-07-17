@@ -1,5 +1,15 @@
+"""
+Filename: ILIF.py
+Author: Changze Lv <czlv24@m.fudan.edu.cn>
+Date Created: 2025-05-07
+Description:
+    implementation for LIF variants for Spiking Neural Networks.
+
+References:
+    - Zhenxin Lei et al., "Spike2former: Efficient spiking transformer for high-performance image segmentation", AAAI'2025.
+    https://github.com/BICLab/Spike2Former
+"""
 import torch
-import torch.nn as nn
 from typing import Callable
 from abc import abstractmethod
 from soul.neuron.base import MemoryModule

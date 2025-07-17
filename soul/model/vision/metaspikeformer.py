@@ -1,3 +1,19 @@
+"""
+Filename: metaspikeformer.py
+Author: Di Yu <yudi2023@zju.edu.cn>
+Date Created: 2025-06-22
+Description:
+    implementation for a transformer-structured SNN model for image classification.
+
+    Note that the original RepConv will cause the misconvergence of all models. 
+    Besides, the two convolution layers are linked without any neurons, which is not
+    a legal computation logic in neuromorphic chips. Hence, we use a normal linear layer
+    to replace the RepConv part for a stable implementation.
+
+References:
+    - Man Yao et al., "Spike-driven Transformer V2: Meta Spiking Neural Network Architecture Inspiring the Design of Next-generation Neuromorphic Chips", ICLR'2024.
+      https://github.com/BICLab/Spike-Driven-Transformer-V2
+"""
 import torch.nn as nn
 from copy import deepcopy
 

@@ -1,3 +1,14 @@
+"""
+Filename: PLIF.py
+Author: Changze Lv <czlv24@m.fudan.edu.cn>
+Date Created: 2025-05-11
+Description:
+    implementation for LIF variants for Spiking Neural Networks.
+
+References:
+    - Wei Fang et al., "Incorporating Learnable Membrane Time Constant to Enhance Learning of Spiking Neural Networks", ICCV'2021.
+    https://github.com/fangwei123456/Parametric-Leaky-Integrate-and-Fire-Spiking-Neuron
+"""
 import math
 
 import torch

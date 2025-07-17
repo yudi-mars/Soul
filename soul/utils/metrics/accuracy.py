@@ -1,3 +1,13 @@
+"""
+Filename: accuracy.py
+Author: Di Yu <yudi2023@zju.edu.cn>
+Date Created: 2025-04-15
+Description:
+    implementation of accuracy evaluation for recognition tasks.
+    
+References:
+    https://github.com/huggingface/pytorch-image-models
+"""
 class AverageMeter:
     """Computes and stores the average and current value"""
     def __init__(self):

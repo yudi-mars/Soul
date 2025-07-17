@@ -1,3 +1,14 @@
+"""
+Filename: spikingresformer.py
+Author: Di Yu <yudi2023@zju.edu.cn>
+Date Created: 2025-06-20
+Description:
+    implementation for a transformer-structured SNN model for image classification.
+
+References:
+    - Xinyu Shi et al., "SpikingResformer: Bridging ResNet and Vision Transformer in Spiking Neural Networks", CVPR'2024.
+      https://github.com/xyshi2000/SpikingResformer
+"""
 import torch
 import torch.nn as nn
 from copy import deepcopy

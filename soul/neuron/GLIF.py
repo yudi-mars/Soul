@@ -1,8 +1,16 @@
+"""
+Filename: GLIF.py
+Author: Changze Lv <czlv24@m.fudan.edu.cn>
+Date Created: 2025-05-03
+Description:
+    implementation for LIF variants for Spiking Neural Networks.
+
+References:
+    - Xingting Yao et al., "GLIF: A Uniﬁed Gated Leaky Integrate-and-Fire Neuron for Spiking Neural Networks", NeurIPs'2022.
+    https://github.com/CAS-CLab/Gated-LIF
+"""
 import math
 import numpy as np
-
-from typing import Callable
-from soul.utils import surrogate
 
 from soul.neuron import base
 

@@ -1,3 +1,14 @@
+"""
+Filename: IELIF.py
+Author: Changze Lv <czlv24@m.fudan.edu.cn>
+Date Created: 2025-05-05
+Description:
+    implementation for LIF variants for Spiking Neural Networks.
+
+References:
+    - Xuerui Qiu et al., "Quantized Spike-Driven Transformer", ICLR'2025.
+    https://github.com/bollossom/QSD-Transformer
+"""
 import torch
 import torch.nn as nn
 

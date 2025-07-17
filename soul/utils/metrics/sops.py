@@ -1,3 +1,15 @@
+"""
+Filename: sops.py
+Author: Wentao Tong <toldzera@zju.edu.cn>
+Date Created: 2025-05-17
+Description:
+    implementation of counting SOPs for SNN inference.
+
+References:
+    - Man Yao et al., "Attention Spiking Neural Networks", TPAMI'2023
+    https://github.com/BICLab/Attention-SNN
+    The way to calculate SOPs is described at the appendix file provided in https://github.com/BICLab/Attention-SNN/issues/3
+"""
 import os
 import numpy as np
 

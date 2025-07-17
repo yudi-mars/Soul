@@ -1,3 +1,14 @@
+"""
+Filename: LIF.py
+Author: Changze Lv <czlv24@m.fudan.edu.cn>
+Date Created: 2025-04-29
+Description:
+    implementation for LIF for Spiking Neural Networks.
+
+References:
+    - Wei Fang et al., "SpikingJelly: An open-source machine learning infrastructure platform for spike-based intelligence", Science Advances'2023.
+    https://github.com/fangwei123456/spikingjelly
+"""
 from abc import abstractmethod
 import torch
 from soul.neuron import base

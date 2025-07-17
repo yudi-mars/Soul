@@ -1,3 +1,14 @@
+"""
+Filename: rate.py
+Author: Di Yu <yudi2023@zju.edu.cn>
+Date Created: 2025-04-10
+Description:
+    implementation of rate coding mechanism for SNN inputs.
+
+References:
+    - JK Eshraghian et al., "Training Spiking Neural Networks Using Lessons From Deep Learning", Proc. IEEE'2023.
+    https://github.com/jeshraghian/snntorch
+"""
 import torch
 
 dtype = torch.float

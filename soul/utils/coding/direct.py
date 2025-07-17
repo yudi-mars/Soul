@@ -1,3 +1,10 @@
+"""
+Filename: direct.py
+Author: Di Yu <yudi2023@zju.edu.cn>
+Date Created: 2025-04-09
+Description:
+    implementation of direct coding mechanism for SNN inputs.
+"""
 import torch
 
 def direct_coding(data, num_steps):

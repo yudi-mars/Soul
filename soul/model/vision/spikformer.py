@@ -1,3 +1,14 @@
+"""
+Filename: spikformer.py
+Author: Di Yu <yudi2023@zju.edu.cn>
+Date Created: 2025-06-10
+Description:
+    implementation for a transformer-structured SNN model for image classification.
+
+References:
+    - Zhaokun Zhou et al., "Spikformer: when spiking neural network meets transformer", ICLR'2023.
+      https://github.com/ZK-Zhou/spikformer
+"""
 import torch
 import torch.nn as nn
 from copy import deepcopy

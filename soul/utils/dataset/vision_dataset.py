@@ -10,7 +10,7 @@ References:
     https://github.com/fangwei123456/spikingjelly
     - Da-Wei Zhou et al., "Class-Incremental Learning: A Survey", 2024.
     https://github.com/LAMDA-CL/PyCIL
-    - Li, Yuhang et al., "Neuromorphic Data Augmentation for Training Spiking Neural Networks", 2022.
+    - Yuhang Li et al., "Neuromorphic Data Augmentation for Training Spiking Neural Networks", 2022.
     https://github.com/Intelligent-Computing-Lab-Panda/NDA_SNN
     
 '''

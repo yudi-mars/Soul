@@ -6,7 +6,7 @@ Description:
     implementation for spike-wise DCNN-structured model for HAR.
 
 References:
-    - Yang Jianbo et al., "Deep Convolutional Neural Networks On Multichannel Time Series For Human Activity Recognition", 2015.
+    - Yang Jianbo et al., "Deep Convolutional Neural Networks On Multichannel Time Series For Human Activity Recognition", IJCAI'2015.
       https://github.com/gongchenooo/MobiCom24-Delta
 """
 import torch

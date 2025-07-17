@@ -1,3 +1,18 @@
+"""
+Filename: power_energy.py
+Author: Di Yu and Yubing Bao <yudi2023@zju.edu.cn; ybbao23@m.fudan.edu.cn>
+Date Created: 2025-04-23
+Description:
+    implementation of monitoring energy cost for running SNNs on Jetson serial edge devices.
+    
+References:
+    - Di Yu et al., "ECC-SNN: Cost-Effective Edge-Cloud Collaboration for Spiking Neural Networks", IJCAI'2025
+    https://github.com/AmazingDD/Jetson-Energy-Monitor
+    - Xinye Ma et al., "Cost-effective on-device continual learning over memory hierarchy with Miro", MobiCom'2023
+    https://github.com/omnia-unist/Miro
+    - https://embeddeddl.wordpress.com/2018/04/25/convenient-power-measurements-on-the-jetson-tx2-tegra-x2-board/
+    - https://docs.nvidia.com/jetson/archives/r34.1/DeveloperGuide/text/SD/PlatformPowerAndPerformance/JetsonOrinNxSeriesAndJetsonAgxOrinSeries.html
+"""
 import os
 # import csv
 import time

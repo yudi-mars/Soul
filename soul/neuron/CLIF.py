@@ -1,3 +1,14 @@
+"""
+Filename: CLIF.py
+Author: Changze Lv <czlv24@m.fudan.edu.cn>
+Date Created: 2025-05-01
+Description:
+    implementation for LIF variants for Spiking Neural Networks.
+
+References:
+    - Yulong Huang et al., "CLIF: Complementary Leaky Integrate-and-Fire Neuron for Spiking Neural Networks", ICML'2024.
+    https://github.com/HuuYuLong/Complementary-LIF
+"""
 from typing import Callable
 
 import torch

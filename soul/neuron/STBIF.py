@@ -1,3 +1,14 @@
+"""
+Filename: STBIF.py
+Author: Changze Lv <czlv24@m.fudan.edu.cn>
+Date Created: 2025-05-15
+Description:
+    implementation for LIF variants for Spiking Neural Networks.
+
+References:
+    - Kang You et al., "VISTREAM: Improving Computation Efficiency of Visual Streaming Perception via Law-of-Charge-Conservation Inspired Spiking Neural Network", CVPR'2025.
+    https://github.com/Intelligent-Computing-Research-Group/ViStream
+"""
 import torch
 from soul.neuron.LIF import BaseNode
 
@@ -57,7 +68,7 @@ class STBIF(BaseNode):
         return self.cur_output * self.q_threshold
 
     def neuronal_reset(self, spike):
-        """电荷回落（in-place），无需 surrogate 重参数化"""
+        """电荷回落(in-place), 无需 surrogate 重参数化"""
         with torch.no_grad():
             self.q[self.cur_output.bool()] -= 1
             
