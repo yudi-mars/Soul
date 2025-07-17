@@ -9,6 +9,7 @@ References:
     - Jeyakumar J.V. et al., "SenseHAR: A Robust Virtual Activity Sensor for Smartphones and Wearables", 2019.
       https://github.com/devanshuDesai/SenseHAR
 """
+import torch
 import torch.nn as nn
 
 from copy import deepcopy
@@ -25,7 +26,7 @@ def multi_time_forward(x_seq, stateless_module):
         y = stateless_module(y)
     
     y_shape.extend(y.shape[1:]) # [T, B] + [...] -> [T, B, ...]
-    return y.reshape(y_shape)
+    return y.view(y_shape)
 
 class DeviceEncoder(nn.Module):
     '''
@@ -39,43 +40,59 @@ class DeviceEncoder(nn.Module):
     processed data as input, the other three dataset contains features whose dimension can be divided evenly by 3.
 
     Meanwhile, there is no temporal dependency between devices in this reposotory. For example, the left-wrist band never 
-    necessarily precedes the waist sensor. Therefore, when aggregating embeddings, using a linear layer with mean operation 
-    is more appropriate than an LSTM.
+    necessarily precedes the waist sensor. Therefore, when aggregating embeddings, using two linear layer with mean operation 
+    is more appropriate than an 2-layer LSTM.
     '''
-    def __init__(self, lif, in_channels=3, emb_dim=64):
+    def __init__(self, lif, in_channels, K=2, encoder_channels=64, share_channels=3):
         super().__init__()
 
+        self.num_sensors = 1 if in_channels % share_channels else int(in_channels / share_channels)
+
         self.conv1 = nn.Sequential(
-            nn.Conv1d(in_channels, 32, kernel_size=3, padding=1),
-            nn.BatchNorm1d(32),
+            nn.Conv2d(1, encoder_channels, kernel_size=1, padding=0),
+            nn.BatchNorm2d(encoder_channels),
         )
         self.lif1 = deepcopy(lif)
-
-        self.mp = nn.MaxPool1d(2)
-
+        
         self.conv2 = nn.Sequential(
-            nn.Conv1d(32, 64, kernel_size=3, padding=1),
-            nn.BatchNorm1d(64),
+            nn.Conv2d(encoder_channels * self.num_sensors, encoder_channels, kernel_size=3, padding=1),
+            nn.BatchNorm2d(encoder_channels),
         )
         self.lif2 = deepcopy(lif)
 
-        self.ap = nn.AdaptiveAvgPool1d(1)
+        self.mp = nn.MaxPool2d((1, K))
 
-        self.fc = nn.Linear(64, emb_dim)
+        self.time_dist = nn.Linear(encoder_channels * self.num_sensors, self.num_sensors)
+        self.time_lif = deepcopy(lif)
 
     def forward(self, x):
-        # x.shape (T, BD, in_C, L)
-        x = multi_time_forward(x, self.conv1) 
+        # stage 1
+        xs = torch.split(x, self.num_sensors, dim=2) # (T, B, C, L) -> num * (T, B, C / num, L)
+
+        temp = []
+        for x in xs:
+            x = x.unsqueeze(2) # -> (T, B, 1, C / num, L)
+            x = multi_time_forward(x, self.conv1) # (T, B, 1, C / num, L) -> (T, B, C_1, C / num, L)
+            temp.append(x)
+
+        # stage 2
+        x = torch.concatenate(temp, dim=2) # -> (T, B, num * C_1, C / num, L) 
         x = self.lif1(x)
 
-        x = multi_time_forward(x, self.mp)
+        x = multi_time_forward(x, self.conv2) # -> (T, B, C_2, C / num, L)
+        x = self.lif2(x)
 
-        x = multi_time_forward(x, self.conv2)
-        x = self.lif2(x) # -> (T, BD, C, out_D)
+        # stage 3
+        x = multi_time_forward(x, self.mp) # -> (T, B, C_2, C / num, L // K)
+        T, B, C, N, D = x.shape
+        x = x.reshape(T, B, C * N, D).contiguous() # -> (T, B, F, D), F = C_2 * C / num, D = L // K
 
-        x = multi_time_forward(x, self.ap).squeeze(-1) # -> (T, BD, C, 1) -> (T, BD, C)
+        T, B, F, D = x.shape
+        x_ = x.permute(0, 1, 3, 2).reshape(T, -1, F) # -> (T, B, D, F) -> (T, B * D, F)
+        x = multi_time_forward(x_, self.time_dist) # -> (T, B * D, F')
+        x = self.time_lif(x)
 
-        x = multi_time_forward(x, self.fc) # -> (T, BD, dim)
+        x = x.reshape(T, B, D, -1).permute(0, 1, 3, 2) # -> (T, B, D, F') -> (T, B, F', D)
 
         return x
 
@@ -88,8 +105,9 @@ class SenseHAR(nn.Module):
         lif = config['neuron']
         num_classes = config['num_classes']
 
-        emb_dim = config['embedding_dim']
+        K = config['k_pool']
         mlp_hidden_dim = config['mlp_hidden_dim']
+        encoder_channels = config['encoder_channels']
 
         # input_channels = num_devices * 1 or num_devices * 3
         if input_channels % 3 == 0: 
@@ -99,33 +117,30 @@ class SenseHAR(nn.Module):
 
         self.input_channels = 1 if input_channels % 3 else 3
 
-        # All devices share the same encoder, enabling the model to learn shared abstractions across devices.
-        self.encoder = DeviceEncoder(lif, self.input_channels, emb_dim)
+        self.encoder = DeviceEncoder(lif, input_channels, K, encoder_channels)
 
-        self.app = nn.Linear(emb_dim, mlp_hidden_dim)
-        self.app_lif = deepcopy(lif)
+        self.app_ln1 = nn.Linear(input_dim // K, mlp_hidden_dim)
+        self.app_lif1 = deepcopy(lif)
+        self.app_ln2 = nn.Linear(mlp_hidden_dim, mlp_hidden_dim)
+        self.app_lif2 = deepcopy(lif)
 
         self.head = nn.Linear(mlp_hidden_dim, num_classes)
 
     def forward_features(self, x):
         functional.reset_net(self)
 
-        T, B, C, L = x.shape
-        assert C == self.num_devices * self.input_channels
-
-        x = x.reshape(T, B * self.num_devices, self.input_channels, L)
-
-        emb = self.encoder(x) # -> (T, BD, dim)
-        emb = emb.reshape(T, B, self.num_devices, -1) # -> (T, B, D, dim)
+        emb = self.encoder(x) # -> (T, B, L, D)
 
         # aggregation all embedding
-        agg = emb.mean(dim=2) # -> (T, B, dim)
-
+        agg = emb.mean(dim=2) # -> (T, B, D)
+        
         return agg
     
     def forward_head(self, x):
-        x = multi_time_forward(x, self.app)
-        x = self.app_lif(x) # -> (T, B, D)
+        x = multi_time_forward(x, self.app_ln1)
+        x = self.app_lif1(x) # -> (T, B, D)
+        x = multi_time_forward(x, self.app_ln2)
+        x = self.app_lif2(x) 
         x = x.mean(0) # -> (B, D)
         
         x = self.head(x)

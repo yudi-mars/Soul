@@ -1,2 +1,3 @@
-embedding_dim: 128          # (int) embedding dimension for each device
-mlp_hidden_dim: 400          # (int) hidden dimension for intermediate layers in application model
+mlp_hidden_dim: 400         # (int) dimension for intermediate layers in lstm/linear module of application model
+k_pool: 2                   # (int) kernel size for K-MaxPooling operation
+encoder_channels: 64        # (int) the intermediate out channels for encoder filter
