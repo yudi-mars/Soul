@@ -1,6 +1,6 @@
 from .CLIF import CLIFNode
 from .GLIF import GatedLIFNode
-from .ILIF import ILIFNode
+from .INTLIF import INTLIFNode
 from .LIF import LIFNode
 from .PLIF import ParametricLIFNode
 from .PSN import ParallelSpikingNode
@@ -14,7 +14,7 @@ neuron_map = {
     "plif": ParametricLIFNode,
     "clif": CLIFNode,
     "glif": GatedLIFNode,
-    "ilif": ILIFNode,
+    "intlif": INTLIFNode,
     "psn": ParallelSpikingNode,
     "tlif": TLIFNode,
     'ielif': IELIFNode,
