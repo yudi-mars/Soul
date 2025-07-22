@@ -49,20 +49,20 @@ class DeviceEncoder(nn.Module):
         self.num_sensors = 1 if in_channels % share_channels else int(in_channels / share_channels)
 
         self.conv1 = nn.Sequential(
-            nn.Conv2d(1, encoder_channels, kernel_size=1, padding=0),
+            nn.Conv2d(1, encoder_channels, kernel_size=1, padding=0, bias=False),
             nn.BatchNorm2d(encoder_channels),
         )
         self.lif1 = deepcopy(lif)
         
         self.conv2 = nn.Sequential(
-            nn.Conv2d(encoder_channels * self.num_sensors, encoder_channels, kernel_size=3, padding=1),
+            nn.Conv2d(encoder_channels * self.num_sensors, encoder_channels, kernel_size=3, padding=1, bias=False),
             nn.BatchNorm2d(encoder_channels),
         )
         self.lif2 = deepcopy(lif)
 
         self.mp = nn.MaxPool2d((1, K))
 
-        self.time_dist = nn.Linear(encoder_channels * self.num_sensors, self.num_sensors)
+        self.time_dist = nn.Linear(encoder_channels * self.num_sensors, self.num_sensors, bias=False)
         self.time_lif = deepcopy(lif)
 
     def forward(self, x):
@@ -119,9 +119,9 @@ class SenseHAR(nn.Module):
 
         self.encoder = DeviceEncoder(lif, input_channels, K, encoder_channels)
 
-        self.app_ln1 = nn.Linear(input_dim // K, mlp_hidden_dim)
+        self.app_ln1 = nn.Linear(input_dim // K, mlp_hidden_dim, bias=False)
         self.app_lif1 = deepcopy(lif)
-        self.app_ln2 = nn.Linear(mlp_hidden_dim, mlp_hidden_dim)
+        self.app_ln2 = nn.Linear(mlp_hidden_dim, mlp_hidden_dim, bias=False)
         self.app_lif2 = deepcopy(lif)
 
         self.head = nn.Linear(mlp_hidden_dim, num_classes)

@@ -40,17 +40,17 @@ class DCNN(nn.Module):
         mlp_hidden_dim = config['mlp_hidden_dim']
 
         self.conv1 = nn.Sequential(
-            nn.Conv1d(in_channels, 50, kernel_size=5),
+            nn.Conv1d(in_channels, 50, kernel_size=5, bias=False),
             nn.BatchNorm1d(50)
         )
         self.lif1 = deepcopy(lif)
         input_dim -= 4
 
-        self.subsamp1 = nn.MaxPool1d(kernel_size=2)
+        self.subsamp1 = nn.MaxPool1d(kernel_size=2, bias=False)
         input_dim //= 2
 
         self.conv2 = nn.Sequential(
-            nn.Conv1d(50, 40, kernel_size=5),
+            nn.Conv1d(50, 40, kernel_size=5, bias=False),
             nn.BatchNorm1d(40)
         )
         self.lif2 = deepcopy(lif)
@@ -61,20 +61,20 @@ class DCNN(nn.Module):
 
         if input_dim <= 20:
             self.conv3 = nn.Sequential(
-                nn.Conv1d(40, 20, kernel_size=2),
+                nn.Conv1d(40, 20, kernel_size=2, bias=False),
                 nn.BatchNorm1d(20)
             )
             input_dim  -= 1
         else:
             self.conv3 = nn.Sequential(
-                nn.Conv1d(40, 20, kernel_size=3),
+                nn.Conv1d(40, 20, kernel_size=3, bias=False),
                 nn.BatchNorm1d(20)
             )
             input_dim  -= 2
         self.lif3 = deepcopy(lif)
 
         self.linear = nn.Sequential(
-            nn.Linear(input_dim, mlp_hidden_dim),
+            nn.Linear(input_dim, mlp_hidden_dim, bias=False),
             nn.BatchNorm1d(20)
         )
         self.lif4 = deepcopy(lif)
