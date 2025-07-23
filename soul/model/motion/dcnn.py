@@ -46,7 +46,7 @@ class DCNN(nn.Module):
         self.lif1 = deepcopy(lif)
         input_dim -= 4
 
-        self.subsamp1 = nn.MaxPool1d(kernel_size=2, bias=False)
+        self.subsamp1 = nn.MaxPool1d(kernel_size=2)
         input_dim //= 2
 
         self.conv2 = nn.Sequential(
