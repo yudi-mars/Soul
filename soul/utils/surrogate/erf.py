@@ -1,5 +1,15 @@
-import torch
+"""
+Filename: erf.py
+Author: Di Yu <yudi2023@zju.edu.cn>
+Date Created: 2025-06-01
+Description:
+    The Gaussian error (erf) surrogate spiking function.
+
+References:
+    - Esser S. K. et al., "Backpropagation for energy-efficient neuromorphic computing", NeurIPs'2015.
+"""
 import math
+import torch
 from .base import SurrogateFunctionBase, heaviside
 
 @torch.jit.script

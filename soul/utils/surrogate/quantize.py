@@ -1,5 +1,15 @@
+"""
+Filename: quantize.py
+Author: Changze Lv <czlv24@m.fudan.edu.cn>
+Date Created: 2025-05-30
+Description:
+    specific surrogate function for INTLIF
+
+References:
+    - Zhenxin Lei et al., "Spike2former: Efficient spiking transformer for high-performance image segmentation", AAAI'2025.
+"""
 import torch
-from .base import SurrogateFunctionBase, heaviside
+from .base import SurrogateFunctionBase
 
 class quant4(torch.autograd.Function):
     @staticmethod

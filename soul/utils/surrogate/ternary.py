@@ -1,3 +1,13 @@
+"""
+Filename: ternary.py
+Author: Changze Lv <czlv24@m.fudan.edu.cn>
+Date Created: 2025-05-20
+Description:
+    specific surrogate function for TLIF
+
+References:
+    - Yufei Guo et al., "Ternary spike: Learning ternary spikes for spiking neural networks", AAAI'2024.
+"""
 import torch
 from .base import SurrogateFunctionBase
 

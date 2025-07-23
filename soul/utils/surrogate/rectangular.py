@@ -1,3 +1,13 @@
+"""
+Filename: rectangular.py
+Author: Di Yu <yudi2023@zju.edu.cn>
+Date Created: 2025-06-02
+Description:
+    The Rectangular surrogate spiking function.
+
+References:
+    - Yujie Wu et al., "Direct Training for Spiking Neural Networks: Faster, Larger, Better", AAAI'2019.
+"""
 import torch
 
 from .base import SurrogateFunctionBase, heaviside

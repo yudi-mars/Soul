@@ -1,3 +1,13 @@
+'''
+Filename: quadratic.py
+Author: Di Yu <yudi2023@zju.edu.cn>
+Date Created: 2025-06-01
+Description:
+    The piecewise quadratic surrogate spiking function.
+
+References:
+    - Bellec, G. et al., "Long short-term memory and learning-to-learn in networks of spiking neurons", NeurIPs'2018.
+'''
 import torch
 from .base import SurrogateFunctionBase, heaviside
 

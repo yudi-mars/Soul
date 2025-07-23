@@ -1,3 +1,13 @@
+'''
+Filename: atan.py
+Author: Di Yu <yudi2023@zju.edu.cn>
+Date Created: 2025-05-20
+Description:
+    The arc tangent surrogate spiking function. 
+
+References:
+    - Yanqi Chen et al., "State transition of dendritic spines improves learning of sparse spiking neural networks", ICML'2022.
+'''
 import math
 import torch
 

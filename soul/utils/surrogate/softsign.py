@@ -1,3 +1,13 @@
+'''
+Filename: softsign.py
+Author: Di Yu <yudi2023@zju.edu.cn>
+Date Created: 2025-06-02
+Description:
+    The soft sign surrogate spiking function.
+
+References:
+    - Zenke F. et al., "Superspike: Supervised learning in multilayer spiking neural networks", Neural computation'2018.
+'''
 import torch
 import torch.nn.functional as F
 from .base import SurrogateFunctionBase, heaviside
