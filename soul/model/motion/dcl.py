@@ -9,6 +9,8 @@ References:
     - Ordóñez, F. J. et al., "Deep convolutional and LSTM recurrent neural networks for multimodal wearable activity recognition", Sensors'2016.
     - Yuhang Li et al., "Wearable-based Human Activity Recognition with Spatio-Temporal Spiking Neural Networks", Frontiers in Neuroscience'2023
     https://github.com/Intelligent-Computing-Lab-Panda/SNN_HAR
+    - Wei Fang et al., "SpikingJelly: An open-source machine learning infrastructure platform for spike-based intelligence", Science Advances'2023.
+    https://github.com/fangwei123456/spikingjelly/blob/master/spikingjelly/activation_based/rnn.py
 """
 import torch
 import torch.nn as nn
