@@ -1,5 +1,5 @@
 """
-Filename: is.py
+Filename: ispikformer.py
 Author: Di Yu <yudi2023@zju.edu.cn>
 Date Created: 2025-07-23
 Description:

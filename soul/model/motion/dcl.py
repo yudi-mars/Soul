@@ -3,7 +3,7 @@ Filename: dcl.py
 Author: Di Yu <yudi2023@zju.edu.cn>
 Date Created: 2025-07-22
 Description:
-    spike-wise deep convolutional and LSTM network for HAR, (hybrid model with ANN and SNN)
+    spike-wise deep convolutional and LSTM network for HAR
 
 References:
     - Ordóñez, F. J. et al., "Deep convolutional and LSTM recurrent neural networks for multimodal wearable activity recognition", Sensors'2016.

@@ -3,7 +3,6 @@
 ### 工程任务
 
 - [ ] TBD Other Sensing Application
-    - Wireless Sensing: 
     - Multi-Modal Sensing: @changze 是不是用下spike-clip的研究成果稍微展示下？就说这是一种多模态SNN应用？
     - Earable Sensing: 头戴/夹耳式设备之类采集的信号:可以做（1）Sound source localization定位 (2) EEG/ECG生物信号 这两个application SNN的AI模型都有，可以做toy-example
     - Generative AI for Sensing: 展示一些spiking的LLM在一些通用设备上运行的结果(spikeGPT为例） toy-example
@@ -13,13 +12,22 @@
 - [ ] 2025.07.20-2025.07.31 @changze lightweight的方法: **NAS**: 如果目前只支持vgg，那就先只支持直通网络,~~但是要确认一些别的方法（比如乐透奖Panda 2022那篇ECCV）看看哪种方法开销更小~~**主要展示的是当前这个NAS方向是如何和我们的Soul融合适配的！**  example(case)导向
 - [ ] 2025.07.25-2025.07.31 @changze @yudi quantization接口  **主要展示的是当前这个prune方向是如何和我们的Soul融合适配的**
 - [ ] 2025.07.20-2025.08.20 @helin prune：以example的形式展示，不是融进Soul里，针对GPU系列的设备提供一个可行方案，如structure pruning，以VGG直通网络为例，支持GPU上优化~~neuromorphic~~， ~~unstructure pruning支持neuromorphic (目前提供GPU模拟即可)~~ **主要展示的是当前这个prune方向是如何和我们的Soul融合适配的！**
+- [ ] 2025.08.15-2025.08.30 Wireless Sensing: 通过无线信号收集的数据(雷达mmWave, wifi signal, RFID这类的)，任务很杂, 我们还是以识别任务为导向 (SenseFi: A Benchmark for WiFi CSI Sensing) 有个开源项目，有数据集和简单的网络结构，很适合我们spike化，可以直接参考 @yudi
+    - 4个数据集集成和统一处理接口(从简单到复杂): UT-HAR, NTU-HAR, NTU-HumanID, Widar 3.0
+    - 模型结构(选4个就行， 主要是结构多样性):
+        - MLP
+        - LeNet
+        - Spike RNN / LSTM
+        - Conv + LSTM
+        - ResNet + classifier
+        - ViT
 - [ ] 2025.07.23-2025.08.15 Speech Recognition~~相关文献调研~~、模型以及数据加载复现以及融入Soul的难点评估 @yudi
     - 目前已经明确4个数据集, 需要维护数据处理和数据加载: GTZAN (audio领域的mnist，作为SNN的初步探索，很适合选择), UrbanSound8K (Mobicom有人用), ESC-50 (Ubicomp有人用), Google Speech Commands v2 (mobicom等经常用，有点imagenet的感觉)
     - 音频数据处理默认为转换为Mel Spectrogram后喂给模型
         - CNN-based Model: 搞个vgg结构的差不多了 (mobicom有人用)
         - DCL(deepconvlstm): 2 conv + 2 bi-lstm (mobicom的文章有人用)
         - ResNet + 1 layer FC (mobicom的文章有人用)
-        - Transformer（以spikformer为模板）的基础模型 (现在比较流行,SNN也有相关工作)
+        - Transformer（以spikformer为模板）的基础模型 (现在比较流行,SNN也有相关工作，如果能直接拿来复现最好)
 - [x] 2025.07.23-2025.07.24 UCI HAR 更换数据源以及raw data处理方式(更合理，与其他HAR数据源保持一致)
 - [x] 2025.07.17-2025.07.30 @yudi HAR的模型还差2个，至少要保证一个transformer-based的模型存在
     - ~~DCNN~~ Conv1D应用
@@ -100,6 +108,9 @@ TBD
     - [UrbanSound8K](https://dl.acm.org/doi/10.1145/2647868.2655045) [[Download Link](https://urbansounddataset.weebly.com/download-urbansound8k.html)]
     - [ESC-50](https://dl.acm.org/doi/abs/10.1145/2733373.2806390) [[Download Link](https://github.com/karoldvl/ESC-50/archive/master.zip)]
     - [Google Speech Commands](https://arxiv.org/abs/1804.03209) [[Download Link](https://huggingface.co/datasets/google/speech_commands)]
+
+4. Wireless Sensing
+    - []
 
 ## Guidance
 ### Command in Console 
