@@ -91,7 +91,7 @@ TBD
 
 2. Motion Sensing
     - [UCI HAR](https://www.sciencedirect.com/science/article/abs/pii/S0925231215010930) [[Download Link](https://archive.ics.uci.edu/dataset/240/human+activity+recognition+using+smartphones)]
-    - [HHAR](https://dl.acm.org/doi/10.1145/2809695.2809718) [[Download Link](https://archive.ics.uci.edu/dataset/344/heterogeneity+activity+recognition)] *Note: Only Phone-related data is used in this repository*
+    - [HHAR](https://dl.acm.org/doi/10.1145/2809695.2809718) [[Download Link](https://archive.ics.uci.edu/dataset/344/heterogeneity+activity+recognition)]  <!-- *Note: Only Phone-related data is used in this repository* -->
     - [MotionSense](https://dl.acm.org/doi/10.1145/3302505.3310068) [[Download Link](https://www.kaggle.com/datasets/malekzadeh/motionsense-dataset)]
     - [Shoaib](https://www.mdpi.com/1424-8220/14/6/10146) [[Download Link](https://www.researchgate.net/publication/266384007_Sensors_Activity_Recognition_DataSet)]
 
@@ -99,8 +99,7 @@ TBD
     - [GTZAN](https://ieeexplore.ieee.org/abstract/document/1021072) [[Download Link](https://www.kaggle.com/datasets/andradaolteanu/gtzan-dataset-music-genre-classification)]
     - [UrbanSound8K](https://dl.acm.org/doi/10.1145/2647868.2655045) [[Download Link](https://urbansounddataset.weebly.com/download-urbansound8k.html)]
     - [ESC-50](https://dl.acm.org/doi/abs/10.1145/2733373.2806390) [[Download Link](https://github.com/karoldvl/ESC-50/archive/master.zip)]
-    - [Google Speech Commands](https://arxiv.org/abs/1804.03209) [[Download Link](https://www.researchgate.net/publication/266384007_Sensors_Activity_Recognition_DataSet)]
-
+    - [Google Speech Commands](https://arxiv.org/abs/1804.03209) [[Download Link](https://huggingface.co/datasets/google/speech_commands)]
 
 ## Guidance
 ### Command in Console 
@@ -146,7 +145,7 @@ TBD
 We want to express our sincere gratitude to the developers and contributors of the following open-source projects, which have greatly inspired and supported this work:
 
 - [snntorch](https://github.com/jeshraghian/snntorch): Provided excellent modular design patterns for surrogate functions and input encoding schema that influenced our architecture.
-- [SpikingJelly](https://github.com/fangwei123456/spikingjelly): Served as a reference for implementing spiking neuron, RNN-related topologies and loading DVS dataset.
+- [SpikingJelly](https://github.com/fangwei123456/spikingjelly): Served as a reference for implementing basic spiking neuron, RNN-related topologies, and DVS dataset loading module.
 - [PyCIL](https://github.com/LAMDA-CL/PyCIL): Provided a clear and extensible data loading module for conventional dataset, which served as a valuable reference for our dataset handling.
 
 Their valuable work laid the foundation for some key components of our project.
