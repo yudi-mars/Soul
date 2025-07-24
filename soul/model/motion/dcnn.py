@@ -32,6 +32,8 @@ class DCNN(nn.Module):
     def __init__(self, config):
         super().__init__()
 
+        # for uci har, lr must be 1e-3
+
         in_channels = config['input_channels']
         input_dim = config['input_dim']
         lif = config['neuron']

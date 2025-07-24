@@ -15,7 +15,7 @@ epochs: 150                       # (int) The number of training epochs.
 batch_size: 128                   # (int) The training batch size.
 optimizer: adam                   # (str) The name of used optimizer.
 scheduler: cosine                 # (str) The name of optimizer scheduler
-learning_rate: 0.0001             # (float) Learning rate.
+learning_rate: 0.001              # (float) Learning rate.
 weight_decay: 0.0                 # (float) The weight decay value (L2 penalty) for optimizers.
 momentum: 0.9                     # (float) inertia coefficient for optimizer
 window_size: 128                  # (int) sliced window size for motion sensing dataset
