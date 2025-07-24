@@ -1,23 +1,31 @@
 ## TODO List
 
-_Note: 应用以主流edge applicaiton为主(老三样), 但是举例一些特殊的应用，如果有开源数据的话 就跑一跑结果调通验证未来可行性_
-
 ### 工程任务
 
-- [ ] TBD 展示一些spiking的LLM在一些通用设备上运行的结果(spikeGPT为例)，展示EdgeLLM future direction.(作为一个application) toy-example
-- [ ] 2025.07.26-2025.07.27 @changze 加一下IJCAI2025的ILIF，代码和论文都在ILIF.py中（原来的ILIF被改为INTLIF, 'intlif'）
+- [ ] TBD Other Sensing Application
+    - Wireless Sensing: 
+    - Multi-Modal Sensing: @changze 是不是用下spike-clip的研究成果稍微展示下？就说这是一种多模态SNN应用？
+    - Earable Sensing: 头戴/夹耳式设备之类采集的信号:可以做（1）Sound source localization定位 (2) EEG/ECG生物信号 这两个application SNN的AI模型都有，可以做toy-example
+    - Generative AI for Sensing: 展示一些spiking的LLM在一些通用设备上运行的结果(spikeGPT为例） toy-example
+- [ ] 2025.07.26-2025.07.27 @changze 加一下IJCAI2025的ILIF(属于membrane potential modulation)，代码和论文都在ILIF.py中（咱们原来的ILIF被改为INTLIF, 'intlif'）
 - [ ] 2025.07.10-2025.07.31 @changze @yudi 我们需要ANN2SNN（为vgg，resnet，spikformer至少挑选一个对应可行的资源消耗没那么严重的ANN2SNN训练方法）**从cloud service的视角展示可行性，最后cloud端给边缘端发送模型** / offload with incremental learning看看有没有可能
 - [ ] 2025.07.20-2025.07.31 @changze @yudi lightweight的方法: ANN->SNN的蒸馏方法~2023cvpr 为vgg，resnet，spikformer提供一个可行的蒸馏方案 **与ANN2SNN同理**
 - [ ] 2025.07.20-2025.07.31 @changze lightweight的方法: **NAS**: 如果目前只支持vgg，那就先只支持直通网络,~~但是要确认一些别的方法（比如乐透奖Panda 2022那篇ECCV）看看哪种方法开销更小~~**主要展示的是当前这个NAS方向是如何和我们的Soul融合适配的！**  example(case)导向
 - [ ] 2025.07.25-2025.07.31 @changze @yudi quantization接口  **主要展示的是当前这个prune方向是如何和我们的Soul融合适配的**
 - [ ] 2025.07.20-2025.08.20 @helin prune：以example的形式展示，不是融进Soul里，针对GPU系列的设备提供一个可行方案，如structure pruning，以VGG直通网络为例，支持GPU上优化~~neuromorphic~~， ~~unstructure pruning支持neuromorphic (目前提供GPU模拟即可)~~ **主要展示的是当前这个prune方向是如何和我们的Soul融合适配的！**
-- [ ] 2025.07.23-2025.08.05 Speech Recognition相关文献调研、模型以及数据加载复现以及融入Soul的难点评估 @yudi
+- [ ] 2025.07.23-2025.08.15 Speech Recognition~~相关文献调研~~、模型以及数据加载复现以及融入Soul的难点评估 @yudi
+    - 目前已经明确4个数据集, 需要维护数据处理和数据加载: GTZAN (audio领域的mnist，作为SNN的初步探索，很适合选择), UrbanSound8K (Mobicom有人用), ESC-50 (Ubicomp有人用), Google Speech Commands v2 (mobicom等经常用，有点imagenet的感觉)
+    - 音频数据处理默认为转换为Mel Spectrogram后喂给模型
+        - CNN-based Model: 搞个vgg结构的差不多了 (mobicom有人用)
+        - DCL(deepconvlstm): 2 conv + 2 bi-lstm (mobicom的文章有人用)
+        - ResNet + 1 layer FC (mobicom的文章有人用)
+        - Transformer（以spikformer为模板）的基础模型 (现在比较流行,SNN也有相关工作)
 - [x] 2025.07.23-2025.07.24 UCI HAR 更换数据源以及raw data处理方式(更合理，与其他HAR数据源保持一致)
 - [x] 2025.07.17-2025.07.30 @yudi HAR的模型还差2个，至少要保证一个transformer-based的模型存在
-    - ~~DCNN~~
-    - ~~SenseHAR~~
+    - ~~DCNN~~ Conv1D应用
+    - ~~SenseHAR~~ Conv2D应用
     - ~~DANA~~ 这个模型就是多了个卷积多了adaptivepool，没必要融了, 换成了里面用到的backbone deepconvlstm，其中与Yale的SNN-HAR工作吻合(已完成)
-    - ~~BIOT~~ 里面有傅立叶变换，严格意义上是不是不应该算进来?
+    - ~~BIOT~~ 里面有傅立叶变换，严格意义上是不是不应该算进来
     - ~~iTransformer? 可能是适配的，后面可以和 @changze 讨论~~ 搞定了 效果挺好
 - [x] 2025.07.15-2025.07.20 Human Activity Recognition相关模型，数据加载模块融入Soul @yudi
 - [x] 2025.07.07-2025.07.14 @yudi data.py的功能模块需要拆分，分数据集进行处理会不会更好?
@@ -88,12 +96,10 @@ TBD
     - [Shoaib](https://www.mdpi.com/1424-8220/14/6/10146) [[Download Link](https://www.researchgate.net/publication/266384007_Sensors_Activity_Recognition_DataSet)]
 
 3. Acoustic Sensing
+    - [GTZAN](https://ieeexplore.ieee.org/abstract/document/1021072) [[Download Link](https://www.kaggle.com/datasets/andradaolteanu/gtzan-dataset-music-genre-classification)]
+    - [UrbanSound8K](https://dl.acm.org/doi/10.1145/2647868.2655045) [[Download Link](https://urbansounddataset.weebly.com/download-urbansound8k.html)]
+    - [ESC-50](https://dl.acm.org/doi/abs/10.1145/2733373.2806390) [[Download Link](https://github.com/karoldvl/ESC-50/archive/master.zip)]
     - [Google Speech Commands](https://arxiv.org/abs/1804.03209) [[Download Link](https://www.researchgate.net/publication/266384007_Sensors_Activity_Recognition_DataSet)]
-    - [UrbanSound](https://dl.acm.org/doi/10.1145/2647868.2655045) [[Download Link](https://urbansounddataset.weebly.com/)]
-    - TODO @yudi
-    - TODO @yudi
-
-    Note: Acoustic sensing(麦克风、扬声器等收集):(数据集以keyword/event detection、emotion recognition为例?) GSC(google speech recognition), UrbanSound8k这两个肯定可以算 ｜模型有哪些？ _TBD @yudi_
 
 
 ## Guidance
@@ -127,7 +133,7 @@ TBD 终版前给一个结果展示，比如ESBench的一些结果列上去
 
 ## Documentation
 
-TBD 后面学生来做这个部分的事情 (Sphinx Documentation)
+TBD (Sphinx Documentation)
 
 ## Cite
 
