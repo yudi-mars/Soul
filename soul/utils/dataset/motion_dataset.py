@@ -48,54 +48,93 @@ class iUCIHAR(MotionData):
     def __init__(self, data_dir, T, window_size, step_size):
         super().__init__(data_dir, T, window_size, step_size)
 
+    def _load_segments(self, signal_type='train'):
+        SIGNALS = [
+            'body_acc_x', 'body_acc_y', 'body_acc_z',
+            'body_gyro_x', 'body_gyro_y', 'body_gyro_z',
+            'total_acc_x', 'total_acc_y', 'total_acc_z'
+        ]
+
+        X_list = []
+        for signal in SIGNALS:
+            path = os.path.join(self.data_dir, signal_type, 'Inertial Signals', f"{signal}_{signal_type}.txt")
+            arr = np.loadtxt(path)  # [N, 128]
+            X_list.append(arr[:, np.newaxis, :])  # → [N,1,128]
+        X = np.concatenate(X_list, axis=1)  # → [N, 9, 128]
+        y = np.loadtxt(os.path.join(self.data_dir, signal_type, "y_" + signal_type + ".txt")).astype(int) - 1
+
+        return X.astype(np.float32), y.astype(int)
+
     def download_data(self):
         # self.data_dir = ~/data/ucihar/
 
         # load train data
-        self.train_data = pd.read_csv(
-            os.path.join(self.data_dir, 'train', 'X_train.txt'),
-            delim_whitespace=True, 
-            header=None
-        ).values
-        self.train_targets = pd.read_csv(
-            os.path.join(self.data_dir, 'train', 'y_train.txt'),
-            delim_whitespace=True, 
-            header=None
-        ).values.squeeze() - 1 # label start from 0
-
+        self.train_data, self.train_targets = self._load_segments('train')
         # load test data
-        self.test_data = pd.read_csv(
-            os.path.join(self.data_dir, 'test', 'X_test.txt'),
-            delim_whitespace=True, 
-            header=None
-        ).values
-        self.test_targets = pd.read_csv(
-            os.path.join(self.data_dir, 'test', 'y_test.txt'),
-            delim_whitespace=True, 
-            header=None
-        ).values.squeeze() - 1 # label start from 0
+        self.test_data, self.test_targets = self._load_segments('test')
 
-        self.train_data = self.train_data.astype(np.float32) # (B, D) D=561 in this dataset
-        self.test_data = self.test_data.astype(np.float32)
+        
+        mean = self.train_data.mean(axis=(0,2), keepdims=True)  # shape [1,9,1]
+        std  = self.train_data.std(axis=(0,2), keepdims=True)
+        self.train_data = (self.train_data - mean) / std
+        self.test_data  = (self.test_data  - mean) / std
+
+        # to tensor
+        self.train_data = torch.tensor(self.train_data, dtype=torch.float32) # (B, C, D) C=9, D=128 in this dataset
+        self.test_data = torch.tensor(self.test_data, dtype=torch.float32)
         self.train_targets = torch.tensor(self.train_targets, dtype=torch.long) # (B)
         self.test_targets = torch.tensor(self.test_targets, dtype=torch.long)
 
-        mean = self.train_data.mean(axis=0) # (D, )
-        std = self.train_data.std(axis=0) # (D, )
-
-        self.train_data = torch.tensor(self.train_data, dtype=torch.float32)
-        self.train_data = (self.train_data - mean) / (std + 1e-5)
-
-        self.test_data = torch.tensor(self.test_data, dtype=torch.float32)
-        self.test_data = (self.test_data - mean) / (std + 1e-5)
-
-        # (B, D) -> (B, 1, D) for window dimension
-        self.train_data = self.train_data.unsqueeze(1) 
-        self.test_data = self.test_data.unsqueeze(1) 
-
         print(f'train data shape: {self.train_data.shape}, test data shape: {self.test_data.shape}')
 
-        self.input_shape = (1, 561)
+        self.input_shape = (9, 128)
+
+        # ===== previous version for load preprocessed data =====
+        # # load train data
+        # self.train_data = pd.read_csv(
+        #     os.path.join(self.data_dir, 'train', 'X_train.txt'),
+        #     delim_whitespace=True, 
+        #     header=None
+        # ).values
+        # self.train_targets = pd.read_csv(
+        #     os.path.join(self.data_dir, 'train', 'y_train.txt'),
+        #     delim_whitespace=True, 
+        #     header=None
+        # ).values.squeeze() - 1 # label start from 0
+
+        # # load test data
+        # self.test_data = pd.read_csv(
+        #     os.path.join(self.data_dir, 'test', 'X_test.txt'),
+        #     delim_whitespace=True, 
+        #     header=None
+        # ).values
+        # self.test_targets = pd.read_csv(
+        #     os.path.join(self.data_dir, 'test', 'y_test.txt'),
+        #     delim_whitespace=True, 
+        #     header=None
+        # ).values.squeeze() - 1 # label start from 0
+
+        # self.train_data = self.train_data.astype(np.float32) # (B, D) D=561 in this dataset
+        # self.test_data = self.test_data.astype(np.float32)
+        # self.train_targets = torch.tensor(self.train_targets, dtype=torch.long) # (B)
+        # self.test_targets = torch.tensor(self.test_targets, dtype=torch.long)
+
+        # mean = self.train_data.mean(axis=0) # (D, )
+        # std = self.train_data.std(axis=0) # (D, )
+
+        # self.train_data = torch.tensor(self.train_data, dtype=torch.float32)
+        # self.train_data = (self.train_data - mean) / (std + 1e-5)
+
+        # self.test_data = torch.tensor(self.test_data, dtype=torch.float32)
+        # self.test_data = (self.test_data - mean) / (std + 1e-5)
+
+        # # (B, D) -> (B, 1, D) for window dimension
+        # self.train_data = self.train_data.unsqueeze(1) 
+        # self.test_data = self.test_data.unsqueeze(1) 
+
+        # print(f'train data shape: {self.train_data.shape}, test data shape: {self.test_data.shape}')
+
+        # self.input_shape = (1, 561)
 
 
 class iMotionSense(MotionData):
