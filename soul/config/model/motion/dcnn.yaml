@@ -1,1 +1,0 @@
-mlp_hidden_dim: 400          # (int) hidden dimension for intermediate layers in mlp part

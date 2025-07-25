@@ -1,3 +1,0 @@
-surrogate: atan               # (str) surrogate function for back-propagation
-q_threshold: 1.0              # (float) quantization threshold
-level: 2                      # (int) number of quantization levels

@@ -1,2 +1,0 @@
-hidden_dim: 128                    # (int) dimension of the hidden layer for LSTM
-n_channels: 64                        # (int) number of intermediate channels for convolutional layers
