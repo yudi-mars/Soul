@@ -1,0 +1,3 @@
+steps: 4               # (int) Number of steps to run the LTM-D model
+kappa: 0.5             # (float) Kappa value for the LTM-D model
+surrogate: atan        # (str) unued, surrogate function for back-propagation

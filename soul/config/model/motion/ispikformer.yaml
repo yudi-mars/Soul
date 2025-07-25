@@ -1,0 +1,4 @@
+embedding_dim: 256                    # (int) dimension of the embedding
+num_head: 8                           # (int) number of attention heads
+depth: 4                              # (int) number of transformer blocks
+mlp_ratio: 4.0                        # (float) ratio of mlp hidden dimension in transformer

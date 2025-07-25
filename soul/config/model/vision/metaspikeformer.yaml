@@ -1,0 +1,2 @@
+mlp_ratio: 4                        # (float) expand ratio for hidden dimension in MLP intermediate layers
+num_heads: 8                        # (int) number of heads for attention output
