@@ -71,21 +71,15 @@ As previously mentioned, the energy-saving properties of SNNs can only be effect
 Due to the device heterogeneity, however, not all the devices are embedded with such sensors. Hence, when answering the RQ3 across different device platform, we choose the commonly-used theoretical energy cost counting measures to compare different on-device implementations, which _counting the number of total computing operation for the SNN model implementing inference per sample_.
 
 For SNNs, the theoretical energy consumption of layer $l$ in SNNs can be calculated as: 
-$$
-    E(l) = E_{AC}\times \mathrm{SOPs}(l)
-$$
+$E(l) = E_{AC}\times \mathrm{SOPs}(l)$
 where $\mathrm{SOPs}$ are the number of spike-based accumulate (AC) operations (a.k.a. synaptic operations).
 
 For traditional ANNs, the theoretical energy consumption required by a specific layer $b$ can be estimated by:
-$$
-    E(b) = E_{MAC}\times \mathrm{FLOPs}(b)
-$$
+$E(b) = E_{MAC}\times \mathrm{FLOPs}(b)$
 where $\mathrm{FLOPs}$ is the floating point operations of $b$, representing the number of multiply-and-accumulate (MAC) operations. Following other SNN-related research, 
 we also assume that the MAC and AC operations are implemented on the 45nm hardware \cite{horowitz20141}, where $E_{MAC} = 4.6\mathrm{pJ}$ and $E_{AC} = 0.9\mathrm{pJ}$, where $1\mathrm{J}=10^{3}\mathrm{mJ}=10^{12}\mathrm{pJ}$.
 The number of SOPs at the layer $l$ of SNN is estimated as 
-$$
-    \mathrm{SOPs}(l) = T \times \gamma \times \mathrm{FLOPs}(l)
-$$
+$\mathrm{SOPs}(l) = T \times \gamma \times \mathrm{FLOPs}(l)$
 where $T$ is the number of times steps during simulation, and $\gamma$ is the firing rate of the input spike train of the layer $l$.
 
 Therefore, we can approximate the total theoretical energy consumption for SNNs and ANNs layer by layer. Future advancements in neuromorphic hardware are expected to decrease energy consumption further.
