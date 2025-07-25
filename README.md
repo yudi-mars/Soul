@@ -2,6 +2,7 @@
 
 ### 工程任务
 
+- [ ] TBD @yudi `scripts`里的shell脚本后面应该换成针对utils.app里的各个服务调用的脚本会比较好(run_soul本质就是rate_trainer，后面会放到app/train里)
 - [ ] TBD Other Sensing Application
     - Multi-Modal Sensing: @changze 是不是用下spike-clip的研究成果稍微展示下？就说这是一种多模态SNN应用？
     - Earable Sensing: 头戴/夹耳式设备之类采集的信号:可以做（1）Sound source localization定位 (2) EEG/ECG生物信号 这两个application SNN的AI模型都有，可以做toy-example
