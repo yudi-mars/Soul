@@ -6,7 +6,7 @@ Description:
     implementation for LIF variants for Spiking Neural Networks.
 
 References:
-    - Xingting Yao et al., "GLIF: A Uniﬁed Gated Leaky Integrate-and-Fire Neuron for Spiking Neural Networks", NeurIPs'2022.
+    - Xingting Yao et al., "GLIF: A Uniﬁed Gated Leaky Integrate-and-Fire Neuron for Spiking Neural Networks", NeurIPS'2022.
     https://github.com/CAS-CLab/Gated-LIF
 """
 import math

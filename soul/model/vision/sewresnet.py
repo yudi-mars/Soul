@@ -6,7 +6,7 @@ Description:
     implementation for ResNet-structured spiking neural networks for image classification.
 
 References:
-    - Wei Fang et al., "Deep residual learning in spiking neural networks", NeurIPs'2021.
+    - Wei Fang et al., "Deep residual learning in spiking neural networks", NeurIPS'2021.
       https://github.com/fangwei123456/Spike-Element-Wise-ResNet
 """
 import torch

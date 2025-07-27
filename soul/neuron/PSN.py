@@ -6,7 +6,7 @@ Description:
     implementation for LIF variants for Spiking Neural Networks.
 
 References:
-    - Wei Fang et al., "Parallel Spiking Neurons with High Efficiency and Ability to Learn Long-term Dependencies", NeurIPs'2023.
+    - Wei Fang et al., "Parallel Spiking Neurons with High Efficiency and Ability to Learn Long-term Dependencies", NeurIPS'2023.
     https://github.com/fangwei123456/Parallel-Spiking-Neuron
 """
 import math

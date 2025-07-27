@@ -291,8 +291,8 @@ def SpikingResformer256(config):
             ['DSSA', 'GWFFN'] * 1,
             ['DSSA', 'GWFFN'] * 2,
             ['DSSA', 'GWFFN'] * 3, ],
-        [64, 256, 612],
-        [1, 3, 6],
+        [64, 256, 512],
+        [1, 4, 8],
         [4, 2, 1]
     )
 

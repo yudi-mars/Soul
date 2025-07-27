@@ -6,7 +6,7 @@ Description:
     implementation for a transformer-structured SNN model for image classification.
 
 References:
-    - Chenlin Zhou et al., "QKFormer: Hierarchical Spiking Transformer using Q-K Attention", NeurIPs'2024.
+    - Chenlin Zhou et al., "QKFormer: Hierarchical Spiking Transformer using Q-K Attention", NeurIPS'2024.
       https://github.com/zhouchenlin2096/QKFormer
 """
 import torch

@@ -6,7 +6,7 @@ Description:
     The piecewise exponential surrogate spiking function.
 
 References:
-    - Shrestha, S. B. et al., "Slayer: Spike layer error reassignment in time", NeurIPs'2018.
+    - Shrestha, S. B. et al., "Slayer: Spike layer error reassignment in time", NeurIPS'2018.
 '''
 import torch
 from .base import SurrogateFunctionBase, heaviside

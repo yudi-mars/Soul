@@ -6,7 +6,7 @@ Description:
     The piecewise quadratic surrogate spiking function.
 
 References:
-    - Bellec, G. et al., "Long short-term memory and learning-to-learn in networks of spiking neurons", NeurIPs'2018.
+    - Bellec, G. et al., "Long short-term memory and learning-to-learn in networks of spiking neurons", NeurIPS'2018.
 '''
 import torch
 from .base import SurrogateFunctionBase, heaviside

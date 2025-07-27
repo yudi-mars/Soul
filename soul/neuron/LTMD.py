@@ -6,7 +6,7 @@ Description:
     implementation for LIF variants for Spiking Neural Networks.
 
 References:
-    - Siqi Wang et al., "LTMD: Learning Improvement of Spiking Neural Networks with Learnable Thresholding Neurons and Moderate Dropout", NeurIPs'2022.
+    - Siqi Wang et al., "LTMD: Learning Improvement of Spiking Neural Networks with Learnable Thresholding Neurons and Moderate Dropout", NeurIPS'2022.
     https://github.com/sq117/LTMD
 """
 import torch

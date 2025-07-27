@@ -6,7 +6,7 @@ Description:
     The Gaussian error (erf) surrogate spiking function.
 
 References:
-    - Esser S. K. et al., "Backpropagation for energy-efficient neuromorphic computing", NeurIPs'2015.
+    - Esser S. K. et al., "Backpropagation for energy-efficient neuromorphic computing", NeurIPS'2015.
 """
 import math
 import torch
