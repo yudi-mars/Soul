@@ -147,13 +147,13 @@ def init_config():
         config['application'] = 'motion'
     elif config['dataset_name'].lower() in ['cifar10', 'cifar100', 'imagenet', 'dvsgesture', 'cifar10dvs']:
         config['application'] = 'vision'
-    elif config['dataset_name'].lower() in ['gsc', 'urbansound', ]: # TODO
+    elif config['dataset_name'].lower() in ['gsc', 'urbansound', 'gtzan', 'ssc', 'shd']:
         config['application'] = 'acoustic' 
     else:
         raise ValueError(f'Unsupport sensing modality: {config["dataset_name"]}')
     app_dir = config['application']
 
-    # load neuron specific yaml TODO neuron also need specify application scenario??
+    # load neuron specific yaml
     target_config_file = os.path.join(current_path, f"../config/neuron/{config['neuron_type'].lower()}.yaml")
     neuron_default_config = yaml.safe_load(open(target_config_file, 'r', encoding="utf-8"))
     config.update(neuron_default_config)
