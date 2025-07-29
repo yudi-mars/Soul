@@ -1,4 +1,4 @@
-from .dataset import DataManager
+from .dataset import load_dataset
 from .metrics import *
 from .parser import init_config
 from .random import init_seed

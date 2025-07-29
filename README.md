@@ -8,7 +8,6 @@
     - Earable Sensing: 头戴/夹耳式设备之类采集的信号:可以做（1）Sound source localization定位 (2) EEG/ECG生物信号 这两个application SNN的AI模型都有，可以做toy-example
     - Generative AI for Sensing: 展示一些spiking的LLM在一些通用设备上运行的结果(spikeGPT为例） toy-example
 - [ ] 2025.07.26-2025.07.27 @changze 加一下IJCAI2025的ILIF(属于membrane potential modulation)，代码和论文都在ILIF.py中（咱们原来的ILIF被改为INTLIF, 'intlif'）
-- [ ] TBD @yudi dataset结构可能还要变一下
 - [ ] 2025.07.10-2025.07.31 @changze @yudi 我们需要ANN2SNN（为vgg，resnet，spikformer至少挑选一个对应可行的资源消耗没那么严重的ANN2SNN训练方法）**从cloud service的视角展示可行性，最后cloud端给边缘端发送模型** / offload with incremental learning看看有没有可能
 - [ ] 2025.07.20-2025.07.31 @changze @yudi lightweight的方法: ANN->SNN的蒸馏方法~2023cvpr 为vgg，resnet，spikformer提供一个可行的蒸馏方案 **与ANN2SNN同理**
 - [ ] 2025.07.20-2025.07.31 @changze lightweight的方法: **NAS**: 如果目前只支持vgg，那就先只支持直通网络,~~但是要确认一些别的方法（比如乐透奖Panda 2022那篇ECCV）看看哪种方法开销更小~~**主要展示的是当前这个NAS方向是如何和我们的Soul融合适配的！**  example(case)导向
@@ -30,6 +29,7 @@
         - DCL(deepconvlstm): 2 conv + 2 bi-lstm (mobicom的文章有人用)
         - ResNet + 1 layer FC (mobicom的文章有人用)
         - Transformer（以spikformer为模板）的基础模型 (现在比较流行,SNN也有相关工作，如果能直接拿来复现最好)
+- [x] 2025.07.30 @yudi ~~dataset结构可能还要变一下~~ 目前dataset加载重构，换成工厂函数的形式，更灵活的处理transform, dataset生成, 原始数据加载的共存问题
 - [x] 2025.07.23-2025.07.24 UCI HAR 更换数据源以及raw data处理方式(更合理，与其他HAR数据源保持一致)
 - [x] 2025.07.17-2025.07.30 @yudi HAR的模型还差2个，至少要保证一个transformer-based的模型存在
     - ~~DCNN~~ Conv1D应用

@@ -58,9 +58,7 @@ if global_rank == 0:
 # load data TODO
 if global_rank == 0:
     logger.info('Load data...')
-dm = DataManager(config)
-config = dm.update_config()
-train_dataset, test_dataset = dm.get_dataset()
+train_dataset, test_dataset = load_dataset(config)
 
 if config['is_distributed']:
     train_sampler = torch.utils.data.DistributedSampler(train_dataset)

@@ -18,8 +18,6 @@ scheduler: cosine                 # (str) The name of optimizer scheduler
 learning_rate: 0.001              # (float) Learning rate.
 weight_decay: 0.0                 # (float) The weight decay value (L2 penalty) for optimizers.
 momentum: 0.9                     # (float) inertia coefficient for optimizer
-window_size: 128                  # (int) sliced window size for motion sensing dataset
-step_size: 64                     # (int) step size for the slicing window for motion sensing dataset
 
 # Model Settings
 model: spikingvgg9                # (str) The name of model to be used.
@@ -27,3 +25,12 @@ neuron_type: lif                  # (str) neuron model for SNNs
 time_step: 4                      # (int) The number of time steps for SNNs.
 dataset_name: cifar10             # (str) The name of dataset to be used.
 coding_schema: direct             # (str) encoding schema for static raw input
+
+# Specific Sensing Settings
+receptor_size: ~                  # (int) size of DVS images
+window_size: 128                  # (int) sliced window size for motion sensing dataset
+step_size: 64                     # (int) step size for the slicing window for motion sensing dataset
+sr: 22050                         # (int) sampling rate for audio files
+duration: 30                      # (int) maximum duration (in seconds) to load from each audio clip
+n_mfcc: 40                        # (int) number of MFCC (Mel Frequency Cepstral Coefficients) features to extract
+hop_length: 1024                  # (int) number of audio samples between adjacent MFCC frames (frame shift) 
