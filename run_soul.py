@@ -141,7 +141,7 @@ for epoch in range(1, config['epochs'] + 1):
     if config['is_distributed']:
         train_sampler.set_epoch(epoch)
     
-    top1_meter, loss_meter = AverageMeter(), AverageMeter()
+    train_top1_meter, train_loss_meter = AverageMeter(), AverageMeter()
     # customize progress bar for train loader
     loader = tqdm(train_loader, unit='batch', ncols=80, desc='Train: ') if global_rank == 0 else train_loader
     for inputs, targets in loader:
@@ -158,13 +158,16 @@ for epoch in range(1, config['epochs'] + 1):
         loss.backward()
         optimizer.step()
 
-        top1_meter.update(acc1.item(), targets.numel())
-        loss_meter.update(loss.item(), targets.numel())
+        train_top1_meter.update(acc1.item(), targets.numel())
+        train_loss_meter.update(loss.item(), targets.numel())
+
+    train_acc = train_top1_meter.avg
+    train_loss = train_loss_meter.avg
 
     if not config['is_distributed'] or dist.get_rank() == 0:
         model.eval()
 
-        top1_meter, loss_meter = AverageMeter(), AverageMeter()
+        test_top1_meter, test_loss_meter = AverageMeter(), AverageMeter()
         with torch.no_grad():
             for inputs, targets in test_loader:
                 inputs, targets = inputs.to(device, non_blocking=True), targets.to(device, non_blocking=True)
@@ -176,12 +179,13 @@ for epoch in range(1, config['epochs'] + 1):
                 acc1 = accuracy(outputs, targets, topk=(1,))[0]
                 loss = criterion(outputs, targets)
 
-                loss_meter.update(loss.item(), targets.numel())
-                top1_meter.update(acc1.item(), targets.numel())
+                test_loss_meter.update(loss.item(), targets.numel())
+                test_top1_meter.update(acc1.item(), targets.numel())
 
-        test_acc = top1_meter.avg
+        test_acc = test_top1_meter.avg
+        test_loss = test_loss_meter.avg
 
-        logger.info(f"[Epoch {epoch:3d}/{config['epochs']}] Train Loss: {loss_meter.avg:.4f}, Train Acc: {top1_meter.avg:.2f}%; Test Loss: {loss_meter.avg:.4f}, Test Acc: {test_acc:.2f}%")
+        logger.info(f"[Epoch {epoch:3d}/{config['epochs']}] Train Loss: {train_loss:.4f}, Train Acc: {train_acc:.2f}%; Test Loss: {test_loss:.4f}, Test Acc: {test_acc:.2f}%")
         if test_acc > best_acc:
             ensure_dir(config['model_dir'])
 
