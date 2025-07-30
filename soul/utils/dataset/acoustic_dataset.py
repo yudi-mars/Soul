@@ -63,10 +63,10 @@ class iSpikingHeidelbergDigits(AudioData):
     def __init__(self, data_dir, coding_schema, time_step, sample_rate, duration, n_mfcc, hop_length, seed=2025):
         super().__init__(data_dir, coding_schema, time_step, sample_rate, duration, n_mfcc, hop_length, seed)
 
-        self.sample_freq = 100
+        self.sample_freq = 100 # sequence step (channels)
 
-        self.num_classes = 10
-        self.input_shape = (700, self.sample_freq) # (channels, window_size) 100 as default
+        self.num_classes = 20
+        self.input_shape = (self.sample_freq, 700) # (channels, window_size)
 
     def _preprocess(self, times, units, label):
         data_label = torch.tensor(label, dtype=torch.int64)
@@ -155,8 +155,8 @@ class iSpikingHeidelbergDigits(AudioData):
                 self.time_steps = time_steps
             
             def __getitem__(self, index):
-                # (W, C) -> (C, W)
-                inputs = self.data[index].transpose(0, 1)
+                # (C, W=700)
+                inputs = self.data[index]
 
                 # coding (C, W) -> (inner_T, C, W)
                 x = coding_map[self.encode](inputs, num_steps=self.time_steps)

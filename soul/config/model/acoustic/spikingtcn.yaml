@@ -1,0 +1,2 @@
+ksize: 7                                       # (int) kernel size (default: 7)
+hidden_channels: [128, 256, 256]               # (list) intermediate model architecture

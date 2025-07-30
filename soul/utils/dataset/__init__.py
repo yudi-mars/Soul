@@ -34,8 +34,7 @@ def load_dataset(config):
     elif config['application'] == 'motion':
         config['input_channels'], config['input_dim'] = idata.input_shape
     elif config['application'] == 'acoustic':
-        # TODO
-        pass
+        config['input_channels'], config['input_dim'] = idata.input_shape
     else:
         raise ValueError(f'Unknown application type: {config["application"]}')
     
