@@ -307,10 +307,6 @@ class iCIFAR10DVS(VisionData):
                 interpolation=transforms.InterpolationMode.NEAREST),
         ]
 
-        self.common_trsf = [
-            transforms.ToTensor()
-        ]
-
         self.input_shape = (
             2, 
             self.receptor_size if self.receptor_size else 48, 
@@ -355,10 +351,12 @@ class iCIFAR10DVS(VisionData):
                 self.trsf = trsf
             
             def __getitem__(self, index):
-                inputs = torch.from_numpy(np.load(self.data[index])['frames']).float()
+                inputs = np.load(self.data[index])['frames']
+                inputs = torch.from_numpy(inputs).float()
 
                 if self.trsf:
-                    inputs = self.trsf(inputs)
+                    for aug in self.trsf:
+                        inputs = aug(inputs)
 
                 y = self.targets[index]
 
@@ -368,10 +366,10 @@ class iCIFAR10DVS(VisionData):
                 return len(self.targets)
 
         if train:
-            train_trsf = transforms.Compose([*self.train_trsf, *self.common_trsf])
+            train_trsf = [*self.train_trsf, *self.common_trsf]
             ds = DummyDataset(self.train_data, self.train_targets, train_trsf)
         else:
-            test_trsf = transforms.Compose([*self.test_trsf, *self.common_trsf])
+            test_trsf = [*self.test_trsf, *self.common_trsf]
             ds = DummyDataset(self.test_data, self.test_targets, test_trsf)
 
         return ds
@@ -391,10 +389,6 @@ class iDVSGesture(VisionData):
             transforms.Resize(
                 size=(self.receptor_size if self.receptor_size else 64, self.receptor_size if self.receptor_size else 64), 
                 interpolation=transforms.InterpolationMode.NEAREST),
-        ]
-
-        self.common_trsf = [
-            transforms.ToTensor()
         ]
 
         self.input_shape = (
@@ -439,7 +433,8 @@ class iDVSGesture(VisionData):
                 inputs = torch.from_numpy(np.load(self.data[index])['frames']).float()
 
                 if self.trsf:
-                    inputs = self.trsf(inputs)
+                    for aug in self.trsf:
+                        inputs = aug(inputs)
 
                 y = self.targets[index]
 
@@ -449,10 +444,10 @@ class iDVSGesture(VisionData):
                 return len(self.targets)
 
         if train:
-            train_trsf = transforms.Compose([*self.train_trsf, *self.common_trsf])
+            train_trsf = [*self.train_trsf, *self.common_trsf]
             ds = DummyDataset(self.train_data, self.train_targets, train_trsf)
         else:
-            test_trsf = transforms.Compose([*self.test_trsf, *self.common_trsf])
+            test_trsf = [*self.test_trsf, *self.common_trsf]
             ds = DummyDataset(self.test_data, self.test_targets, test_trsf)
 
         return ds
