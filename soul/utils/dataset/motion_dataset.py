@@ -132,6 +132,8 @@ class MotionData(object):
                 if self.trsf:
                     inputs = self.trsf(inputs)
 
+                inputs = torch.tensor(inputs, dtype=torch.float32)
+
                 # coding (C, D) -> (T, C, D)
                 x = coding_map[self.encode](inputs, num_steps=self.time_steps)
                 y = self.targets[index]
@@ -156,7 +158,7 @@ class iUCIHAR(MotionData):
         super().__init__(data_dir, coding_schema, time_step, window_size, step_size, seed)
 
         self.num_classes = 6
-        self.input_shape = (9, self.window_size)
+        self.input_shape = (9, 128) # this is fixed for uci har
 
     def _load_segments(self, signal_type='train'):
         SIGNALS = [
@@ -194,9 +196,9 @@ class iUCIHAR(MotionData):
 
     def get_dataset(self, train=True):
         self.train_trsf = [
-            Resample(factor_range=(0.9, 1.1)), 
+            # Resample(factor_range=(0.9, 1.1)), 
             AddGaussianNoise(0., sigma=0.02),
-            TimeWarp(max_warp=0.2),
+            # TimeWarp(max_warp=0.2),
             Scaling(sigma=0.1),
         ]
 
