@@ -4,10 +4,13 @@ Author: Di Yu <yudi2023@zju.edu.cn>
 Date Created: 2025-07-30
 Description:
     Load data from acoustic sensor. For those audio file without preprocessing, 
-    we choose mel-frequency spectrogram to convert.
+    we choose mel-frequency spectrogram to convert, shape as [window size, num channels].
+    For the dynamic acoustic sensing (DVS) datasets, we process them similarly into [window size, num channels].
 
 References:
     - Hanle Zheng et al. "Temporal dendritic heterogeneity incorporated with spiking neural networks for learning multi-timescale dynamics." Nature Communications 2023.
+    - Xinyi Chen et al. "Neuromorphic Sequential Arena: A Benchmark for Neuromorphic Temporal Processing." IJCAI'2025.
+    https://github.com/liyc5929/neuroseqbench
 '''
 import os
 import h5py
@@ -44,6 +47,20 @@ class AudioData:
     
     def get_dataset(self, train=True):
         raise NotImplementedError
+
+@register_dataset('gtzan')
+class iGTZAN(AudioData):
+    def __init__(self, data_dir, coding_schema, time_step, sample_rate, duration, n_mfcc, hop_length, seed=2025):
+        super().__init__(data_dir, coding_schema, time_step, sample_rate, duration, n_mfcc, hop_length, seed)
+
+    def download_data(self):
+
+        return 
+    
+    def get_dataset(self, train=True):
+    
+        return     
+
     
 @register_dataset('urbansound')
 class iUrbanSound8K(AudioData):
@@ -57,22 +74,38 @@ class iUrbanSound8K(AudioData):
     def get_dataset(self, train=True):
     
         return 
+    
+@register_dataset('gsc')
+class iGoogleSpeechCommands(AudioData):
+    def __init__(self, data_dir, coding_schema, time_step, sample_rate, duration, n_mfcc, hop_length, seed=2025):
+        super().__init__(data_dir, coding_schema, time_step, sample_rate, duration, n_mfcc, hop_length, seed)
+
+    def download_data(self):
+        # V2 data as default
+
+        return 
+    
+    def get_dataset(self, train=True):
+    
+        return 
+    
 
 @register_dataset('shd')
 class iSpikingHeidelbergDigits(AudioData):
     def __init__(self, data_dir, coding_schema, time_step, sample_rate, duration, n_mfcc, hop_length, seed=2025):
         super().__init__(data_dir, coding_schema, time_step, sample_rate, duration, n_mfcc, hop_length, seed)
 
-        self.sample_freq = 100 # sequence step (channels)
+        self.duration = 100 # window size
+        self.n_mfcc = 700 # fixed channel number
 
         self.num_classes = 20
-        self.input_shape = (self.sample_freq, 700) # (channels, window_size)
+        self.input_shape = (self.duration, self.n_mfcc) # (window_size, channels)
 
     def _preprocess(self, times, units, label):
         data_label = torch.tensor(label, dtype=torch.int64)
-        max_unit   = 700
+        max_unit   = self.n_mfcc
         max_time   = 1
-        dt         = 1 / self.sample_freq # 
+        dt         = 1 / self.duration # 
         time_frames  = int(max_time / dt) # the total samping frames
         list_input = []
         for i in range(time_frames):
@@ -94,9 +127,9 @@ class iSpikingHeidelbergDigits(AudioData):
         ├── shd_test.h5
         └── shd_train.h5
         '''
-        os.makedirs(os.path.join(self.data_dir, f'preprocessed_W{self.sample_freq}'), exist_ok=True)
+        os.makedirs(os.path.join(self.data_dir, f'preprocessed_W{self.duration}'), exist_ok=True)
         for train_type in ['train', 'test']:
-            preprocessed_data_root = os.path.join(self.data_dir, f'preprocessed_W{self.sample_freq}', train_type)
+            preprocessed_data_root = os.path.join(self.data_dir, f'preprocessed_W{self.duration}', train_type)
             if os.path.exists(preprocessed_data_root): 
                 # Data preloading
                 print(f"The `saved_data_file` exists, data preloading of `{self.__class__.__name__}` from path `{preprocessed_data_root}` start.")
@@ -179,16 +212,17 @@ class iSpikingSpeechCommands(AudioData):
     def __init__(self, data_dir, coding_schema, time_step, sample_rate, duration, n_mfcc, hop_length, seed=2025):
         super().__init__(data_dir, coding_schema, time_step, sample_rate, duration, n_mfcc, hop_length, seed)
 
-        self.sample_freq = 320
+        self.duration = 100
+        self.n_mfcc = 700 # channel number
 
         self.num_classes = 35
-        self.input_shape = (128, self.sample_freq) # (channels, window_size)
+        self.input_shape = (self.duration, self.n_mfcc) # (window_size, channels)
 
     def _preprocess(self, times, units, label):
         data_label = torch.tensor(label, dtype=torch.int64)
-        max_unit   = 700
+        max_unit   = self.n_mfcc # this is the channel number
         max_time   = 1
-        dt         = 1 / self.sample_freq
+        dt         = 1 / self.duration
         time_step  = int(max_time / dt)
         list_input = []
         for i in range(time_step):
@@ -202,9 +236,9 @@ class iSpikingSpeechCommands(AudioData):
         return data_input, data_label
     
     def download_data(self):
-        os.makedirs(os.path.join(self.data_dir, f'preprocessed_W{self.sample_freq}'), exist_ok=True)
+        os.makedirs(os.path.join(self.data_dir, f'preprocessed_W{self.duration}'), exist_ok=True)
         for train_type in ['train', 'test']:
-            preprocessed_data_root = os.path.join(self.data_dir, f'preprocessed_W{self.sample_freq}', train_type)
+            preprocessed_data_root = os.path.join(self.data_dir, f'preprocessed_W{self.duration}', train_type)
             if os.path.exists(preprocessed_data_root):
                 # Data preloading
                 print(f"The `saved_data_file` exists, data preloading of `{self.__class__.__name__}` from path `{preprocessed_data_root}` start.")
