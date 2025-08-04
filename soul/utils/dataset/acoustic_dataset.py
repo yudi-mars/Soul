@@ -13,9 +13,12 @@ References:
     https://github.com/liyc5929/neuroseqbench
 '''
 import os
+import cv2
 import h5py
+import librosa
 import numpy as np
 from tqdm import tqdm
+from sklearn.model_selection import train_test_split
 
 import torch
 from torch.utils.data import Dataset
@@ -24,23 +27,24 @@ from soul.utils.coding import coding_map
 from . import register_dataset
 
 class AudioData:
-    train_trsf = []
-    test_trsf = []
-    common_trsf = []
-
     input_shape = (None, None)
     num_classes = None
 
-    def __init__(self, data_dir, coding_schema, time_step, sample_rate, duration, n_mfcc, hop_length, seed=2025):
+    def __init__(self, data_dir, coding_schema, time_step, reduce_size, seed=2025):
         self.data_dir = data_dir
         self.T = time_step
         self.encode = coding_schema
         self.seed = seed
+        self.reduce_size = reduce_size
 
-        self.sr = sample_rate
-        self.duration = duration
-        self.n_mfcc = n_mfcc
-        self.hop_length = hop_length
+        self.sr = None              # (int) target sampling rate for audio data
+        self.duration = None        # (int) only load up to this much audio (in seconds)
+        self.n_mels = None          # (int) number of Mel bands to generate
+        self.n_mfcc = None          # (int) number of MFCCs to return
+        self.n_fft = None           # (int) length of the FFT window
+        self.hop_length = None      # (int) number of samples between successive frames
+
+        self.input_shape = (self.reduce_size, self.reduce_size)
 
     def download_data(self):
         raise NotImplementedError
@@ -50,22 +54,115 @@ class AudioData:
 
 @register_dataset('gtzan')
 class iGTZAN(AudioData):
-    def __init__(self, data_dir, coding_schema, time_step, sample_rate, duration, n_mfcc, hop_length, seed=2025):
-        super().__init__(data_dir, coding_schema, time_step, sample_rate, duration, n_mfcc, hop_length, seed)
+    def __init__(self, data_dir, coding_schema, time_step, reduce_size, seed=2025):
+        super().__init__(data_dir, coding_schema, time_step, reduce_size, seed)
+
+        self.hop_length = 256
+        self.n_mels = 96
+        self.n_fft = 512
+        self.sr = 22050
+        self.duration = 30
+
+        self.num_classes = 10
 
     def download_data(self):
+        # self.data_dir = /data/gtzan/
+        '''
+        The files below should be included in data_dir
+        gtzan/genres_original/
+        ├── blues
+        ├── classical
+        ├── ...
+        └── rock
+        '''
+        self.data_dir = os.path.join(self.data_dir, 'genres_original')
+        self.filepaths = []
+        self.labels = []
 
-        return 
+        genre_list = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
+        for idx, genre in enumerate(genre_list):
+            genre_dir = os.path.join(self.data_dir, genre)
+            for fname in os.listdir(genre_dir):
+                if fname.endswith('.wav'):
+                    if fname == 'jazz.00054.wav':
+                        continue # this file is corrupted
+                    else:
+                        self.filepaths.append(os.path.join(genre_dir, fname))
+                        # idx is the label code for label name
+                        self.labels.append(idx)
+
+        self.train_data, self.test_data, self.train_targets, self.test_targets = train_test_split(
+            self.filepaths, self.labels, test_size=0.2,
+            stratify=self.labels, random_state=self.seed)
     
     def get_dataset(self, train=True):
-    
-        return     
+        class DummyDataset(Dataset):
+            def __init__(self, data, targets, encode, time_steps, sample_rate, duration, n_fft, hop_length, n_mels, reduce_size):
+                self.data = data
+                self.targets = targets
+
+                self.encode = encode
+                self.time_steps = time_steps
+
+                self.n_fft = n_fft
+                self.hop_length = hop_length
+                self.n_mels = n_mels
+
+                self.sr = sample_rate
+                self.duration = duration
+
+                self.reduce_size = reduce_size
+
+            def __getitem__(self, index):
+                fpath = self.data[index]
+                audio_info, sfr = librosa.load(fpath, sr=self.sr, duration=self.duration)
+                
+                # make the length equal
+                max_len = int(self.sr * self.duration)
+                if len(audio_info) < max_len:
+                    # zero padding for not enough long audio file
+                    audio_info = np.pad(audio_info, (0, max_len - len(audio_info)))
+                else:
+                    # slice for too long audio file
+                    audio_info = audio_info[:max_len]
+
+                # Mel-Spectrogram converting
+                mel_spec = librosa.feature.melspectrogram(
+                    y=audio_info, 
+                    sr=sfr, 
+                    n_mels=self.n_mels, 
+                    hop_length=self.hop_length, 
+                    n_fft=self.n_fft,
+                )
+                inputs = librosa.power_to_db(mel_spec, ref=np.max)
+
+                # resize to reduce dimension
+                inputs = cv2.resize(inputs, (self.reduce_size, self.reduce_size), interpolation=cv2.INTER_LINEAR)
+                inputs = torch.tensor(inputs, dtype=torch.float32).transpose(0, 1) # (C, W) - > (W, C)
+
+                # coding (C, W) -> (T, C, W)
+                x = coding_map[self.encode](inputs, num_steps=self.time_steps)
+                y = self.targets[index]
+
+                return x, y
+
+            def __len__(self):
+                return len(self.targets)
+
+        if train:
+            ds = DummyDataset(
+                self.train_data, self.train_targets, self.encode, self.T, self.sr, self.duration, self.n_fft, self.hop_length, self.n_mels, self.reduce_size)
+        else:
+            ds = DummyDataset(
+                self.test_data, self.test_targets, self.encode, self.T, self.sr, self.duration, self.n_fft, self.hop_length, self.n_mels, self.reduce_size)
+
+        return ds
 
     
 @register_dataset('urbansound')
 class iUrbanSound8K(AudioData):
-    def __init__(self, data_dir, coding_schema, time_step, sample_rate, duration, n_mfcc, hop_length, seed=2025):
-        super().__init__(data_dir, coding_schema, time_step, sample_rate, duration, n_mfcc, hop_length, seed)
+    def __init__(self, data_dir, coding_schema, time_step, reduce_size, seed=2025):
+        super().__init__(data_dir, coding_schema, time_step, reduce_size, seed)
 
     def download_data(self):
 
@@ -77,8 +174,8 @@ class iUrbanSound8K(AudioData):
     
 @register_dataset('gsc')
 class iGoogleSpeechCommands(AudioData):
-    def __init__(self, data_dir, coding_schema, time_step, sample_rate, duration, n_mfcc, hop_length, seed=2025):
-        super().__init__(data_dir, coding_schema, time_step, sample_rate, duration, n_mfcc, hop_length, seed)
+    def __init__(self, data_dir, coding_schema, time_step, reduce_size, seed=2025):
+        super().__init__(data_dir, coding_schema, time_step, reduce_size, seed)
 
     def download_data(self):
         # V2 data as default
@@ -92,20 +189,19 @@ class iGoogleSpeechCommands(AudioData):
 
 @register_dataset('shd')
 class iSpikingHeidelbergDigits(AudioData):
-    def __init__(self, data_dir, coding_schema, time_step, sample_rate, duration, n_mfcc, hop_length, seed=2025):
-        super().__init__(data_dir, coding_schema, time_step, sample_rate, duration, n_mfcc, hop_length, seed)
+    def __init__(self, data_dir, coding_schema, time_step, reduce_size, seed=2025):
+        super().__init__(data_dir, coding_schema, time_step, reduce_size, seed)
 
-        self.duration = 100 # window size
-        self.n_mfcc = 700 # fixed channel number
+        self.duration = 150 # window size
+        self.n_mels = 700 # fixed channel number
 
         self.num_classes = 20
-        self.input_shape = (self.duration, self.n_mfcc) # (window_size, channels)
 
     def _preprocess(self, times, units, label):
         data_label = torch.tensor(label, dtype=torch.int64)
-        max_unit   = self.n_mfcc
+        max_unit   = self.n_mels
         max_time   = 1
-        dt         = 1 / self.duration # 
+        dt         = 1 / self.duration 
         time_frames  = int(max_time / dt) # the total samping frames
         list_input = []
         for i in range(time_frames):
@@ -115,7 +211,12 @@ class iSpikingHeidelbergDigits(AudioData):
             times  = np.delete(times, indexs)
             units  = np.delete(units, indexs)
             list_input.append(vector)
-        data_input = torch.tensor(np.array(list_input), dtype=torch.float32)
+
+        # resize to reduce dimension
+        inputs = cv2.resize(np.array(list_input), (self.reduce_size, self.reduce_size), interpolation=cv2.INTER_LINEAR)
+        
+        # to tensor
+        data_input = torch.tensor(inputs, dtype=torch.float32)
 
         return data_input, data_label
 
@@ -167,7 +268,6 @@ class iSpikingHeidelbergDigits(AudioData):
                     getattr(self, f'{train_type}_data').append(data_input)
                     getattr(self, f'{train_type}_targets').append(data_label)
 
-
                 # Data saving
                 print(f"The saving to path `{preprocessed_data_root}` start.")
                 with h5py.File(f"{preprocessed_data_root}/shd_preprocessed_data.h5", "w") as fp:
@@ -188,10 +288,10 @@ class iSpikingHeidelbergDigits(AudioData):
                 self.time_steps = time_steps
             
             def __getitem__(self, index):
-                # (C, W=700)
+                # (W, C)
                 inputs = self.data[index]
 
-                # coding (C, W) -> (inner_T, C, W)
+                # coding (W, C) -> (T, W, C)
                 x = coding_map[self.encode](inputs, num_steps=self.time_steps)
                 y = self.targets[index]
 
@@ -209,18 +309,17 @@ class iSpikingHeidelbergDigits(AudioData):
         
 @register_dataset('ssc')
 class iSpikingSpeechCommands(AudioData):
-    def __init__(self, data_dir, coding_schema, time_step, sample_rate, duration, n_mfcc, hop_length, seed=2025):
-        super().__init__(data_dir, coding_schema, time_step, sample_rate, duration, n_mfcc, hop_length, seed)
+    def __init__(self, data_dir, coding_schema, time_step, reduce_size, seed=2025):
+        super().__init__(data_dir, coding_schema, time_step, reduce_size, seed)
 
-        self.duration = 100
-        self.n_mfcc = 700 # channel number
+        self.duration = 150
+        self.n_mels = 700 # channel number
 
         self.num_classes = 35
-        self.input_shape = (self.duration, self.n_mfcc) # (window_size, channels)
 
     def _preprocess(self, times, units, label):
         data_label = torch.tensor(label, dtype=torch.int64)
-        max_unit   = self.n_mfcc # this is the channel number
+        max_unit   = self.n_mels # this is the channel number
         max_time   = 1
         dt         = 1 / self.duration
         time_step  = int(max_time / dt)
@@ -232,7 +331,11 @@ class iSpikingSpeechCommands(AudioData):
             times  = np.delete(times, indexs)
             units  = np.delete(units, indexs)
             list_input.append(vector)
-        data_input = torch.tensor(np.array(list_input), dtype=torch.float32)
+
+        # resize to reduce dimension
+        inputs = cv2.resize(np.array(list_input), (self.reduce_size, self.reduce_size), interpolation=cv2.INTER_LINEAR)
+
+        data_input = torch.tensor(inputs, dtype=torch.float32)
         return data_input, data_label
     
     def download_data(self):
@@ -294,10 +397,10 @@ class iSpikingSpeechCommands(AudioData):
                 self.time_steps = time_steps
             
             def __getitem__(self, index):
-                # (W, C) -> (C, W)
-                inputs = self.data[index].transpose(0, 1)
+                # (W, C)
+                inputs = self.data[index]
 
-                # coding (C, W) -> (inner_T, C, W)
+                # coding (W, C) -> (T, W, C)
                 x = coding_map[self.encode](inputs, num_steps=self.time_steps)
                 y = self.targets[index]
 

@@ -8,4 +8,5 @@ pandas
 tqdm
 scipy
 matplotlib
-soundfile
+librosa
+h5py

@@ -21,7 +21,7 @@ def get_idata(config):
 # this is important to hook registery
 from .motion_dataset import iHHAR, iMotionSense, iShoaib, iUCIHAR
 from .vision_dataset import iCIFAR10, iCIFAR100, iCIFAR10DVS, iDVSGesture, iTinyImageNet
-from .acoustic_dataset import iSpikingHeidelbergDigits, iSpikingSpeechCommands, iUrbanSound8K
+from .acoustic_dataset import iSpikingHeidelbergDigits, iSpikingSpeechCommands, iUrbanSound8K, iGoogleSpeechCommands, iGTZAN
 
 def load_dataset(config):
     idata = get_idata(config)
