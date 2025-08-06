@@ -2,17 +2,7 @@
 
 ### 工程任务
 
-- [ ] TBD @yudi `scripts`里的shell脚本后面应该换成针对utils.app里的各个服务调用的脚本会比较好(run_soul本质就是rate_trainer，后面会放到app/train里)
-- [ ] TBD Other Sensing Application
-    - Multi-Modal Sensing: @changze 是不是用下spike-clip的研究成果稍微展示下？就说这是一种多模态SNN应用？
-    - Earable Sensing: 头戴/夹耳式设备之类采集的信号:可以做（1）Sound source localization定位 (2) EEG/ECG生物信号 这两个application SNN的AI模型都有，可以做toy-example
-    - Generative AI for Sensing: 展示一些spiking的LLM在一些通用设备上运行的结果(spikeGPT为例） toy-example
-- [ ] 2025.07.26-2025.07.27 @changze 加一下IJCAI2025的ILIF(属于membrane potential modulation)，代码和论文都在ILIF.py中（咱们原来的ILIF被改为INTLIF, 'intlif'）
-- [ ] 2025.07.10-2025.07.31 @changze @yudi 我们需要ANN2SNN（为vgg，resnet，spikformer至少挑选一个对应可行的资源消耗没那么严重的ANN2SNN训练方法）**从cloud service的视角展示可行性，最后cloud端给边缘端发送模型** / offload with incremental learning看看有没有可能
-- [ ] 2025.07.20-2025.07.31 @changze @yudi lightweight的方法: ANN->SNN的蒸馏方法~2023cvpr 为vgg，resnet，spikformer提供一个可行的蒸馏方案 **与ANN2SNN同理**
-- [ ] 2025.07.20-2025.07.31 @changze lightweight的方法: **NAS**: 如果目前只支持vgg，那就先只支持直通网络,~~但是要确认一些别的方法（比如乐透奖Panda 2022那篇ECCV）看看哪种方法开销更小~~**主要展示的是当前这个NAS方向是如何和我们的Soul融合适配的！**  example(case)导向
-- [ ] 2025.07.25-2025.07.31 @changze @yudi quantization接口  **主要展示的是当前这个prune方向是如何和我们的Soul融合适配的**
-- [ ] 2025.07.20-2025.08.20 @helin prune：以example的形式展示，不是融进Soul里，针对GPU系列的设备提供一个可行方案，如structure pruning，以VGG直通网络为例，支持GPU上优化~~neuromorphic~~， ~~unstructure pruning支持neuromorphic (目前提供GPU模拟即可)~~ **主要展示的是当前这个prune方向是如何和我们的Soul融合适配的！**
+- [ ] 2025.08.12-2025.08.30 音频数据处理默认为转换为Mel Spectrogram后喂给模型, 具体模型可能要待定下 @changze
 - [ ] 2025.08.15-2025.08.30 Wireless Sensing: 通过无线信号收集的数据(雷达mmWave, wifi signal, RFID这类的)，任务很杂, 我们还是以识别任务为导向 (SenseFi: A Benchmark for WiFi CSI Sensing) 有个开源项目，有数据集和简单的网络结构，很适合我们spike化，可以直接参考 @yudi
     - 4个数据集集成和统一处理接口(从简单到复杂): UT-HAR, NTU-HAR, NTU-HumanID, Widar 3.0
     - 模型结构(选4个就行， 主要是结构多样性):
@@ -22,44 +12,24 @@
         - Conv + LSTM
         - ResNet + classifier
         - ViT
-- [ ] 2025.07.23-2025.08.15 Speech Recognition~~相关文献调研~~、模型以及数据加载复现以及融入Soul的难点评估 @yudi
-    - 目前已经明确4个数据集, 需要维护数据处理和数据加载: GTZAN (audio领域的mnist，作为SNN的初步探索，很适合选择), UrbanSound8K (Mobicom有人用), ESC-50 (Ubicomp有人用), Google Speech Commands v2 (mobicom等经常用，有点imagenet的感觉)
-    - 音频数据处理默认为转换为Mel Spectrogram后喂给模型
-        - CNN-based Model: 搞个vgg结构的差不多了 (mobicom有人用)
-        - DCL(deepconvlstm): 2 conv + 2 bi-lstm (mobicom的文章有人用)
-        - ResNet + 1 layer FC (mobicom的文章有人用)
-        - Transformer（以spikformer为模板）的基础模型 (现在比较流行,SNN也有相关工作，如果能直接拿来复现最好)
-- [x] 2025.07.30 @yudi ~~dataset结构可能还要变一下~~ 目前dataset加载重构，换成工厂函数的形式，更灵活的处理transform, dataset生成, 原始数据加载的共存问题
-- [x] 2025.07.23-2025.07.24 UCI HAR 更换数据源以及raw data处理方式(更合理，与其他HAR数据源保持一致)
-- [x] 2025.07.17-2025.07.30 @yudi HAR的模型还差2个，至少要保证一个transformer-based的模型存在
-    - ~~DCNN~~ Conv1D应用
-    - ~~SenseHAR~~ Conv2D应用
-    - ~~DANA~~ 这个模型就是多了个卷积多了adaptivepool，没必要融了, 换成了里面用到的backbone deepconvlstm，其中与Yale的SNN-HAR工作吻合(已完成)
-    - ~~BIOT~~ 里面有傅立叶变换，严格意义上是不是不应该算进来
-    - ~~iTransformer? 可能是适配的，后面可以和 @changze 讨论~~ 搞定了 效果挺好
-- [x] 2025.07.15-2025.07.20 Human Activity Recognition相关模型，数据加载模块融入Soul @yudi
-- [x] 2025.07.07-2025.07.14 @yudi data.py的功能模块需要拆分，分数据集进行处理会不会更好?
-- [x] TBD ~~neuron对于不同场景会不会有特殊化的处理？@changze 这个需要商讨下~~ 以TS-LIFw为例，用case的形式展示如何利用Soul构建特殊lif进行特殊数据集上的应用即可
-- [x] 2025.07.03-2025.07.05 @yudi run_soul独立训练、推理、算各类指标的接口,提供一些单一功能的执行文件
-- [x] ~~2025.07.05-TBD @wentao 目前count_sops还无法对transformer相关模型进行统计(或者统计很慢), 需要优化调整~~
-- [x] 2025.07.11-2025.07.15 @yudi 为DVS数据加载添加augmentation功能
-- [x] 2025.06.23-2025.07.02 @changze Potential Modulation类目下的神经元建模，能融合的都要融合进来
-    - ST-BIF [67] 找作者要到了代码，已完成
-    - PLIF[74] 已经完成
-    - ~~SRIF[76] guoyufei的，发现无法“即插即用”，需要指定input dim和output dim~~
-    - LTMD [76] 已实现
-    - ~~BDETT [77] 未开源~~
-    - ~~DTA-TTFS [78] 虽然找作者要到了代码，但这个神经元的传递强制需要前一层权重的weight sum以及activation，不能在我们的文件中直接forward。淘汰~~
-    - CLIF[79] 已经完成
-    - ~~ABN [80] 未开源~~
-    - ~~DA-LIF [81] 未开源~~
-    - ~~Smooth LIF [82] 未开源~~
-- [x] 2025.12.01-TBD ~~**终版要为每个文件添加一定的注释信息，包含输入输出代码说明，代码引用，以及必要的参考文献** 代码内参考文献可以用spikingvgg.py开头的示例为参考 !!!!!!~~ 需要给每个函数添加一些文档说明，或许需要与负责documentation的同学联动
+- [ ] 2025.08.06-2025.08.10 @changze 加一下IJCAI2025的ILIF(属于membrane potential modulation)，代码和论文都在ILIF.py中（咱们原来的ILIF被改为INTLIF, 'intlif'）
+- [ ] 2025.07.10-2025.07.31 @changze @yudi 我们需要ANN2SNN（为vgg，resnet，spikformer至少挑选一个对应可行的资源消耗没那么严重的ANN2SNN训练方法）**从cloud service的视角展示可行性，最后cloud端给边缘端发送模型**
+- [ ] 2025.07.20-2025.07.31 @changze @yudi lightweight的方法: ANN->SNN的蒸馏方法~2023cvpr 为vgg，resnet，spikformer提供一个可行的蒸馏方案 **与ANN2SNN同理**
+- [ ] 2025.07.20-2025.07.31 @changze lightweight的方法: **NAS**: 如果目前只支持vgg，那就先只支持直通网络,~~但是要确认一些别的方法（比如乐透奖Panda 2022那篇ECCV）看看哪种方法开销更小~~**主要展示的是当前这个NAS方向是如何和我们的Soul融合适配的！**  example(case)导向
+- [ ] 2025.07.25-2025.07.31 @changze @yudi quantization接口  **主要展示的是当前这个prune方向是如何和我们的Soul融合适配的**
+- [ ] 2025.07.20-2025.08.20 @helin structure/unstructure pruning结果展示
+- [ ] TBD Other Sensing Application
+    - Multi-Modal Sensing: @changze 是不是用下spike-clip的研究成果稍微展示下？就说这是一种多模态SNN应用？
+    - Earable Sensing: 头戴/夹耳式设备之类采集的信号:可以做（1）Sound source localization定位 (2) EEG/EMG生物信号 这两个application SNN的AI模型都有
+    - Generative AI for Sensing: 展示一些LLM吐出的token让snn进行解码的示例？@changze
+- [ ] TBD @yudi `scripts`里的shell脚本后面应该换成针对utils.app里的各个服务调用的脚本会比较好(run_soul本质就是rate_trainer，后面会放到app/train里)
 
 ### 科研任务
-- [ ] 2025.07.31-TBD @Lvchangze @Yudi **设计一个针对enrich data的rehearsal-based的增量学习算法（simple but effective）**
-- [ ] 2025.07.10-2025.08.31 ~~STDP训练方法调研 提供一个好用的方案，目前可以给个GPU方案，但需要给出neuromorphic chip的部署基本逻辑(STDP的特色，至少是可以避免一定的人工打标签的模型无监督更新，存在一定的特色)~~ 经讨论确认采用snn-ncg项目对于STDP的应用范式，需要@changze全力推进代码方针工作以及相应的难点延伸, @yudi 负责辅助、代码复审
-- [x] 2025.07.01-2025.08.31 @yudi  ~~temporal learning 提供一个好用的方案，可以GPU方针，但需要给出neuromorphic chip的部署基本逻辑~~ ~~tempporal learning这个方向本身只是训练方法，内在要求其实和ANN差别不大，无法完全彰显SNN的特色，哪怕是有能在neuromorphic上高效运行的潜能，也并不代表其可完全替代或补全ANN的对应功能~~
+
+- [ ] 2025.08.06-2025.08.31 Softhebb+STDP算法设计@changze | @yudi 负责辅助、代码复审
+- [ ] TBD @Lvchangze @Yudi **设计一个针对enrich data的rehearsal-based的增量学习算法（simple but effective）**
+
+--------------------------------------------------------------------------------
 
 # Soul: A Toolbox for Developing Edge Intelligence Applications with Spiking Neural Networks
 
@@ -86,7 +56,7 @@ TBD 一张图 @yudi
 
 ### Feature
 
-TBD 
+TBD Soul的一些基本的特色
 
 - feature 1
 - feature 2
@@ -114,13 +84,16 @@ TBD
     - [Spiking Speech Commands](https://ieeexplore.ieee.org/document/9311226) [[Download Link](https://zenkelab.org/resources/spiking-heidelberg-datasets-shd/)]
 
 4. Wireless Sensing
-    - []() [[Download Link]()]
-    - []() [[Download Link]()]
-    - []() [[Download Link]()]
-    - []() [[Download Link]()]
+    - [UT-HAR](https://ieeexplore.ieee.org/document/8067693) [[Download Link](https://github.com/ermongroup/Wifi_Activity_Recognition?tab=readme-ov-file)]
+    - [NTU-HAR](https://ieeexplore.ieee.org/document/9667414) [[Download Link](https://drive.google.com/drive/folders/1R0R8SlVbLI1iUFQCzh_mH90H_4CW2iwt)]
+    - [NTU-HumanID](https://ieeexplore.ieee.org/abstract/document/9726794) [[Download Link](https://drive.google.com/drive/folders/1R0R8SlVbLI1iUFQCzh_mH90H_4CW2iwt)]
+    - [Widar](https://ieeexplore.ieee.org/document/9516988) [[Download Link](https://tns.thss.tsinghua.edu.cn/widar3.0/)]
 
 ## Guidance
+
 ### Command in Console 
+
+TBD 这个后面等run_soul变成一个app服务后后面再统一做shell脚本修改
 
 - Running `Soul` with a single GPU in default settings
     ```shell
@@ -157,16 +130,6 @@ TBD (Sphinx Documentation)
 ```
 TBD
 ```
-
-## Acknowledgments
-
-We want to express our sincere gratitude to the developers and contributors of the following open-source projects, which have greatly inspired and supported this work:
-
-- [snntorch](https://github.com/jeshraghian/snntorch): Provided excellent modular design patterns for surrogate functions and input encoding schema that influenced our architecture.
-- [SpikingJelly](https://github.com/fangwei123456/spikingjelly): Served as a reference for implementing basic spiking neuron, RNN-related topologies, and DVS dataset loading module.
-
-Their valuable work laid the foundation for some key components of our project.
-We also appreciate the broader open-source community for fostering a collaborative and innovative ecosystem for EdgeSNN.
 
 ## Contact Us
 
