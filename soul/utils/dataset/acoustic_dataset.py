@@ -28,7 +28,6 @@ from soul.utils.coding import coding_map
 from . import register_dataset
 
 class AudioData:
-    input_shape = (None, None)
     num_classes = None
 
     def __init__(self, data_dir, coding_schema, time_step, reduce_size, seed=2025):
@@ -45,6 +44,7 @@ class AudioData:
         self.n_fft = None           # (int) length of the FFT window
         self.hop_length = None      # (int) number of samples between successive frames
 
+        # all mel-spectrogram will be resize to a square image-like data
         self.input_shape = (self.reduce_size, self.reduce_size)
 
     def download_data(self):
