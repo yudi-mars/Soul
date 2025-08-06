@@ -17,6 +17,7 @@ import cv2
 import h5py
 import librosa
 import numpy as np
+import pandas as pd
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 
@@ -164,13 +165,107 @@ class iUrbanSound8K(AudioData):
     def __init__(self, data_dir, coding_schema, time_step, reduce_size, seed=2025):
         super().__init__(data_dir, coding_schema, time_step, reduce_size, seed)
 
-    def download_data(self):
+        self.hop_length = 512
+        self.n_mels = 128
+        self.n_fft = 2048
+        self.sr = 22050
+        self.duration = 4.0
 
-        return 
+        self.num_classes = 10
+
+    def download_data(self):
+        # self.data_dir = /data/urbansound8k/
+        '''
+        there are 10-fold data in UrbanSound8K, we use the last two folder (9, 10) as test set in this repository
+        urbansound8k/
+        ├── audio/
+        │   ├── fold1/
+        │   ├── fold2/
+        │   └── ...
+        └── metadata/
+            └── UrbanSound8K.csv
+        '''
+        csv_path = os.path.join(self.data_dir, 'metadata/UrbanSound8K.csv')
+        audio_dir = os.path.join(self.data_dir, 'audio')
+
+        annotations = pd.read_csv(csv_path)
+
+        test_folders = [9, 10]
+        train_annotations = annotations[~annotations['fold'].isin(test_folders)].reset_index(drop=True)
+        test_annotations = annotations[annotations['fold'].isin(test_folders)].reset_index(drop=True)
+
+        self.train_targets = train_annotations['classID'].values
+        self.test_targets = test_annotations['classID'].values
+
+        self.train_data = train_annotations.apply(lambda row: os.path.join(audio_dir, f"fold{row['fold']}", row['slice_file_name']), axis=1).tolist()
+        self.test_data = test_annotations.apply(lambda row: os.path.join(audio_dir, f"fold{row['fold']}", row['slice_file_name']), axis=1).tolist()
     
     def get_dataset(self, train=True):
-    
-        return 
+        class DummyDataset(Dataset):
+            def __init__(self, data, targets, encode, time_steps, sample_rate, duration, n_fft, hop_length, n_mels, reduce_size):
+                self.data = data
+                self.targets = targets
+
+                self.encode = encode
+                self.time_steps = time_steps
+
+                self.n_fft = n_fft
+                self.hop_length = hop_length
+                self.n_mels = n_mels
+
+                self.sr = sample_rate
+                self.duration = duration
+
+                self.reduce_size = reduce_size
+
+            def __getitem__(self, index):
+                fpath = self.data[index]
+                audio_info, sfr = librosa.load(fpath, sr=self.sr, duration=self.duration)
+                
+                # make the length equal
+                max_len = int(self.sr * self.duration)
+                if len(audio_info) < max_len:
+                    # zero padding for not enough long audio file
+                    audio_info = np.pad(audio_info, (0, max_len - len(audio_info)))
+                else:
+                    # slice for too long audio file
+                    audio_info = audio_info[:max_len]
+
+                # Mel-Spectrogram converting
+                mel_spec = librosa.feature.melspectrogram(
+                    y=audio_info, 
+                    sr=sfr, 
+                    n_mels=self.n_mels, 
+                    hop_length=self.hop_length, 
+                    n_fft=self.n_fft,
+                    fmin=20,
+                    fmax=8000,
+                    power=2.0
+                )
+                inputs = librosa.power_to_db(mel_spec, ref=np.max)
+
+                # resize to reduce dimension
+                inputs = cv2.resize(inputs, (self.reduce_size, self.reduce_size), interpolation=cv2.INTER_LINEAR)
+                inputs = torch.tensor(inputs, dtype=torch.float32).transpose(0, 1) # (C, W) - > (W, C)
+
+                # coding (C, W) -> (T, C, W)
+                x = coding_map[self.encode](inputs, num_steps=self.time_steps)
+                y = self.targets[index]
+
+                return x, y
+
+            def __len__(self):
+                return len(self.targets)
+
+        if train:
+            ds = DummyDataset(
+                self.train_data, self.train_targets, self.encode, self.T, self.sr, self.duration, self.n_fft, self.hop_length, self.n_mels, self.reduce_size)
+        else:
+            ds = DummyDataset(
+                self.test_data, self.test_targets, self.encode, self.T, self.sr, self.duration, self.n_fft, self.hop_length, self.n_mels, self.reduce_size)
+
+        return ds
+
     
 @register_dataset('gsc')
 class iGoogleSpeechCommands(AudioData):
