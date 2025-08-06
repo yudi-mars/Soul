@@ -141,7 +141,7 @@ class iGTZAN(AudioData):
                 inputs = cv2.resize(inputs, (self.reduce_size, self.reduce_size), interpolation=cv2.INTER_LINEAR)
                 inputs = torch.tensor(inputs, dtype=torch.float32).transpose(0, 1) # (C, W) - > (W, C)
 
-                # coding (C, W) -> (T, C, W)
+                # coding (W, C) -> (T, W, C)
                 x = coding_map[self.encode](inputs, num_steps=self.time_steps)
                 y = self.targets[index]
 
@@ -248,7 +248,7 @@ class iUrbanSound8K(AudioData):
                 inputs = cv2.resize(inputs, (self.reduce_size, self.reduce_size), interpolation=cv2.INTER_LINEAR)
                 inputs = torch.tensor(inputs, dtype=torch.float32).transpose(0, 1) # (C, W) - > (W, C)
 
-                # coding (C, W) -> (T, C, W)
+                # coding (W, C) -> (T, W, C)
                 x = coding_map[self.encode](inputs, num_steps=self.time_steps)
                 y = self.targets[index]
 
@@ -272,14 +272,126 @@ class iGoogleSpeechCommands(AudioData):
     def __init__(self, data_dir, coding_schema, time_step, reduce_size, seed=2025):
         super().__init__(data_dir, coding_schema, time_step, reduce_size, seed)
 
-    def download_data(self):
-        # V2 data as default
+        self.hop_length = 160
+        self.n_mels = 128
+        self.n_fft = 400
+        self.sr = 16000
+        self.duration = 1.0
 
-        return 
+        self.num_classes = 35
+
+    def download_data(self):
+        '''
+        After download and unzip automatically by Torch, the file directory structure is
+        /SpeechCommands/speech_commands_v0.02/
+        ├── backward
+        ├── bed
+        ├── bird
+        ├── ...
+        ├── yes
+        └── zero
+        '''
+        # self.data_dir = data/gsc/
+        # V2 data as default
+        CORE_WORDS = ["yes","no","up","down","left","right","on","off","stop","go"]
+        AUX_WORDS = ["zero","one","two","three","four","five","six","seven","eight","nine",
+                    "bed","bird","cat","dog","happy","house","marvin","sheila","tree",
+                    "wow","backward","forward","follow","learn","visual"]
+        ALL_WORDS = CORE_WORDS + AUX_WORDS
+        assert len(ALL_WORDS) == 35
+        # BACKGROUND_DIR = "_background_noise_"
+
+        paths = []
+        labels = []
+        self.label_map = {}
+
+        base_dir = os.path.join(self.data_dir, 'SpeechCommands', 'speech_commands_v0.02')
+
+        self.label_map = {w: i for i, w in enumerate(sorted(ALL_WORDS))}
+        # self.label_map["_silence_"] = len(labels) # background_noise -> silence
+
+        for lbl in ALL_WORDS:
+            dirpath = os.path.join(base_dir, lbl)
+            if not os.path.isdir(dirpath): continue
+            for fname in os.listdir(dirpath):
+                if fname.endswith('.wav'):
+                    paths.append(os.path.join(dirpath, fname))
+                    labels.append(self.label_map[lbl])
+
+
+        self.train_data, self.test_data, self.train_targets, self.test_targets = train_test_split(
+            paths, labels, 
+            test_size=0.2,
+            stratify=labels, 
+            random_state=self.seed
+        )
+
     
     def get_dataset(self, train=True):
-    
-        return 
+        class DummyDataset(Dataset):
+            def __init__(self, data, targets, encode, time_steps, sample_rate, duration, n_fft, hop_length, n_mels, reduce_size):
+                self.data = data
+                self.targets = targets
+
+                self.encode = encode
+                self.time_steps = time_steps
+
+                self.n_fft = n_fft
+                self.hop_length = hop_length
+                self.n_mels = n_mels
+
+                self.sr = sample_rate
+                self.duration = duration
+
+                self.reduce_size = reduce_size
+
+            def __getitem__(self, index):
+                fpath = self.data[index]
+                audio_info, sfr = librosa.load(fpath, sr=self.sr, duration=self.duration)
+                
+                # make the length equal
+                max_len = int(self.sr * self.duration)
+                if len(audio_info) < max_len:
+                    # zero padding for not enough long audio file
+                    audio_info = np.pad(audio_info, (0, max_len - len(audio_info)))
+                else:
+                    # slice for too long audio file
+                    audio_info = audio_info[:max_len]
+
+                # Mel-Spectrogram converting
+                mel_spec = librosa.feature.melspectrogram(
+                    y=audio_info, 
+                    sr=sfr, 
+                    n_mels=self.n_mels, 
+                    hop_length=self.hop_length, 
+                    n_fft=self.n_fft,
+                    fmin=20,
+                    fmax=self.sr // 2,
+                    power=2.0
+                )
+                inputs = librosa.power_to_db(mel_spec, ref=np.max)
+
+                # resize to reduce dimension
+                inputs = cv2.resize(inputs, (self.reduce_size, self.reduce_size), interpolation=cv2.INTER_LINEAR)
+                inputs = torch.tensor(inputs, dtype=torch.float32).transpose(0, 1) # (C, W) - > (W, C)
+
+                # coding (W, C) -> (T, W, C)
+                x = coding_map[self.encode](inputs, num_steps=self.time_steps)
+                y = self.targets[index]
+
+                return x, y
+
+            def __len__(self):
+                return len(self.targets)
+
+        if train:
+            ds = DummyDataset(
+                self.train_data, self.train_targets, self.encode, self.T, self.sr, self.duration, self.n_fft, self.hop_length, self.n_mels, self.reduce_size)
+        else:
+            ds = DummyDataset(
+                self.test_data, self.test_targets, self.encode, self.T, self.sr, self.duration, self.n_fft, self.hop_length, self.n_mels, self.reduce_size)
+
+        return ds
     
 
 @register_dataset('shd')
