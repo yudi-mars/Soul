@@ -2,27 +2,25 @@
 
 ### 工程任务
 
-- [ ] 2025.08.12-2025.08.30 音频数据处理默认为转换为Mel Spectrogram后喂给模型, 具体模型可能要待定下 @changze
-- [ ] 2025.08.15-2025.08.30 Wireless Sensing: 通过无线信号收集的数据(雷达mmWave, wifi signal, RFID这类的)，任务很杂, 我们还是以识别任务为导向 (SenseFi: A Benchmark for WiFi CSI Sensing) 有个开源项目，有数据集和简单的网络结构，很适合我们spike化，可以直接参考 @yudi
-    - 4个数据集集成和统一处理接口(从简单到复杂): UT-HAR, NTU-HAR, NTU-HumanID, Widar 3.0
-    - 模型结构(选4个就行， 主要是结构多样性):
-        - MLP
-        - LeNet
-        - Spike RNN / LSTM
-        - Conv + LSTM
-        - ResNet + classifier
-        - ViT
+- [ ] 2025.08.12-2025.08.30 音频数据处理默认为转换为Mel Spectrogram后喂给模型, 具体模型可能要待定下, 后续集中攻坚下
+- [x] 2025.08.15-2025.08.30 基础模型结构(选4个就行， 主要是结构多样性)
+    - MLP
+    - LeNet
+    - Spike RNN / LSTM (Maybe iRNN)
+    - Conv + LSTM
+    - ResNet + classifier
+    - ViT
 - [ ] 2025.08.06-2025.08.10 @changze 加一下IJCAI2025的ILIF(属于membrane potential modulation)，代码和论文都在ILIF.py中（咱们原来的ILIF被改为INTLIF, 'intlif'）
-- [ ] 2025.07.10-2025.07.31 @changze @yudi 我们需要ANN2SNN（为vgg，resnet，spikformer至少挑选一个对应可行的资源消耗没那么严重的ANN2SNN训练方法）**从cloud service的视角展示可行性，最后cloud端给边缘端发送模型**
-- [ ] 2025.07.20-2025.07.31 @changze @yudi lightweight的方法: ANN->SNN的蒸馏方法~2023cvpr 为vgg，resnet，spikformer提供一个可行的蒸馏方案 **与ANN2SNN同理**
-- [ ] 2025.07.20-2025.07.31 @changze lightweight的方法: **NAS**: 如果目前只支持vgg，那就先只支持直通网络,~~但是要确认一些别的方法（比如乐透奖Panda 2022那篇ECCV）看看哪种方法开销更小~~**主要展示的是当前这个NAS方向是如何和我们的Soul融合适配的！**  example(case)导向
-- [ ] 2025.07.25-2025.07.31 @changze @yudi quantization接口  **主要展示的是当前这个prune方向是如何和我们的Soul融合适配的**
-- [ ] 2025.07.20-2025.08.20 @helin structure/unstructure pruning结果展示
-- [ ] TBD Other Sensing Application
-    - Multi-Modal Sensing: @changze 是不是用下spike-clip的研究成果稍微展示下？就说这是一种多模态SNN应用？
-    - Earable Sensing: 头戴/夹耳式设备之类采集的信号:可以做（1）Sound source localization定位 (2) EEG/EMG生物信号 这两个application SNN的AI模型都有
-    - Generative AI for Sensing: 展示一些LLM吐出的token让snn进行解码的示例？@changze
-- [ ] TBD @yudi `scripts`里的shell脚本后面应该换成针对utils.app里的各个服务调用的脚本会比较好(run_soul本质就是rate_trainer，后面会放到app/train里)
+- [ ] 2025.07.10-2025.07.31 cloud app: ANN2SNN
+- [ ] 2025.07.20-2025.07.31 cloud app: ANN-SNN distill
+- [ ] 2025.07.20-2025.07.31 cloud app: SNN NAS
+- [ ] 2025.07.25-2025.07.31 cloud app: SNN quantization
+- [ ] 2025.07.20-2025.08.20 cloud app: SNN pruning (structured/unstructured)
+- [ ] TBD special sensing modality
+    - Multi-Modal Sensing: spike-CLIP?
+    - Earable Sensing with bio-signal
+    - Generative AI for Sensing: SNN for LLM token output
+- [ ] TBD `scripts`里的shell脚本后面应该换成针对utils.app里的各个服务调用的脚本会比较好(run_soul本质就是rate_trainer，后面会放到app/train里)
 
 ### 科研任务
 
