@@ -5,7 +5,7 @@ Date Created: 2025-07-30
 Description:
     Load data from acoustic sensor. For those audio file without preprocessing, 
     we choose mel-frequency spectrogram to convert, shape as [window size, num channels].
-    For the dynamic acoustic sensing (DVS) datasets, we process them similarly into [window size, num channels].
+    For the dynamic acoustic sensing (DAS) datasets, we process them similarly into [window size, num channels].
 
 References:
     - Hanle Zheng et al. "Temporal dendritic heterogeneity incorporated with spiking neural networks for learning multi-timescale dynamics." Nature Communications 2023.

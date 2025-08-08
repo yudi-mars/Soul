@@ -22,7 +22,7 @@ from . import register_dataset
 
 
 class WirelessData:
-    input_shape = (None, None, None) # Channel State Information (CSI) size
+    input_shape = (None, None, None) # Channel State Information (CSI) size, (C, H, W), can reshape to (CH, W) for RNN input, CH is the sequential dimension
     num_classes = None
 
     def __init__(self, data_dir, coding_schema, time_step):
