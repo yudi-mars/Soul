@@ -12,7 +12,7 @@ application: vision               # (str) Default application scenario for soul
 
 # Training Settings
 epochs: 150                       # (int) The number of training epochs.
-batch_size: 128                   # (int) The training batch size.
+batch_size: 64                    # (int) The training batch size.
 optimizer: adam                   # (str) The name of used optimizer.
 scheduler: cosine                 # (str) The name of optimizer scheduler
 learning_rate: 0.001              # (float) Learning rate.

@@ -22,6 +22,7 @@ def get_idata(config):
 from .motion_dataset import iHHAR, iMotionSense, iShoaib, iUCIHAR
 from .vision_dataset import iCIFAR10, iCIFAR100, iCIFAR10DVS, iDVSGesture, iTinyImageNet
 from .acoustic_dataset import iSpikingHeidelbergDigits, iSpikingSpeechCommands, iUrbanSound8K, iGoogleSpeechCommands, iGTZAN
+from .wireless_dataset import iFiHAR, iFiHumanID, iUTHAR, iWidar3
 
 def load_dataset(config):
     idata = get_idata(config)
@@ -35,6 +36,8 @@ def load_dataset(config):
         config['input_channels'], config['input_dim'] = idata.input_shape
     elif config['application'] == 'acoustic':
         config['input_channels'], config['input_dim'] = idata.input_shape
+    elif config['application'] == 'wireless':
+        config['input_channels'], config['input_height'], config['input_width'] = idata.input_shape
     else:
         raise ValueError(f'Unknown application type: {config["application"]}')
     

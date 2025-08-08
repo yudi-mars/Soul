@@ -143,12 +143,15 @@ def init_config():
     config.update(vars(args))
 
     # double-check application specific config
-    if config['dataset_name'].lower() in ['ucihar', 'hhar', 'motionsense', 'shoaib']:
+    dataset_name = config['dataset_name'].lower()
+    if dataset_name in ['ucihar', 'hhar', 'motionsense', 'shoaib']:
         config['application'] = 'motion'
-    elif config['dataset_name'].lower() in ['cifar10', 'cifar100', 'imagenet', 'dvsgesture', 'cifar10dvs']:
+    elif dataset_name in ['cifar10', 'cifar100', 'imagenet', 'dvsgesture', 'cifar10dvs']:
         config['application'] = 'vision'
-    elif config['dataset_name'].lower() in ['gsc', 'urbansound', 'gtzan', 'ssc', 'shd']:
+    elif dataset_name in ['gsc', 'urbansound', 'gtzan', 'ssc', 'shd']:
         config['application'] = 'acoustic' 
+    elif dataset_name in ['uthar', 'widar', 'fihumanid', 'fihar']:
+        config['application'] = 'wireless' 
     else:
         raise ValueError(f'Unsupport sensing modality: {config["dataset_name"]}')
     app_dir = config['application']
@@ -157,6 +160,7 @@ def init_config():
     target_config_file = os.path.join(current_path, f"../config/neuron/{config['neuron_type'].lower()}.yaml")
     neuron_default_config = yaml.safe_load(open(target_config_file, 'r', encoding="utf-8"))
     config.update(neuron_default_config)
+    
     # load model specific yaml
     match = re.match(r'^([a-zA-Z]+)', config['model'])
     if match:

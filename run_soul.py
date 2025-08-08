@@ -47,7 +47,7 @@ else:
 # report all configuration
 for k, v in sorted(config.items()):
     if global_rank == 0:
-        logger.info(f'{k} = {v}')
+        logger.debug(f'{k} = {v}')
 
 # reproducibility
 if global_rank == 0:
@@ -95,7 +95,7 @@ if global_rank == 0:
 config['surrogate_function'] = surrogate_map[config['surrogate']]
 config['neuron'] = neuron_map[config['neuron_type'].lower()](config) 
 
-model = model_map[config['model'].lower()](config)
+model = model_map[config['application']][config['model'].lower()](config)
 if global_rank == 0:
     logger.debug('\n'+ str(model))
 model.to(device)
