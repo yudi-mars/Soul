@@ -15,6 +15,7 @@ import numpy as np
 import scipy.io as sio
 
 import torch
+import torch.nn.functional as F
 from torch.utils.data import Dataset
 
 from soul.utils.coding import coding_map
@@ -43,7 +44,7 @@ class iWidar3(WirelessData):
         super().__init__(data_dir, coding_schema, time_step)
 
         self.num_classes = 22
-        self.input_shape = (22, 20, 20)
+        self.input_shape = (22, 32, 32)
 
     def download_data(self):
         '''
@@ -79,11 +80,15 @@ class iWidar3(WirelessData):
                 # normalize 
                 inputs = (inputs - 0.0025) / 0.0119
 
-                # reshape: (22, 400) -> (22, 20, 20), maybe can interpolate to 32*32?
+                # reshape: (22, 400) -> (22, 20, 20)
                 inputs = inputs.reshape(22, 20, 20)
 
                 # to tensor
                 inputs = torch.tensor(inputs, dtype=torch.float32)
+
+                # interpolate to 32*32
+                x = F.interpolate(x.unsqueeze(0), size=(32, 32), mode='bilinear', align_corners=False)
+                x = x.squeeze(0)
 
                 # coding (C, H, W) -> (T, C, H, W)
                 x = coding_map[self.encode](inputs, num_steps=self.time_steps)

@@ -30,14 +30,14 @@ def load_dataset(config):
 
     # update input shape of different applications for config
     assert idata.input_shape is not None, 'Something wrong'
-    if config['application'] == 'vision':
+    if config['application'] == 'vision': # -> frame (C, H, W)
         config['input_channels'], config['input_height'], config['input_width'] = idata.input_shape
-    elif config['application'] == 'motion':
-        config['input_channels'], config['input_dim'] = idata.input_shape
-    elif config['application'] == 'acoustic':
-        config['input_channels'], config['input_dim'] = idata.input_shape
-    elif config['application'] == 'wireless':
+    elif config['application'] == 'wireless': # -> CSI (C, H, W)
         config['input_channels'], config['input_height'], config['input_width'] = idata.input_shape
+    elif config['application'] == 'motion': # -> multi-series (C, W)
+        config['input_channels'], config['input_dim'] = idata.input_shape
+    elif config['application'] == 'acoustic': # -> Mel-spectrogram (W, C)
+        config['input_dim'], config['input_channels'] = idata.input_shape
     else:
         raise ValueError(f'Unknown application type: {config["application"]}')
     

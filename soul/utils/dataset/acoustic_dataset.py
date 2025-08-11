@@ -45,7 +45,7 @@ class AudioData:
         self.hop_length = None      # (int) number of samples between successive frames
 
         # all mel-spectrogram will be resize to a square image-like data
-        self.input_shape = (self.reduce_size, self.reduce_size)
+        self.input_shape = (self.reduce_size, self.reduce_size) # (window_size, channel_num)
 
     def download_data(self):
         raise NotImplementedError

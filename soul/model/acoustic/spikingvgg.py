@@ -18,15 +18,11 @@ from copy import deepcopy
 
 from soul.neuron import functional
 
-__all__ = ['VGG', 'SpikingVGG5', 'SpikingVGG9', 'SpikingVGG11', 'SpikingVGG13', 'SpikingVGG16', 'SpikingVGG19']
+__all__ = ['VGG', 'SpikingVGG9', 'SpikingVGG16']
 
 cfgs = {
-    'vgg5': [64, 'M', 128, 'M'],
     'vgg9': [64, 'M', 128, 128, 'M', 256, 256, 256, 'M'],
-    'vgg11': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
-    'vgg13': [64, 64, 'M', 128, 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
     'vgg16': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M'],
-    'vgg19': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M', 512, 512, 512, 512, 'M'],
 }
 
 def multi_time_forward(x_seq, stateless_module):
@@ -171,20 +167,8 @@ class VGG(nn.Module):
                 nn.init.normal_(m.weight, 0, 0.01)
                 nn.init.constant_(m.bias, 0)
 
-def SpikingVGG5(config):
-    return VGG(cfgs['vgg5'], config)
-
 def SpikingVGG9(config):
     return VGG(cfgs['vgg9'], config)
 
-def SpikingVGG11(config):
-    return VGG(cfgs['vgg11'], config)
-
-def SpikingVGG13(config):
-    return VGG(cfgs['vgg13'], config)
-
 def SpikingVGG16(config):
     return VGG(cfgs['vgg16'], config)
-
-def SpikingVGG19(config):
-    return VGG(cfgs['vgg19'], config)

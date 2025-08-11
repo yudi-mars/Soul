@@ -1,0 +1,1 @@
+hidden_dim: 512               # (int) hidden dimension for the intermediate layers in full connection part

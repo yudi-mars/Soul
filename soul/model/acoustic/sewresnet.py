@@ -305,8 +305,5 @@ class SEWResNet(nn.Module):
 def SEWResNet18(config):
     return SEWResNet(config, BasicBlock, [2, 2, 2, 2])
 
-def SEWResNet34(config):
-    return SEWResNet(config, BasicBlock, [3, 4, 6, 3])
-
 def SEWResNet50(config):
     return SEWResNet(config, Bottleneck, [3, 4, 6, 3])

@@ -1,0 +1,1 @@
+hidden_dim: 1024            # (int) hidden dimension for the intermediate layer of MLP
