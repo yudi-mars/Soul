@@ -4,7 +4,7 @@
 
 - [x] 2025.08.12-2025.08.30 音频数据处理默认为转换为Mel Spectrogram后喂给模型, 具体模型可能要待定下, 后续集中攻坚下
 - [x] 2025.08.15-2025.08.30 基础模型结构(选4个就行， 主要是结构多样性)
-- [ ] 2025.08.06-2025.08.10 @changze 加一下IJCAI2025的ILIF(属于membrane potential modulation)，代码和论文都在ILIF.py中（咱们原来的ILIF被改为INTLIF, 'intlif'）
+- [x] 2025.08.06-2025.08.10 @changze 加一下IJCAI2025的ILIF(属于membrane potential modulation)，代码和论文都在ILIF.py中（咱们原来的ILIF被改为INTLIF, 'intlif'）
 - [ ] 2025.07.10-2025.07.31 cloud app: ANN2SNN
 - [ ] 2025.07.20-2025.07.31 cloud app: ANN-SNN distill
 - [ ] 2025.07.20-2025.07.31 cloud app: SNN NAS

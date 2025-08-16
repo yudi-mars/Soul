@@ -10,3 +10,4 @@ scipy
 matplotlib
 librosa
 h5py
+scikit-learn

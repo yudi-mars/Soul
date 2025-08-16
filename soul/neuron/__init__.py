@@ -8,6 +8,7 @@ from .TLIF import TLIFNode
 from .IELIF import IELIFNode
 from .LTMD import LTMD
 from .STBIF import STBIF
+from .ILIF import ILIFNeuron
 
 neuron_map = {
     "lif": LIFNode,
@@ -19,6 +20,7 @@ neuron_map = {
     "tlif": TLIFNode,
     'ielif': IELIFNode,
     'ltmd': LTMD,
-    'stbif': STBIF
+    'stbif': STBIF,
+    'ilif': ILIFNeuron,
     # TODO
 }
