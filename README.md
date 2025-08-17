@@ -1,10 +1,7 @@
-## TODO List
+<!-- ## TODO List
 
 ### 工程任务
 
-- [x] 2025.08.12-2025.08.30 音频数据处理默认为转换为Mel Spectrogram后喂给模型, 具体模型可能要待定下, 后续集中攻坚下
-- [x] 2025.08.15-2025.08.30 基础模型结构(选4个就行， 主要是结构多样性)
-- [x] 2025.08.06-2025.08.10 @changze 加一下IJCAI2025的ILIF(属于membrane potential modulation)，代码和论文都在ILIF.py中（咱们原来的ILIF被改为INTLIF, 'intlif'）
 - [ ] 2025.07.10-2025.07.31 cloud app: ANN2SNN
 - [ ] 2025.07.20-2025.07.31 cloud app: ANN-SNN distill
 - [ ] 2025.07.20-2025.07.31 cloud app: SNN NAS
@@ -21,7 +18,7 @@
 - [x] 2025.08.06-2025.08.31 Softhebb+STDP算法设计@changze | @yudi 负责辅助、代码复审
 - [ ] TBD @Lvchangze @Yudi **设计一个针对enrich data的rehearsal-based的增量学习算法（simple but effective）**
 
---------------------------------------------------------------------------------
+-------------------------------------------------------------------------------- -->
 
 # Soul: A Toolbox for Developing Edge Intelligence Applications with Spiking Neural Networks
 
