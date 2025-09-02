@@ -78,6 +78,11 @@ device_nodes = {
         ('vdd_cpu_gpu_cv', '0040', '2'),  # vdd_cpu_gpu_cv
         ('vdd_soc', '0040', '3'),  # vdd_soc
     ]
+    'jetson_orin_nano': [
+        ('vdd_in', '0040', '1'),  # vdd_in
+        ('vdd_cpu_gpu_cv', '0040', '2'),  # VDD_CPU_GPU_CV
+        ('vdd_soc', '0040', '3'),  # vdd_soc
+        ],
 }
 
 driver_dir = {  
@@ -85,6 +90,7 @@ driver_dir = {
     'jetson_nx': '/sys/bus/i2c/devices/7-0040/',
     'jetson_agx_orin': '/sys/bus/i2c/drivers/ina3221/1-0041/hwmon/hwmon2/',
     'jetson_orin_nx': '/sys/bus/i2c/drivers/ina3221/1-0040/hwmon/hwmon3/',
+    'jetson_orin_nano': '/sys/bus/i2c/drivers/ina3221/1-0040/hwmon/hwmon1/',
 }
 
 _valTypes = ['power', 'voltage', 'current']
@@ -145,6 +151,17 @@ def readValue(i2cAddr='0040', channel='0', valType='power',device='jetson_agx_or
             val = 'in' if valtype == 'voltage' else 'curr'
             # Construct the filename for Jetson AGX Orin device
             fname = f'/sys/bus/i2c/drivers/ina3221/1-{i2cAddr}/hwmon/hwmon3/{val}{channel}_input'
+            with open(fname, 'r') as f:
+                res[valtype] = f.read()
+        
+        # Calculate power if needed
+        res['power'] = float(res['voltage']) * float(res['current']) / 1000
+    elif device == 'jetson_orin_nano':
+        res = {}
+        for valtype in ['voltage', 'current']:
+            val = 'in' if valtype == 'voltage' else 'curr'
+            # Construct the filename for Jetson Orin Nano device
+            fname = f'/sys/bus/i2c/drivers/ina3221/1-{i2cAddr}/hwmon/hwmon1/{val}{channel}_input'
             with open(fname, 'r') as f:
                 res[valtype] = f.read()
         
@@ -284,7 +301,16 @@ class PowerLogger:
                 label_names = names
                 half = int((len(names)-1)/2)
                 styles = [":"] + ['-'] * half + ['-.'] * (len(names) - half) + ['--']
-
+        elif device == 'jetson_orin_nano': 
+            if names is None: 
+                names = [name for name, _, _ in [node for node in self._nodes]]
+                label_names = ['vdd_in', 'vdd_cpu_gpu_cv', 'vdd_soc']
+                styles = ['-', '-.', ':']
+            else: 
+                names = [name for name, _, _ in [self._nodes[i] for i in names]]
+                label_names = names
+                half = int((len(names)-1)/2)
+                styles = [":"] + ['-'] * half + ['-.'] * (len(names) - half) + ['--']
         #prepare data to display
         TPs = [self.getDataTrace(nodeName=name, valType=valType) for name in names]
         Ts, _ = TPs[0] # TPs.shape 4 2 344
@@ -293,12 +319,13 @@ class PowerLogger:
         if device == 'jetson_tx2':
             Ps.append([Ps[1][i]+Ps[2][i]+Ps[3][i] for i in range(len(Ts))])
         elif device == 'jetson_nx':
-            Ps.append([Ps[0][i]+Ps[1][i]+Ps[2][i] for i in range(len(Ts))])
+            Ps.append([Ps[0][i] for i in range(len(Ts))])
         elif device == 'jetson_agx_orin': 
-            Ps.append([Ps[0][i]+Ps[1][i]+Ps[2][i]+Ps[3][i] for i in range(len(Ts))])
-        elif device == 'jetson_orin_nx': 
             Ps.append([Ps[0][i]+Ps[1][i]+Ps[2][i] for i in range(len(Ts))])
-
+        elif device == 'jetson_orin_nx': 
+            Ps.append([Ps[0][i] for i in range(len(Ts))])
+        elif device == 'jetson_orin_nano': 
+            Ps.append([Ps[0][i] for i in range(len(Ts))])
         Ts_s = []
         Ps_a = []
         Ps_t = []
@@ -320,12 +347,13 @@ class PowerLogger:
         if device == 'jetson_tx2':
             energies.append(energies[1]+energies[2]+energies[3])
         elif device == 'jetson_nx':
-            energies.append(energies[0]+energies[1]+energies[2])
+            energies.append(energies[0])
         elif device == 'jetson_agx_orin':
-            energies.append(energies[0]+energies[1]+energies[2]+energies[3])
-        elif device == 'jetson_orin_nx':
             energies.append(energies[0]+energies[1]+energies[2])
-        
+        elif device == 'jetson_orin_nx':
+            energies.append(energies[0])
+        elif device == 'jetson_orin_nano':
+            energies.append(energies[0])
         for t in range(len(label_names)): 
             print(f'{label_names[t]}: {energies[t] / 1e3:.4f} J')
 
