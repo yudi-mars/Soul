@@ -17,10 +17,8 @@ from soul.utils.surrogate import Rectangle
 
 
 class ComplementaryLIFNeuron(LIFNode):
-    def __init__(self, tau: float = 2., decay_input: bool = False, v_threshold: float = 1.,
-                 v_reset: float = None, surrogate_function: Callable = Rectangle(),
-                 detach_reset: bool = False, **kwargs):
-        super().__init__(tau, decay_input, v_threshold, v_reset, surrogate_function, detach_reset)
+    def __init__(self, config, **kwargs):
+        super().__init__(config)
         self.register_memory('m', 0.)  # Complementary memory
 
     def forward(self, x: torch.Tensor):
@@ -65,13 +63,13 @@ class ComplementaryLIFNeuron(LIFNode):
 # spikingjelly multiple step version
 class CLIFNode(ComplementaryLIFNeuron):
     def __init__(self, config):
-        tau = config['tau']
-        decay_input = config['decay_input']
-        v_threshold = config['v_threshold']
-        v_reset = config['v_reset']
-        surrogate_function = config['surrogate_function']
-        detach_reset = config['detach_reset']
-        super().__init__(tau, decay_input, v_threshold, v_reset, surrogate_function, detach_reset)
+        # tau = config['tau']
+        # decay_input = config['decay_input']
+        # v_threshold = config['v_threshold']
+        # v_reset = config['v_reset']
+        # surrogate_function = config['surrogate_function']
+        # detach_reset = config['detach_reset']
+        super().__init__(config)
 
     def forward(self, x_seq: torch.Tensor):
         assert x_seq.dim() > 1
