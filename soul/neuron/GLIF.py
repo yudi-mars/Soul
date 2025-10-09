@@ -77,20 +77,22 @@ class GatedLIFNode(base.MemoryModule):
         return super().extra_repr() + f', tau={tau}' + f', v_subreset={v_subreset}' + f', linear_decay={linear_decay}' + f', conduct={conduct}'
 
     def neuronal_charge(self, x: torch.Tensor, alpha: torch.Tensor, beta: torch.Tensor, t):
-        input = x * (1 - beta * (1 - self.conduct[t].view(1, -1, 1, 1).sigmoid()))
-        self.u = ((1 - alpha * (1 - self.tau.view(1, -1, 1, 1).sigmoid())) * self.v \
-                  - (1 - alpha) * self.linear_decay.view(1, -1, 1, 1).sigmoid()) \
+        input = x * (1 - beta * (1 - self.conduct[t].view(*self.target_shape).sigmoid()))
+        self.u = ((1 - alpha * (1 - self.tau.view(*self.target_shape).sigmoid())) * self.v \
+                  - (1 - alpha) * self.linear_decay.view(*self.target_shape).sigmoid()) \
                  + input
 
     def neuronal_reset(self, spike, alpha: torch.Tensor, gamma: torch.Tensor):
-        self.u = self.u - (1 - alpha * (1 - self.tau.view(1, -1, 1, 1).sigmoid())) * self.v * gamma * spike \
-                 - (1 - gamma) * self.v_subreset.view(1, -1, 1, 1).sigmoid() * spike
+        self.u = self.u - (1 - alpha * (1 - self.tau.view(*self.target_shape).sigmoid())) * self.v * gamma * spike \
+                 - (1 - gamma) * self.v_subreset.view(*self.target_shape).sigmoid() * spike
 
     def neuronal_fire(self):
-        return self.surrogate_function(self.u - self.v_threshold.view(1, -1, 1, 1).sigmoid())
+        return self.surrogate_function(self.u - self.v_threshold.view(*self.target_shape).sigmoid())
 
     def multi_step_forward(self, x_seq: torch.Tensor):
-        alpha, beta, gamma = self.alpha.view(1, -1, 1, 1).sigmoid(), self.beta.view(1, -1, 1, 1).sigmoid(), self.gamma.view(1, -1, 1, 1).sigmoid()
+        self.target_shape = (1, -1, *([1] * (x_seq.ndim - 3)))  # (1, -1, 1, 1) for conv2d or (1, -1) for linear
+
+        alpha, beta, gamma = self.alpha.view(*self.target_shape).sigmoid(), self.beta.view(*self.target_shape).sigmoid(), self.gamma.view(*self.target_shape).sigmoid()
         y_seq = []
         spike = torch.zeros(x_seq.shape[1:], device=x_seq.device)
         for t in range(self.T):
