@@ -44,10 +44,12 @@ class LTMD(nn.Module):
         self.w = nn.Parameter(torch.tensor(init_w, dtype=torch.float))
         
     def forward(self, x):
-        x = x.permute(1, 2, 3, 4, 0)
+        # x = x.permute(1, 2, 3, 4, 0)
+        x = x.movedim(0, -1)  # move timestep dimension to the end
         u = torch.zeros(x.shape[:-1] , device=x.device)
         out = torch.zeros(x.shape, device=x.device)
         for step in range(self.steps):
             u, out[..., step] = state_update(u, out[..., max(step-1, 0)], x[..., step], self.w.tanh())
-        out = out.permute(4, 0, 1, 2, 3)
+        # out = out.permute(4, 0, 1, 2, 3)
+        out = out.movedim(-1, 0)  # move timestep dimension back to the front
         return out
