@@ -77,7 +77,7 @@ device_nodes = {
         ('vdd_in', '0040', '1'),  # vdd_in
         ('vdd_cpu_gpu_cv', '0040', '2'),  # vdd_cpu_gpu_cv
         ('vdd_soc', '0040', '3'),  # vdd_soc
-    ]
+    ],
     'jetson_orin_nano': [
         ('vdd_in', '0040', '1'),  # vdd_in
         ('vdd_cpu_gpu_cv', '0040', '2'),  # VDD_CPU_GPU_CV
