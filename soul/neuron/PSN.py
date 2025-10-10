@@ -16,7 +16,7 @@ import torch.nn as nn
 class ParallelSpikingNode(nn.Module):
     def __init__(self, config):
         super().__init__()
-        self.T = config['T']
+        self.T = config['time_step'] # config['T']
         self.surrogate_function = config['surrogate_function']
         weight = torch.zeros([self.T, self.T])
         bias = torch.zeros([self.T, 1])

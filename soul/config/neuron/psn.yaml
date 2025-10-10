@@ -1,2 +1,1 @@
-T: 4                       # (int) firing threshold for neuron
 surrogate: atan            # (str) surrogate gradient function
