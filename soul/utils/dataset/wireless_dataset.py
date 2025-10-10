@@ -87,8 +87,8 @@ class iWidar3(WirelessData):
                 inputs = torch.tensor(inputs, dtype=torch.float32)
 
                 # interpolate to 32*32
-                x = F.interpolate(x.unsqueeze(0), size=(32, 32), mode='bilinear', align_corners=False)
-                x = x.squeeze(0)
+                inputs = F.interpolate(inputs.unsqueeze(0), size=(32, 32), mode='bilinear', align_corners=False)
+                inputs = inputs.squeeze(0)
 
                 # coding (C, H, W) -> (T, C, H, W)
                 x = coding_map[self.encode](inputs, num_steps=self.time_steps)
