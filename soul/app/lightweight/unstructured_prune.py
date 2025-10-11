@@ -240,10 +240,11 @@ def init_config():
         raise ValueError(f'Unsupport sensing modality: {config["dataset_name"]}')
     app_dir = config['application']
 
-    # load neuron specific yaml TODO neuron also need specify application scenario??
+    # load neuron specific yaml
     target_config_file = os.path.join(current_path, f"../../config/neuron/{config['neuron_type'].lower()}.yaml")
     neuron_default_config = yaml.safe_load(open(target_config_file, 'r', encoding="utf-8"))
     config.update(neuron_default_config)
+
     # load model specific yaml
     match = re.match(r'^([a-zA-Z]+)', config['model'])
     if match:
