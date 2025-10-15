@@ -1,24 +1,4 @@
-<!-- ## TODO List
-
-### 工程任务
-
-- [ ] 2025.07.10-2025.07.31 cloud app: ANN2SNN
-- [ ] 2025.07.20-2025.07.31 cloud app: ANN-SNN distill
-- [ ] 2025.07.20-2025.07.31 cloud app: SNN NAS
-- [ ] 2025.07.25-2025.07.31 cloud app: SNN quantization
-- [ ] 2025.07.20-2025.08.20 cloud app: SNN pruning (structured/unstructured)
-- [ ] TBD special sensing modality
-    - Multi-Modal Sensing: spike-CLIP?
-    - Earable Sensing with bio-signal
-    - Generative AI for Sensing: SNN for LLM token output
-- [ ] TBD `scripts`里的shell脚本后面应该换成针对utils.app里的各个服务调用的脚本会比较好(run_soul本质就是rate_trainer，后面会放到app/train里)
-
-### 科研任务
-
-- [x] 2025.08.06-2025.08.31 Softhebb+STDP算法设计@changze | @yudi 负责辅助、代码复审
-- [ ] TBD @Lvchangze @Yudi **设计一个针对enrich data的rehearsal-based的增量学习算法（simple but effective）**
-
--------------------------------------------------------------------------------- -->
+--------------------------------------------------------------------------------
 
 # Soul: A Toolbox for Developing Edge Intelligence Applications with Spiking Neural Networks
 
@@ -43,12 +23,6 @@ SOUL (**S**NN-based **O**pen so**U**rce too**L**kit) is developed based on Pytho
 
 TBD 一张图 @yudi
 
-### Feature
-
-TBD Soul的一些基本的特色
-
-- feature 1
-- feature 2
 
 ### Dataset Support
 
@@ -82,8 +56,6 @@ TBD Soul的一些基本的特色
 
 ### Command in Console 
 
-TBD 这个后面等run_soul变成一个app服务后后面再统一做shell脚本修改
-
 - Running `Soul` with a single GPU in default settings
     ```shell
     CUDA_VISIBLE_DEVICES=[GPU-ID] python run_soul.py
@@ -94,25 +66,13 @@ TBD 这个后面等run_soul变成一个app服务后后面再统一做shell脚本
     CUDA_VISIBLE_DEVICES=[GPU-ID1],[GPU-ID2],... torchrun --nproc_per_node=[Number of used GPU] run_soul.py
     ```
 
-### Shell scripts
-
-- Running `Soul` with a single GPU in default settings
-    ```shell
-    ./scripts/train_single.sh
-    ```
-    
-- Running `Soul` with multiple GPUs in default settings
-    ```shell
-    ./scripts/train_ddp.sh
-    ```
-
 ## Results Analysis
 
-TBD 终版前给一个结果展示，比如ESBench的一些结果列上去
+TBD 
 
 ## Documentation
 
-TBD (Sphinx Documentation)
+TBD @Cajol1e (Sphinx Documentation)
 
 ## Cite
 
