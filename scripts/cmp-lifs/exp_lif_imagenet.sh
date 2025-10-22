@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Not Recommend to run this script to compare all LIF models on ImageNet, since LeNet structure is too simple.
+
 # 固定参数
 GPU_ID="3,4"
 MODEL=lenet
