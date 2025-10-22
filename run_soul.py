@@ -89,6 +89,7 @@ test_loader = torch.utils.data.DataLoader(
 # load SNN model
 if global_rank == 0:
     logger.info(f'Load SNN model: {config["model"]} featured {config["neuron_type"].upper()} neuron...')
+    logger.info(f'#Training Samples: {len(train_dataset)}; #Test Samples: {len(test_dataset)}')
 
 if global_rank == 0:
     logger.debug(f'surrogate function: {config["surrogate"]}')
