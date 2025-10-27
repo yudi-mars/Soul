@@ -22,7 +22,7 @@ def get_idata(config):
 from .motion_dataset import iHHAR, iMotionSense, iShoaib, iUCIHAR
 from .vision_dataset import iCIFAR10, iCIFAR100, iCIFAR10DVS, iDVSGesture, iTinyImageNet
 from .acoustic_dataset import iSpikingHeidelbergDigits, iSpikingSpeechCommands, iUrbanSound8K, iGoogleSpeechCommands, iGTZAN
-from .wireless_dataset import iFiHAR, iFiHumanID, iUTHAR, iWidar3
+from .wireless_dataset import iFiHAR, iFiHumanID, iUTHAR, iWidar3, iWiGesture
 
 def load_dataset(config):
     idata = get_idata(config)

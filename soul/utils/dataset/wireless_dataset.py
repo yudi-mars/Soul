@@ -10,9 +10,13 @@ References:
     https://github.com/xyanchen/WiFi-CSI-Sensing-Benchmark
 """
 import os
+import copy
 import glob
 import numpy as np
+import pandas as pd
 import scipy.io as sio
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split
 
 import torch
 import torch.nn.functional as F
@@ -36,6 +40,145 @@ class WirelessData:
     
     def get_dataset(self, train=True):
         raise NotImplementedError
+    
+@register_dataset('wigesture')
+class iWiGesture(WirelessData):
+    '''
+    The CSI data for WiGesture is preprocessed to gray-scale maginitude images with size 32x32.
+    Each sample corresponds to a gesture action.
+    There are 6 gesture classes in total.
+    0: applause
+    1: circle clockwise
+    2: front and after
+    3: left to right
+    4: up and down
+    5: wave right
+    Only dynamic data is used in previous works.
+    '''
+    def __init__(self, data_dir, coding_schema, time_step):
+        super().__init__(data_dir, coding_schema, time_step)
+
+        self.num_classes = 6 
+        self.input_shape = (1, 32, 32) 
+
+    def _handle_complex_data(self, x, valid_indices):
+        real_parts = []
+        imag_parts = []
+        for i in valid_indices:
+            real_parts.append(x[i * 2])
+            imag_parts.append(x[i * 2 - 1])
+        return np.array(real_parts) + 1j * np.array(imag_parts)
+
+    def _get_time(self, s):
+        s = s.split()[-1]
+        s = s.split(':')
+        h = float(s[0])
+        m = float(s[1])
+        t = float(s[2])
+        total = h * 3600 + m * 60 + t
+        return h, m, t, total
+
+    def download_data(self):
+        # self.data_dir = /data/wigesture/
+        data_dir = os.path.join(self.data_dir, 'dynamic')
+        
+        # 52 subcarriers are valid
+        csi_vaid_subcarrier_index = range(0, 52)
+        csi = []
+
+        for people in sorted(os.listdir(data_dir)):
+            path_people = os.path.join(data_dir, people)
+
+            for action_file in sorted(os.listdir(path_people)): # sort to keep the same order
+                action = action_file.split('.')[0] # label.csv
+                print(f'Processing {people} {action}...')
+                file_path = os.path.join(path_people, action_file) # action file path    
+
+                df = pd.read_csv(file_path)
+                df.dropna(inplace=True)
+                df['data'] = df['data'].apply(lambda x: eval(x))
+                complex_data = df['data'].apply(lambda x: self._handle_complex_data(x, csi_vaid_subcarrier_index))
+                magnitude = complex_data.apply(lambda x: np.abs(x))
+                phase = complex_data.apply(lambda x: np.angle(x, deg=True))
+                local_time = np.array(df['local_timestamp'])
+
+                csi.append({
+                    'csi_local_time': local_time,
+                    'action': action,
+                    'magnitude': np.array([np.array(a) for a in magnitude]),
+                    'phase': np.array([np.array(a) for a in phase])
+                })
+
+        gap = 1
+        length = gap * 100 # the time window length, can be adjusted here
+        action_list = []
+        magnitudes = []
+        # phases = []
+
+        for data in csi:
+            # local_time = data['csi_local_time']
+            magnitude = data['magnitude']
+            # phase = data['phase']
+            action = data['action']
+
+            index=0
+            while index < len(magnitude) - length:
+                current_magnitude = magnitude[index:index + length]
+                # current_phase = phase[index:index + length]
+                index += (length + gap - 1)
+                magnitudes.append(copy.deepcopy(current_magnitude))
+                # phases.append(copy.deepcopy(current_phase))
+                action_list.append(action)
+        
+        action_list = np.array(action_list)
+        magnitudes = np.array(magnitudes)
+        # phases=np.array(phases)
+        magnitudes = np.swapaxes(magnitudes, 1, 2) # (N, L, 52) -> (N, 52, L)
+        magnitudes = np.expand_dims(magnitudes, axis=1) # (N, 52, L) -> (N, 1, 52, L)
+        # sometimes phases can be also introduced, but this data may fluctuate a lot due to different devices/environments
+
+        # magnitude normalization
+        magnitudes = (magnitudes - magnitudes.mean()) / (magnitudes.std() + 1e-6)
+
+        # resize to better fit the model input
+        magnitudes = F.interpolate(torch.tensor(magnitudes, dtype=torch.float32), size=(32, 32), mode='bilinear', align_corners=False) # (N, 1, 52, L) -> (N, 1, 32, 32)
+
+        # catgorize labels
+        le = LabelEncoder()
+        y_encoded = le.fit_transform(action_list)
+
+        # load train and test data
+        self.train_data, self.test_data, self.train_targets, self.test_targets = train_test_split(
+            magnitudes, y_encoded, test_size=0.1, stratify=y_encoded, random_state=2025
+        )    
+
+    def get_dataset(self, train=True):
+        class DummyDataset(Dataset):
+            def __init__(self, data, targets, encode, time_steps):
+                self.data = data
+                self.targets = targets
+
+                self.encode = encode
+                self.time_steps = time_steps
+            
+            def __getitem__(self, index):
+                inputs = self.data[index]
+
+                # coding (C, H, W) -> (T, C, H, W)
+                x = coding_map[self.encode](inputs, num_steps=self.time_steps)
+                y = self.targets[index]
+
+                return x, y
+
+            def __len__(self):
+                return len(self.targets)
+
+        if train:
+            ds = DummyDataset(self.train_data, self.train_targets, self.encode, self.T)
+        else:
+            ds = DummyDataset(self.test_data, self.test_targets, self.encode, self.T)
+
+        return ds
     
 @register_dataset('widar')
 class iWidar3(WirelessData):
