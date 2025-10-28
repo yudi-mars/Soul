@@ -41,6 +41,86 @@ class WirelessData:
     def get_dataset(self, train=True):
         raise NotImplementedError
     
+@register_dataset('falldar')
+class iFallDar(WirelessData):
+    '''
+    The CSI data for Falldar, we use the denoise version data provided in this dataset for experiments.
+    0: not fall
+    1: fall
+    '''
+    def __init__(self, data_dir, coding_schema, time_step):
+        super().__init__(data_dir, coding_schema, time_step)
+
+        self.num_classes = 2 # fall / no-fall
+        self.input_shape = (3, 32, 500) 
+
+    def download_data(self):
+        # self.data_dir = /data/falldar/
+        data_dir = os.path.join(self.data_dir, 'denoisemat')
+
+        samples, labels = [], []
+        for code in ['fall', 'nonfall']:
+            print(f'Processing {code} data...')
+            folder_path = os.path.join(data_dir, code)
+            for file_path in os.listdir(folder_path): 
+                for data_mat_file in os.listdir(os.path.join(folder_path, file_path)):
+                    if data_mat_file.endswith('.mat'):
+                        mat_contents = sio.loadmat(os.path.join(folder_path, file_path, data_mat_file))
+                        data = mat_contents['csi_data']  # shape: (2000, 30, 3) CSI complex data
+                        data = np.swapaxes(data, 0, 2)  # (3, 30, 2000) : [attenna, subcarrier, time packet]
+                        amp = np.abs(data)  # use magnitude only
+
+                        # interpolate to 32 * 500
+                        amp = F.interpolate(torch.from_numpy(amp).unsqueeze(0).float(), size=(32, 500), mode='bilinear', align_corners=False)
+                        amp = amp.squeeze(0).numpy()
+
+                        samples.append(amp)
+                        labels.append(0 if code == 'nonfall' else 1)
+
+        samples = np.array(samples) # (1655, 3, 30, 500) 
+        labels = np.array(labels)
+
+        # magnitude Z-score normalization
+        mean = np.mean(samples, axis=(0, 2, 3), keepdims=True)  # shape (1, 3, 1, 1)
+        std = np.std(samples, axis=(0, 2, 3), keepdims=True)    # shape (1, 3, 1, 1)
+        samples = (samples - mean) / (std + 1e-6)
+
+        # convert to tensor for encoding
+        samples = torch.from_numpy(samples).float()
+
+        # load train and test data
+        self.train_data, self.test_data, self.train_targets, self.test_targets = train_test_split(
+            samples, labels, test_size=0.1, stratify=labels, random_state=2025
+        )   
+
+    def get_dataset(self, train=True):
+        class DummyDataset(Dataset):
+            def __init__(self, data, targets, encode, time_steps):
+                self.data = data
+                self.targets = targets
+
+                self.encode = encode
+                self.time_steps = time_steps
+            
+            def __getitem__(self, index):
+                inputs = self.data[index]
+
+                # coding (C, H, W) -> (T, C, H, W)
+                x = coding_map[self.encode](inputs, num_steps=self.time_steps)
+                y = self.targets[index]
+
+                return x, y
+
+            def __len__(self):
+                return len(self.targets)
+
+        if train:
+            ds = DummyDataset(self.train_data, self.train_targets, self.encode, self.T)
+        else:
+            ds = DummyDataset(self.test_data, self.test_targets, self.encode, self.T)
+
+        return ds
+    
 @register_dataset('wigesture')
 class iWiGesture(WirelessData):
     '''
@@ -137,7 +217,7 @@ class iWiGesture(WirelessData):
         magnitudes = np.expand_dims(magnitudes, axis=1) # (N, 52, L) -> (N, 1, 52, L)
         # sometimes phases can be also introduced, but this data may fluctuate a lot due to different devices/environments
 
-        # magnitude normalization
+        # magnitude Z-score normalization
         magnitudes = (magnitudes - magnitudes.mean()) / (magnitudes.std() + 1e-6)
 
         # resize to better fit the model input
