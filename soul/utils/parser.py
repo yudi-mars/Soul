@@ -151,7 +151,7 @@ def init_config():
     elif dataset_name in ['gsc', 'urbansound', 'gtzan', 'ssc', 'shd']:
         config['application'] = 'acoustic' 
     elif dataset_name in [
-        'uthar', 'widar', 'fihumanid', 'fihar', 'wigesture', 'falldar', 'aril', 'gaitid']:
+        'uthar', 'widar', 'fihumanid', 'fihar', 'wigesture', 'falldar', 'aril', 'bullydetect']:
         config['application'] = 'wireless' 
     else:
         raise ValueError(f'Unsupport sensing modality: {config["dataset_name"]}')

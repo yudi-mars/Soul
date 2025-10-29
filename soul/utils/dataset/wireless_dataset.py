@@ -12,6 +12,7 @@ References:
 import os
 import copy
 import glob
+import h5py
 import numpy as np
 import pandas as pd
 import scipy.io as sio
@@ -27,7 +28,7 @@ from . import register_dataset
 
 
 class WirelessData:
-    input_shape = (None, None, None) # Channel State Information (CSI) size, (C, H, W), can reshape to (CH, W) for RNN input, CH is the sequential dimension
+    input_shape = (None, None, None) # Channel State Information (CSI) size (atenna, subcarrier, time length) 
     num_classes = None
 
     def __init__(self, data_dir, coding_schema, time_step):
@@ -97,23 +98,66 @@ class iARIL(WirelessData):
 
         return ds
 
-@register_dataset('gaitid')
-class iGaitID(WirelessData):
+@register_dataset('bullydetect')
+class iBullyDetect(WirelessData):
     def __init__(self, data_dir, coding_schema, time_step):
         super().__init__(data_dir, coding_schema, time_step)
 
-        self.num_classes = 6
-        self.input_shape = (6, 512, 21) # (A, S, T) 
+        self.num_classes = 7
+        self.input_shape = (3, 32, 500) 
 
     def download_data(self):
-        # self.data_dir = /data/ElderAL/
+        # self.data_dir = /data/bullydetect/
+        self.data_dir = os.path.join(self.data_dir, 'wifi_violence_processed_loc/')
 
-        return 
+        # load train data
+        train_df = pd.read_csv(os.path.join(self.data_dir, 'train_list.csv'))
+        self.train_data = train_df['file'].values
+        self.train_targets = train_df['label'].values - 1 # make labels start from 0
 
-    
+        # load test data
+        test_df = pd.read_csv(os.path.join(self.data_dir, 'test_list.csv'))
+        self.test_data = test_df['file'].values
+        self.test_targets = test_df['label'].values - 1 
+
     def get_dataset(self, train=True):
-        return 
-    
+        class DummyDataset(Dataset):
+            def __init__(self, data, targets, encode, time_steps, data_dir):
+                self.data = data
+                self.targets = targets
+
+                self.encode = encode
+                self.time_steps = time_steps
+
+                self.data_dir = data_dir
+            
+            def __getitem__(self, index):
+                h5_filename = self.data[index] + '.h5'
+                h5file = h5py.File(os.path.join(self.data_dir, h5_filename), 'r')
+
+                inputs = h5file['amp'][:, :].reshape(3, 30, 1000) # (90, 1000) -> (3, 30, 1000)
+
+                # resize and to tensor
+                inputs = F.interpolate(torch.from_numpy(inputs).unsqueeze(0).float(), size=(32, 500), mode='bilinear', align_corners=False) # (3, 30, 1000) -> (1, 3, 30, 1000) -> (1, 3, 32, 500)
+                inputs = inputs.squeeze(0) # (3, 32, 500)
+                
+                # coding (C, H, W) -> (T, C, H, W)
+                x = coding_map[self.encode](inputs, num_steps=self.time_steps)
+                y = self.targets[index]
+
+                return x, y
+
+            def __len__(self):
+                return len(self.targets)
+
+        data_dir = os.path.join(self.data_dir, 'train') if train else os.path.join(self.data_dir, 'test')
+        if train:
+            ds = DummyDataset(self.train_data, self.train_targets, self.encode, self.T, data_dir)
+        else:
+            ds = DummyDataset(self.test_data, self.test_targets, self.encode, self.T, data_dir)
+
+        return ds    
+
 @register_dataset('falldar')
 class iFallDar(WirelessData):
     '''
