@@ -41,6 +41,79 @@ class WirelessData:
     def get_dataset(self, train=True):
         raise NotImplementedError
     
+@register_dataset('aril')
+class iARIL(WirelessData):
+    '''
+    We only use amplitude information for ARIL dataset as baseline.
+    '''
+    def __init__(self, data_dir, coding_schema, time_step):
+        super().__init__(data_dir, coding_schema, time_step)
+
+        self.num_classes = 6
+        self.input_shape = (1, 52, 192) 
+
+    def download_data(self):
+        # self.data_dir = /data/ARIL/
+        train_data = sio.loadmat(os.path.join(self.data_dir, 'train_data_split_amp.mat'))
+        test_data = sio.loadmat(os.path.join(self.data_dir, 'test_data_split_amp.mat'))
+
+        self.train_data = train_data['train_data'][:, np.newaxis, :, :]  # (N, 52, 192) -> (N, 1, 52, 192)
+        self.train_targets = train_data['train_activity_label'].reshape(-1) # (N, 1) -> (N,)
+
+        self.test_data = test_data['test_data'][:, np.newaxis, :, :]  # (N, 52, 192) -> (N, 1, 52, 192)
+        self.test_targets = test_data['test_activity_label'].reshape(-1) # (N, 1) -> (N,)
+
+        # to tensor
+        self.train_data = torch.tensor(self.train_data, dtype=torch.float32)
+        self.train_targets = torch.tensor(self.train_targets, dtype=torch.long)
+        self.test_data = torch.tensor(self.test_data, dtype=torch.float32)
+        self.test_targets = torch.tensor(self.test_targets, dtype=torch.long)
+
+    def get_dataset(self, train=True):
+        class DummyDataset(Dataset):
+            def __init__(self, data, targets, encode, time_steps):
+                self.data = data
+                self.targets = targets
+
+                self.encode = encode
+                self.time_steps = time_steps
+            
+            def __getitem__(self, index):
+                inputs = self.data[index]
+
+                # coding (C, H, W) -> (T, C, H, W)
+                x = coding_map[self.encode](inputs, num_steps=self.time_steps)
+                y = self.targets[index]
+
+                return x, y
+
+            def __len__(self):
+                return len(self.targets)
+
+        if train:
+            ds = DummyDataset(self.train_data, self.train_targets, self.encode, self.T)
+        else:
+            ds = DummyDataset(self.test_data, self.test_targets, self.encode, self.T)
+
+        return ds
+
+@register_dataset('gaitid')
+class iGaitID(WirelessData):
+    def __init__(self, data_dir, coding_schema, time_step):
+        super().__init__(data_dir, coding_schema, time_step)
+
+        self.num_classes = 6
+        self.input_shape = (6, 512, 21) # (A, S, T) 
+
+    def download_data(self):
+        # self.data_dir = /data/ElderAL/
+
+        return 
+
+    
+    def get_dataset(self, train=True):
+        return 
+    
 @register_dataset('falldar')
 class iFallDar(WirelessData):
     '''
