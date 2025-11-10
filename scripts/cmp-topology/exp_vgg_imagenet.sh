@@ -1,16 +1,19 @@
 #!/bin/bash
 
+# Not Recommend to run this script to compare all LIF models on ImageNet, since LeNet structure is too simple.
+
 # 固定参数
-GPU_ID=1
+GPU_ID="3,4"
 MODEL=lenet
 BATCH_SIZE=16
-DATA_DIR=/home/yudi/data/cifar100/
-DATASET=cifar100
+DATA_DIR=/home/yudi/data/tiny-imagenet-200/
+DATASET=imagenet
 T=4
 
 # 多个可选参数
 seeds=(41 42 43)
-neurons=(clif glif ielif intlif lif ltmd plif psn tlif ilif)
+neurons=(lif)
+
 
 # 循环执行所有组合
 for seed in "${seeds[@]}"; do
@@ -18,7 +21,7 @@ for seed in "${seeds[@]}"; do
     echo ">>> Running with seed=${seed}, neuron=${n}"
     
     CUDA_VISIBLE_DEVICES=$GPU_ID \
-    python run_soul.py \
+    torchrun --nproc_per_node=2 run_soul.py \
       -m=$MODEL \
       -b=$BATCH_SIZE \
       -data_dir=$DATA_DIR \
@@ -31,3 +34,5 @@ for seed in "${seeds[@]}"; do
     echo "---------------------------------------"
   done
 done
+
+  
