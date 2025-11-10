@@ -10,35 +10,85 @@ from soul.model import *
 from soul.neuron import *
 from soul.utils import *
 
+class BinaryActivationFn(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, x):
+        return x.sign()   # >0 -> +1, <=0 -> -1
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        # Straight-Through Estimator (STE)
+        grad_input = grad_output.clone()
+        grad_input = grad_input * (grad_output.abs() <= 1).float()
+        return grad_input
+
+
+class BinaryActivation(nn.Module):
+    """可以像 nn.ReLU 一样在 nn.Sequential 中使用"""
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x):
+        return BinaryActivationFn.apply(x)
+    
 class LeNet(nn.Module):
     def __init__(self, config):
         super().__init__()
 
+        self.app = config['application']
+
         self.num_classes = config['num_classes']
         self.T = config['time_step']
 
-        C, H, W = config['input_channels'], config['input_height'], config['input_width']
+        if self.app in ['vision', 'wireless']:
+            C, H, W = config['input_channels'], config['input_height'], config['input_width']
+        elif self.app in ['motion']:
+            H, W = config['input_channels'], config['input_dim']
+            C = 1
+        elif self.app in ['acoustic']:
+            H, W = config['input_dim'], config['input_channels']
+            C = 1
+        else:
+            raise ValueError(self.app)
+        
+        conv_kernel_size = (1, 5) if self.app == 'motion' else 5
+        pool_kernel_size = (1, 2) if self.app == 'motion' else 2
+        pool_stride_size = (1, 2) if self.app == 'motion' else 2
 
         self.encoder = nn.Sequential(
-            nn.Conv2d(C, 32, kernel_size=5, stride=1, padding=0),
+            nn.Conv2d(C, 32, kernel_size=conv_kernel_size, stride=1, padding=0),
+            nn.BatchNorm2d(32),
+            # BinaryActivation(),
             nn.ReLU(True),
-            nn.MaxPool2d(kernel_size=2, stride=2),
-            nn.Conv2d(32, 64, kernel_size=5, stride=1, padding=0),
+            nn.MaxPool2d(kernel_size=pool_kernel_size, stride=pool_stride_size),
+            nn.Conv2d(32, 64, kernel_size=conv_kernel_size, stride=1, padding=0),
+            nn.BatchNorm2d(64),
+            # BinaryActivation(),
             nn.ReLU(True),
-            nn.MaxPool2d(kernel_size=2, stride=2),
-            nn.Conv2d(64, 96, kernel_size=5, stride=1, padding=0),
+            nn.MaxPool2d(kernel_size=pool_kernel_size, stride=pool_stride_size),
+            nn.Conv2d(64, 96, kernel_size=conv_kernel_size, stride=1, padding=0),
+            nn.BatchNorm2d(96),
+            # BinaryActivation(),
             nn.ReLU(True),
         )
 
-        H = (H - 4) // 2
-        W = (W - 4) // 2
-        H = (H - 4) // 2
-        W = (W - 4) // 2
-        H -= 4
-        W -= 4
+        if self.app in ['wireless', 'vision', 'acoustic']:
+            H = (H - 4) // 2
+            W = (W - 4) // 2
+            H = (H - 4) // 2
+            W = (W - 4) // 2
+            H -= 4
+            W -= 4
+        else:
+            W = (W - 4) // 2
+            W = (W - 4) // 2
+            W -= 4
+
+        dim = 96 * H * W
 
         self.fc = nn.Sequential(
-            nn.Linear(96 * H * W, 512),
+            nn.Linear(dim, 512),
+            # BinaryActivation(),
             nn.ReLU(),
             nn.Linear(512, self.num_classes)
         )
@@ -46,8 +96,12 @@ class LeNet(nn.Module):
     def forward(self, x):
         x = x.mean(0) # (T, B, C, H, W) -> (B, C, H, W)
 
+        if self.app in ['motion', 'acoustic']:
+            x = x.unsqueeze(1) # (B, C, W) -> (B, 1, C, W)
+
         x = self.encoder(x)
         x = x.flatten(1) # (B, C, H, W) -> (B, C*H*W)
+
         out = self.fc(x) # (B, C*H*W) -> (B, num_classes)
 
         return out
@@ -64,6 +118,9 @@ log_path = os.path.join(
 )
 ensure_dir(log_path)
 logger = setup_logger(os.path.join(log_path, f'record-{get_local_time()}.log'), default_level=config['state'])
+
+if config['dataset_name'].lower() in ['dvsgesture', 'ssc', 'shd', 'cifar10dvs']:
+    config['time_step'] = 10 
 
 # report all configuration
 for k, v in sorted(config.items()):
