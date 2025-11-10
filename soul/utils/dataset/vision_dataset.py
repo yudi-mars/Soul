@@ -78,6 +78,173 @@ class VisionData(object):
     
     def get_dataset(self):
         raise NotImplementedError
+    
+@register_dataset('mnist')
+class iMNIST(VisionData):
+    def __init__(self, data_dir, coding_schema, time_step, receptor_size=None):
+        super().__init__(data_dir, coding_schema, time_step, receptor_size)
+
+        self.common_trsf = [
+            transforms.Resize((32, 32), interpolation=transforms.InterpolationMode.NEAREST),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=(0.1307,), std=(0.3081,)),
+        ]
+
+        self.input_shape = (1, 32, 32)
+        self.num_classes = 10
+
+    def download_data(self):
+        train_dataset = datasets.MNIST(root=f'{self.data_dir}', train=True, download=True)
+        test_dataset = datasets.MNIST(root=f'{self.data_dir}', train=False, download=True) 
+
+        self.train_data, self.train_targets = train_dataset.data, train_dataset.targets
+        self.test_data, self.test_targets = test_dataset.data, test_dataset.targets
+
+    def get_dataset(self, train=True):
+        class DummyDataset(Dataset):
+            def __init__(self, data, targets, trsf, encode, time_steps):
+                self.data = data
+                self.targets = targets
+
+                self.trsf = trsf
+                self.encode = encode
+
+                self.time_steps = time_steps
+            
+            def __getitem__(self, index):
+                inputs = Image.fromarray(self.data[index].numpy())
+
+                if self.trsf:
+                    inputs = self.trsf(inputs) # after transform, it will have channel dimension 1
+
+                # coding (C, H, W) -> (T, C, H, W)
+                x = coding_map[self.encode](inputs, num_steps=self.time_steps)
+                y = self.targets[index]
+
+                return x, y
+
+            def __len__(self):
+                return len(self.targets)
+
+        if train:
+            train_trsf = transforms.Compose([*self.train_trsf, *self.common_trsf])
+            ds = DummyDataset(self.train_data, self.train_targets, train_trsf, self.encode, self.T)
+        else:
+            test_trsf = transforms.Compose([*self.test_trsf, *self.common_trsf])
+            ds = DummyDataset(self.test_data, self.test_targets, test_trsf, self.encode, self.T)
+
+        return ds
+
+@register_dataset('fashionmnist')
+class iFashionMNIST(VisionData):
+    def __init__(self, data_dir, coding_schema, time_step, receptor_size=None):
+        super().__init__(data_dir, coding_schema, time_step, receptor_size)
+
+        self.common_trsf = [
+            transforms.Resize((32, 32), interpolation=transforms.InterpolationMode.NEAREST),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=(0.5,), std=(0.5,)),
+        ]
+
+        self.input_shape = (1, 32, 32)
+        self.num_classes = 10
+
+    def download_data(self):
+        train_dataset = datasets.FashionMNIST(root=f'{self.data_dir}', train=True, download=True)
+        test_dataset = datasets.FashionMNIST(root=f'{self.data_dir}', train=False, download=True)
+
+        self.train_data, self.train_targets = train_dataset.data, train_dataset.targets
+        self.test_data, self.test_targets = test_dataset.data, test_dataset.targets
+
+    def get_dataset(self, train=True):
+        class DummyDataset(Dataset):
+            def __init__(self, data, targets, trsf, encode, time_steps):
+                self.data = data
+                self.targets = targets
+
+                self.trsf = trsf
+                self.encode = encode
+
+                self.time_steps = time_steps
+            
+            def __getitem__(self, index):
+                inputs = Image.fromarray(self.data[index].numpy())
+
+                if self.trsf:
+                    inputs = self.trsf(inputs) # after transform, it will have channel dimension 1
+
+                # coding (C, H, W) -> (T, C, H, W)
+                x = coding_map[self.encode](inputs, num_steps=self.time_steps)
+                y = self.targets[index]
+
+                return x, y
+
+            def __len__(self):
+                return len(self.targets)
+
+        if train:
+            train_trsf = transforms.Compose([*self.train_trsf, *self.common_trsf])
+            ds = DummyDataset(self.train_data, self.train_targets, train_trsf, self.encode, self.T)
+        else:
+            test_trsf = transforms.Compose([*self.test_trsf, *self.common_trsf])
+            ds = DummyDataset(self.test_data, self.test_targets, test_trsf, self.encode, self.T)
+
+        return ds
+
+@register_dataset('svhn')
+class iSVHN(VisionData):
+    def __init__(self, data_dir, coding_schema, time_step, receptor_size=None):
+        super().__init__(data_dir, coding_schema, time_step, receptor_size)
+
+        self.common_trsf = [
+            transforms.ToTensor(),
+            transforms.Normalize(mean=(0.4377, 0.4438, 0.4728), std=(0.1980, 0.2010, 0.1970)),
+        ]
+
+        self.input_shape = (3, 32, 32)
+        self.num_classes = 10
+
+    def download_data(self):
+        train_dataset = datasets.SVHN(f'{self.data_dir}', split='train', download=True)
+        test_dataset = datasets.SVHN(f'{self.data_dir}', split='test', download=True)
+
+        self.train_data, self.train_targets = train_dataset.data.transpose(0, 2, 3, 1), train_dataset.labels
+        self.test_data, self.test_targets = test_dataset.data.transpose(0, 2, 3, 1), test_dataset.labels
+
+    def get_dataset(self, train=True):
+        class DummyDataset(Dataset):
+            def __init__(self, data, targets, trsf, encode, time_steps):
+                self.data = data
+                self.targets = targets
+
+                self.trsf = trsf
+                self.encode = encode
+
+                self.time_steps = time_steps
+            
+            def __getitem__(self, index):
+                inputs = Image.fromarray(self.data[index], mode='RGB')
+
+                if self.trsf:
+                    inputs = self.trsf(inputs)
+
+                # coding (C, H, W) -> (T, C, H, W)
+                x = coding_map[self.encode](inputs, num_steps=self.time_steps)
+                y = self.targets[index]
+
+                return x, y
+
+            def __len__(self):
+                return len(self.targets)
+
+        if train:
+            train_trsf = transforms.Compose([*self.train_trsf, *self.common_trsf])
+            ds = DummyDataset(self.train_data, self.train_targets, train_trsf, self.encode, self.T)
+        else:
+            test_trsf = transforms.Compose([*self.test_trsf, *self.common_trsf])
+            ds = DummyDataset(self.test_data, self.test_targets, test_trsf, self.encode, self.T)
+
+        return ds
 
 @register_dataset('cifar10')
 class iCIFAR10(VisionData):
