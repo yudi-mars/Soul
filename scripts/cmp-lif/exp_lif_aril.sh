@@ -10,7 +10,7 @@ T=4
 
 # 多个可选参数
 seeds=(41 42 43)
-neurons=(clif glif intlif lif plif psn tlif ilif)
+neurons=(clif glif intlif lif plif psn tlif ilif rplif)
 
 # 循环执行所有组合
 for seed in "${seeds[@]}"; do
