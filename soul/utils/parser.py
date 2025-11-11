@@ -146,12 +146,14 @@ def init_config():
     dataset_name = config['dataset_name'].lower()
     if dataset_name in ['ucihar', 'hhar', 'motionsense', 'shoaib']:
         config['application'] = 'motion'
-    elif dataset_name in ['cifar10', 'cifar100', 'imagenet', 'svhn', 'mnist', 'fashionmnist', 'dvsgesture', 'cifar10dvs']:
+    elif dataset_name in ['cifar10', 'cifar100', 'imagenet', 'svhn', 
+                          'mnist', 'fashionmnist', 'dvsgesture', 'cifar10dvs', 
+                          'ncaltech', 'nmnist', 'caltech']:
         config['application'] = 'vision'
     elif dataset_name in ['gsc', 'urbansound', 'gtzan', 'esc', 'ssc', 'shd']:
         config['application'] = 'acoustic' 
-    elif dataset_name in [
-        'uthar', 'widar', 'fihumanid', 'fihar', 'wigesture', 'falldar', 'aril', 'bullydetect']:
+    elif dataset_name in ['uthar', 'widar', 'fihumanid', 'fihar', 'wigesture', 
+                          'falldar', 'aril', 'bullydetect']:
         config['application'] = 'wireless' 
     else:
         raise ValueError(f'Unsupport sensing modality: {config["dataset_name"]}')
