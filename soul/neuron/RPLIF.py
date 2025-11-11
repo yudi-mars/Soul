@@ -6,7 +6,7 @@ Description:
     implementation for Refractory Period LIF.
 
 References:
-    Incorporating the Refractory Period into Spiking Neural Networks through Spike-Triggered Threshold Dynamics
+    - Li, Yang, et al., "Incorporating the Refractory Period into Spiking Neural Networks through Spike-Triggered Threshold Dynamics", MM'2025.
     https://arxiv.org/pdf/2509.17769
 """
 from abc import abstractmethod
