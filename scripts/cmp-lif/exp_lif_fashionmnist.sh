@@ -1,16 +1,16 @@
 #!/bin/bash
 
 # 固定参数
-GPU_ID=5
+GPU_ID=2
 MODEL=lenet
 BATCH_SIZE=16
-DATA_DIR=/home/yudi/data/Widardata/
-DATASET=widar
+DATA_DIR=/home/yudi/data/fashionmnist/
+DATASET=fashionmnist
 T=4
 
 # 多个可选参数
 seeds=(41 42 43)
-neurons=(clif glif ielif intlif lif ltmd plif psn tlif ilif)
+neurons=(clif glif intlif lif plif psn tlif ilif)
 
 # 循环执行所有组合
 for seed in "${seeds[@]}"; do

@@ -20,9 +20,9 @@ def get_idata(config):
 
 # this is important to hook registery
 from .motion_dataset import iHHAR, iMotionSense, iShoaib, iUCIHAR
-from .vision_dataset import iCIFAR10, iCIFAR100, iCIFAR10DVS, iDVSGesture, iTinyImageNet
-from .acoustic_dataset import iSpikingHeidelbergDigits, iSpikingSpeechCommands, iUrbanSound8K, iGoogleSpeechCommands, iGTZAN
-from .wireless_dataset import iFiHAR, iFiHumanID, iUTHAR, iWidar3
+from .vision_dataset import iCIFAR10, iCIFAR100, iCIFAR10DVS, iDVSGesture, iTinyImageNet, iFashionMNIST, iSVHN, iMNIST
+from .acoustic_dataset import iSpikingHeidelbergDigits, iSpikingSpeechCommands, iUrbanSound8K, iGoogleSpeechCommands, iGTZAN, iESC50
+from .wireless_dataset import iFiHAR, iFiHumanID, iUTHAR, iWidar3, iWiGesture, iFallDar, iARIL, iBullyDetect
 
 def load_dataset(config):
     idata = get_idata(config)

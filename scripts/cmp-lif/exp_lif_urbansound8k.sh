@@ -4,13 +4,13 @@
 GPU_ID=4
 MODEL=lenet
 BATCH_SIZE=16
-DATA_DIR=/home/yudi/data/cifar10_dvs/
-DATASET=cifar10dvs
-T=10
+DATA_DIR=/home/yudi/data/urbansound8k/
+DATASET=urbansound
+T=4
 
 # 多个可选参数
 seeds=(41 42 43)
-neurons=(clif glif ielif intlif lif ltmd plif psn tlif ilif)
+neurons=(clif glif intlif lif plif psn tlif ilif)
 
 # 循环执行所有组合
 for seed in "${seeds[@]}"; do

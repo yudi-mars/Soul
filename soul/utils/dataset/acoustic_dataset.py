@@ -52,6 +52,108 @@ class AudioData:
     
     def get_dataset(self, train=True):
         raise NotImplementedError
+    
+@register_dataset('esc')
+class iESC50(AudioData):
+    def __init__(self, data_dir, coding_schema, time_step, reduce_size, seed=2025):
+        super().__init__(data_dir, coding_schema, time_step, reduce_size, seed)
+
+        self.hop_length = 512
+        self.sr = 44100
+        self.n_fft = 1024
+        self.n_mels = 128
+        self.duration = 5.0
+
+        self.num_classes = 50
+
+    def download_data(self):
+        # self.data_dir = /data/esc50/
+
+        csv_file = os.path.join(self.data_dir, 'meta/esc50.csv')
+        audio_path = os.path.join(self.data_dir, 'audio')
+        meta = pd.read_csv(csv_file)
+
+        all_folds = meta['fold'].unique().tolist()
+        rng = np.random.default_rng(seed=self.seed)
+        rng.shuffle(all_folds)
+
+        train_folder_list = all_folds[:int(len(all_folds) * 0.8)] 
+        test_folder_list =  all_folds[int(len(all_folds) * 0.8):]
+
+        train_meta = meta[meta['fold'].isin(train_folder_list)].reset_index(drop=True)
+        test_meta = meta[meta['fold'].isin(test_folder_list)].reset_index(drop=True)
+
+        self.train_targets = train_meta['target'].astype(int).values
+        self.test_targets = test_meta['target'].astype(int).values
+
+        self.train_data = [os.path.join(audio_path, filename) for filename in train_meta['filename'].values]
+        self.test_data = [os.path.join(audio_path, filename) for filename in test_meta['filename'].values]
+
+    def get_dataset(self, train=True):
+        class DummyDataset(Dataset):
+            def __init__(self, data, targets, encode, time_steps, sample_rate, duration, n_fft, hop_length, n_mels, reduce_size):
+                self.data = data
+                self.targets = targets
+
+                self.encode = encode
+                self.time_steps = time_steps
+
+                self.n_fft = n_fft
+                self.hop_length = hop_length
+                self.n_mels = n_mels
+
+                self.sr = sample_rate
+                self.duration = duration
+
+                self.reduce_size = reduce_size
+
+            def __getitem__(self, index):
+                fpath = self.data[index]
+                wav, _ = librosa.load(fpath, sr=self.sr, duration=self.duration, mono=True)
+                
+                # make the length equal
+                target_length = int(self.sr * self.duration)
+                if wav.shape[0] < target_length:
+                    # zero padding for not enough long audio file
+                    pad_width = target_length - wav.shape[0]
+                    wav = np.pad(wav, (0, pad_width), mode='constant')
+                else:
+                    # slice for too long audio file
+                    wav = wav[:target_length]
+
+                # Mel-Spectrogram converting
+                mel_spec = librosa.feature.melspectrogram(
+                    y=wav, 
+                    sr=self.sr, 
+                    n_mels=self.n_mels, 
+                    hop_length=self.hop_length, 
+                    n_fft=self.n_fft,
+                    power=2.0,
+                )
+                # convert to dB
+                inputs = librosa.power_to_db(mel_spec, ref=np.max)
+
+                # resize to reduce dimension
+                inputs = cv2.resize(inputs, (self.reduce_size, self.reduce_size), interpolation=cv2.INTER_LINEAR)
+                inputs = torch.tensor(inputs, dtype=torch.float32).transpose(0, 1) # (C, W) - > (W, C)
+
+                # coding (W, C) -> (T, W, C)
+                x = coding_map[self.encode](inputs, num_steps=self.time_steps)
+                y = self.targets[index]
+
+                return x, y
+
+            def __len__(self):
+                return len(self.targets)
+
+        if train:
+            ds = DummyDataset(
+                self.train_data, self.train_targets, self.encode, self.T, self.sr, self.duration, self.n_fft, self.hop_length, self.n_mels, self.reduce_size)
+        else:
+            ds = DummyDataset(
+                self.test_data, self.test_targets, self.encode, self.T, self.sr, self.duration, self.n_fft, self.hop_length, self.n_mels, self.reduce_size)
+
+        return ds
 
 @register_dataset('gtzan')
 class iGTZAN(AudioData):
