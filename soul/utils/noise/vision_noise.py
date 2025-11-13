@@ -1,4 +1,5 @@
 import torch
+import random
 
 def add_gaussian_noise(inputs: torch.tensor, sigma: float):
     '''
@@ -10,8 +11,6 @@ def add_gaussian_noise(inputs: torch.tensor, sigma: float):
         input (T, B, C, H, W), float in [0, 1]
     sigma : float
         noise standard deviation
-    clip : bool, optional
-        clip the tensor to [0, 1], by default True
     '''
     for t in range(inputs.shape[0]):
         noise = torch.randn_like(inputs[t]) * sigma
@@ -29,8 +28,6 @@ def add_impulse_noise(inputs: torch.Tensor, prob: float):
         input (T, B, C, H, W), float in [0, 1]
     prob : float
         replacing probability for each pixel to be "salt & pepper"
-    clip : bool, optional
-        clip the tensor to [0, 1], by default True, by default True
     '''
     for t in range(inputs.shape[0]):
         B, C, H, W = inputs[t].shape
@@ -48,6 +45,45 @@ def add_impulse_noise(inputs: torch.Tensor, prob: float):
 
     return inputs
 
+def add_dropouts_noise(
+        x: torch.Tensor,
+        drop_ratio: float = 0.1,
+        block_size_ratio: tuple = (0.1, 0.1),
+        fill_value: float = 0.0):
+    '''
+    Regional or block loss noise in simulated images (in the form of occlusion or "packet loss")
+
+    Parameters
+    ----------
+    x : torch.Tensor
+        input (T, B, C, H, W), float in [0, 1]
+    drop_ratio : float, optional
+        The area ratio of occluded or missing blocks in the entire image, by default 0.1
+    block_size_ratio : tuple, optional
+        Represents the ratio of each occluded block's height and width to the image’s height and width, by default (0.1, 0.1)
+    fill_value : float, optional
+        The fill value for the occluded region, by default 0.0
+    '''
+    T, B, C, H, W = x.shape
+    h_block = int(H * block_size_ratio[0])
+    w_block = int(W * block_size_ratio[1])
+    # Calculate the total area expected to be occluded
+    total_area = H * W
+    block_area = h_block * w_block
+    # Estimate the number of blocks to be occluded
+    num_blocks = int((drop_ratio * total_area) / (block_area + 1e-8))
+    num_blocks = max(1, num_blocks)
+
+    out = x.clone()
+    for b in range(B):
+        for _ in range(num_blocks):
+            i0 = random.randint(0, H - h_block)
+            j0 = random.randint(0, W - w_block)
+
+            out[:, b, :, i0:i0 + h_block, j0:j0 + w_block] = fill_value
+
+    return out
+
 def add_speckle_noise(inputs: torch.Tensor, sigma: float):
     '''
     Multiplicative gaussian noise for vision sensing inputs
@@ -58,8 +94,6 @@ def add_speckle_noise(inputs: torch.Tensor, sigma: float):
         input (T, B, C, H, W), float in [0, 1]
     sigma : float
         noise standard deviation
-    clip : bool, optional
-        clip the tensor to [0, 1], by default True
     '''
     for t in range(inputs.shape[0]):
         noise = torch.randn_like(inputs[t]) * sigma

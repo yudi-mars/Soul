@@ -19,18 +19,18 @@ def add_gaussian_noise(x: torch.Tensor, sigma: float):
 
     return x
 
-def add_impulse_noise(x: torch.Tensor, prob: float, amplitude: float):
+def add_impulse_noise(x: torch.Tensor, prob: float, amplitude: float=2.):
     '''
-    模拟突发脉冲（点击／爆音）干扰，在谱图上随机将一些帧或通道大幅扰动。
+    Simulate burst impulse (click/pop) interference by randomly applying strong perturbations to certain frames or channels in the spectrogram
 
     Parameters
     ----------
     x : torch.Tensor
         input (T, B, W, C)
     prob : float
-        每个元素被扰动的概率
+        The probability of each element being perturbed
     amplitude : float
-        扰动振幅（可正负或加减幅）
+        Perturbation amplitude (can be positive or negative, or an additive/subtractive value), by default 2.0
     '''
     for t in range(x.shape[0]):
         mask = torch.rand_like(x[t]) < prob
@@ -50,22 +50,22 @@ def add_dropouts_noise(
         num_freq_masks: int = 1,
         fill_value: float = 0.0):
     '''
-    对输入 mel-频谱图做时间轴遮蔽和/或频率轴遮蔽。
+    Apply time-axis and/or frequency-axis masking to the input mel-spectrogram
 
     Parameters
     ----------
     x : torch.Tensor
         tensor shape (B, W, C)
     time_mask_ratio : int, optional
-        最大时间(单位：帧数)遮蔽比例, by default 0
+        Maximum proportion of time-axis masking (in frames), by default 0
     freq_mask_param : int, optional
-        最大频率(单位：通道数)遮蔽比例, by default 0
+        Maximum proportion of frequency-axis masking (in channels), by default 0
     num_time_masks : int, optional
-        每个样本做多少次时间遮蔽, by default 1
+        Number of time-axis masks applied per sample, by default 1
     num_freq_masks : int, optional
-        每个样本做多少次频率遮蔽, by default 1
+        Number of frequency-axis masks applied per sample, by default 1
     fill_value : float, optional
-        遮蔽填充值, by default 0.0
+        Mask fill value, by default 0.0
     '''
     T, B, W, C = x.shape
     for t in range(T):
