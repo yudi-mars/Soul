@@ -10,7 +10,8 @@ T=10
 # 多个可选参数
 seeds=(43)
 neurons=(lif)
-models=(lenet spikingvgg9 spikingvgg16 sewresnet34 sewresnet50 msresnet34 msresnet50 spikformer256 spikformer384 metaspikeformer256 metaspikeformer384 qkformer256 qkformer384 spikingresformer256 spikingresformer384)
+# models=(lenet spikingvgg9 spikingvgg16 sewresnet34 sewresnet50 msresnet34 msresnet50 spikformer256 spikformer384 metaspikeformer256 metaspikeformer384 qkformer256 qkformer384 spikingresformer256 spikingresformer384)
+models=(sewresnet34 sewresnet50 msresnet34 msresnet50 spikformer256 spikformer384 metaspikeformer256 metaspikeformer384 qkformer256 qkformer384 spikingresformer256 spikingresformer384)
 
 # 循环执行所有组合
 for seed in "${seeds[@]}"; do
