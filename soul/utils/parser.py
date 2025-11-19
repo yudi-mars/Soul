@@ -126,6 +126,20 @@ def parse_args():
         default=4, 
         help="number of time steps"
     )
+    parser.add_argument(
+        "--noise_type", 
+        "-noise", 
+        type=str, 
+        default='gassian', 
+        help="Noise type for robust analysis, [optional] gassian, dropout"
+    )
+    parser.add_argument(
+        "--noise_intensity", 
+        "-ni", 
+        type=float, 
+        default=0.1, 
+        help="noise intensity, sigma for Gaussian noise, dropout rate for Dropouts, etc."
+    )
     
     args = parser.parse_args()
     return args
