@@ -1,5 +1,4 @@
 import os
-import time
 from tqdm import tqdm
 
 import torch
@@ -25,7 +24,8 @@ log_path = os.path.join(
 )
 ensure_dir(log_path)
 logger = setup_logger(os.path.join(log_path, f'record-{get_local_time()}.log'), default_level=config['state'])
-logger.info(f'Distributed Training: {config["is_distributed"]}')
+
+logger.info('Noise experiments for robustness evaluation of SNNs vs. ANNs')
 
 # report all configuration
 for k, v in sorted(config.items()):
@@ -109,6 +109,10 @@ for epoch in range(1, config['epochs'] + 1):
         # default data shape (B, T, input_size) -> (T, B, input_size)
         inputs = inputs.transpose(0, 1)
 
+        # apply noise if needed
+        if config['noise_phase'] == 'train' and config['noise_intensity'] > 0.:
+            inputs = config['application'][config['noise_type']](inputs, config['noise_intensity'])
+
         outputs = model(inputs)
         acc1 = accuracy(outputs, targets, topk=(1,))[0]
 
@@ -133,6 +137,10 @@ for epoch in range(1, config['epochs'] + 1):
             # default data shape (B, T, input_size) -> (T, B, input_size)
             inputs = inputs.transpose(0, 1)
 
+            # apply noise if needed
+            if config['noise_phase'] == 'test' and config['noise_intensity'] > 0.:
+                inputs = config['application'][config['noise_type']](inputs, config['noise_intensity'])
+
             outputs = model(inputs)
             acc1 = accuracy(outputs, targets, topk=(1,))[0]
             loss = criterion(outputs, targets)
@@ -146,12 +154,7 @@ for epoch in range(1, config['epochs'] + 1):
     logger.info(f"[Epoch {epoch:3d}/{config['epochs']}] Train Loss: {train_loss:.4f}, Train Acc: {train_acc:.2f}%; Test Loss: {test_loss:.4f}, Test Acc: {test_acc:.2f}%")
     if test_acc > best_acc:
         ensure_dir(config['model_dir'])
-
         best_acc = test_acc
         logger.info(f'Best model saved with accuracy: {best_acc:.2f}%')
-        torch.save(
-            model.module.state_dict() if config['is_distributed'] else model.state_dict(), 
-            os.path.join(config['model_dir'], f'best_{config["model"].lower()}_{config["neuron_type"].lower()}_{config["dataset_name"].lower()}_{config["seed"]}.pt')
-        )
 
     scheduler.step()

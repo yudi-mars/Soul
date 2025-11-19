@@ -51,11 +51,12 @@ for k, v in sorted(config.items()):
 
 # reproducibility
 if global_rank == 0:
+    logger.info(f'Implementation demo for soul...')
     logger.info(f'Reproducibility with random seed {config["seed"]}')
     init_seed(config["seed"])
     logger.info('=' * 50)
 
-# load data TODO
+# load data
 if global_rank == 0:
     logger.info('Load data...')
 train_dataset, test_dataset = load_dataset(config)
@@ -201,60 +202,6 @@ for epoch in range(1, config['epochs'] + 1):
             )
 
     scheduler.step()
-
-# # monitor max memory footprint with the best model
-# if not config['is_distributed'] or dist.get_rank() == 0:
-#     best_model_path = os.path.join(config['model_dir'], f'best_{config["model"].lower()}_{config["neuron_type"].lower()}_{config["dataset_name"].lower()}_T{config["time_step"]}_{config["seed"]}.pt')
-#     logger.info(f'The size of model parameter checkpoint file: {os.path.getsize(best_model_path) / (1024 ** 2):.2f} MB')
-#     best_params = torch.load(
-#         best_model_path, 
-#         map_location='cpu', 
-#         weights_only=True
-#     )
-#     if config['is_distributed']:
-#         model.module.load_state_dict(best_params)
-#     else:
-#         model.load_state_dict(best_params)
-#     logger.debug(f'current device to monitor: {device}')
-#     model.to(device)
-#     model.eval()
-
-#     # calculate theoretical energy cost per sample inference
-#     logger.info('Counting FLOPs/SOPs for theoretical inference cost')
-#     ops_monitor(model, is_sop=config['sop'])
-#     for inputs, _ in tqdm(test_loader, unit='batch', ncols=80, desc='Count OPs: '):
-#         # default data shape (B, T, input_size) -> (T, B, input_size)
-#         inputs = inputs.transpose(0, 1).to(device)
-#         _ = model(inputs)
-
-#     total_sops = 0
-#     for k, v in MODULE_SOP_DICT.items():
-#         total_sops += v
-#     avg_sops = total_sops / len(test_loader)
-
-#     cost_per_op = config['e_ac'] if config['sop'] else config['e_mac']
-#     logger.info(f"Average number of {'SOPs' if config['sop'] else 'FLOPs'} for model {config['model']} inference per sample: {avg_sops / 1e6:.2f} M")
-#     logger.info(f"corresponding theoretical energy cost: {avg_sops * cost_per_op / 1e9:.2f} mj")
-
-#     # evluate the maximum actual memory usage and latency for inference per sample
-#     new_batch_size = 1
-#     test_loader = torch.utils.data.DataLoader(test_loader.dataset, batch_size=new_batch_size, shuffle=False, num_workers=0)
-
-#     logger.info('Monitoring maximum memory usage for inference')
-#     torch.cuda.reset_peak_memory_stats()
-#     start_time = time.time()
-#     with torch.inference_mode():
-#         for inputs, _ in tqdm(test_loader, unit='batch', ncols=80, desc='Inference per sample: '):
-#             # default data shape (B, T, input_size) -> (T, B, input_size)
-#             inputs = inputs.transpose(0, 1).to(device)
-#             _ = model(inputs)  
-#     end_time = time.time() 
-#     final_max_mem = torch.cuda.max_memory_allocated()
-    
-#     logger.info(f"Actual GPU memory usage for inference {new_batch_size} samples per batch with {config['model']}: {final_max_mem / (1024 ** 2):.2f} MB")
-    
-#     latency = (end_time - start_time) / len(test_loader)
-#     logger.info(f'Inference latency for {new_batch_size} samples per batch with {config["model"]}: {latency * 1000:.2f} ms')
 
 # recycle all process
 if config['is_distributed']:

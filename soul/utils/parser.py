@@ -162,6 +162,13 @@ def parse_args():
         default=0.1, 
         help="noise intensity, sigma for Gaussian noise, dropout rate for Dropouts, etc."
     )
+    parser.add_argument(
+        "--noise_phase", 
+        "-phase", 
+        type=str, 
+        default='train', 
+        help="phase for noising, [optional] train, test"
+    )
     
     args = parser.parse_args()
     return args
