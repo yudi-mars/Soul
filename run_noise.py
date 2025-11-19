@@ -111,7 +111,7 @@ for epoch in range(1, config['epochs'] + 1):
 
         # apply noise if needed
         if config['noise_phase'] == 'train' and config['noise_intensity'] > 0.:
-            inputs = config['application'][config['noise_type']](inputs, config['noise_intensity'])
+            inputs = noising_map[config['application']][config['noise_type']](inputs, config['noise_intensity'])
 
         outputs = model(inputs)
         acc1 = accuracy(outputs, targets, topk=(1,))[0]
@@ -139,7 +139,7 @@ for epoch in range(1, config['epochs'] + 1):
 
             # apply noise if needed
             if config['noise_phase'] == 'test' and config['noise_intensity'] > 0.:
-                inputs = config['application'][config['noise_type']](inputs, config['noise_intensity'])
+                inputs = noising_map[config['application']][config['noise_type']](inputs, config['noise_intensity'])
 
             outputs = model(inputs)
             acc1 = accuracy(outputs, targets, topk=(1,))[0]

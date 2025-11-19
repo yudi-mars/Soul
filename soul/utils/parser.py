@@ -152,14 +152,14 @@ def parse_args():
         "--noise_type", 
         "-noise", 
         type=str, 
-        default='gassian', 
-        help="Noise type for robust analysis, [optional] gassian, dropout"
+        default='gaussian', 
+        help="Noise type for robust analysis, [optional] gaussian, dropout"
     )
     parser.add_argument(
         "--noise_intensity", 
         "-ni", 
         type=float, 
-        default=0.1, 
+        default=0., 
         help="noise intensity, sigma for Gaussian noise, dropout rate for Dropouts, etc."
     )
     parser.add_argument(
