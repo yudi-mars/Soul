@@ -5,3 +5,4 @@ from .random import init_seed
 from .log import setup_logger
 from .utility import *
 from .surrogate import surrogate_map
+from .noise import noising_map
