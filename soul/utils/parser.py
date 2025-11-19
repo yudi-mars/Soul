@@ -3,6 +3,27 @@ import re
 import yaml
 import argparse
 
+# although neuromorphic sensing is a new sensing modality, we still need to process it to conventional sensing types to run standard models
+# motion sensing dataset names
+MOTION_APPLICATIONS = [
+    'ucihar', 'hhar', 'motionsense', 'shoaib'
+]
+# vision sensing dataset names
+VISION_APPLICATIONS = [
+    'cifar10', 'cifar100', 'imagenet', 'svhn', 
+    'mnist', 'fashionmnist', 'dvsgesture', 'cifar10dvs', 
+    'ncaltech', 'nmnist', 'caltech',
+]
+# acoustic sensing dataset names
+ACOUSTIC_APPLICATIONS = [
+    'gsc', 'urbansound', 'gtzan', 'esc', 'ssc', 'shd',
+]
+# wireless sensing dataset names
+WIRELESS_APPLICATIONS = [
+    'uthar', 'widar', 'fihumanid', 'fihar', 'wigesture', 
+    'falldar', 'aril', 'bullydetect',
+]
+
 def parse_args():
     parser = argparse.ArgumentParser(description='arguments for soul')
     # Basic Settings
@@ -126,6 +147,7 @@ def parse_args():
         default=4, 
         help="number of time steps"
     )
+    # noise settings for experimental analysis, not for neuromorphic sensing tasks
     parser.add_argument(
         "--noise_type", 
         "-noise", 
@@ -158,16 +180,13 @@ def init_config():
 
     # double-check application specific config
     dataset_name = config['dataset_name'].lower()
-    if dataset_name in ['ucihar', 'hhar', 'motionsense', 'shoaib']:
+    if dataset_name in MOTION_APPLICATIONS:
         config['application'] = 'motion'
-    elif dataset_name in ['cifar10', 'cifar100', 'imagenet', 'svhn', 
-                          'mnist', 'fashionmnist', 'dvsgesture', 'cifar10dvs', 
-                          'ncaltech', 'nmnist', 'caltech']:
+    elif dataset_name in VISION_APPLICATIONS:
         config['application'] = 'vision'
-    elif dataset_name in ['gsc', 'urbansound', 'gtzan', 'esc', 'ssc', 'shd']:
+    elif dataset_name in ACOUSTIC_APPLICATIONS:
         config['application'] = 'acoustic' 
-    elif dataset_name in ['uthar', 'widar', 'fihumanid', 'fihar', 'wigesture', 
-                          'falldar', 'aril', 'bullydetect']:
+    elif dataset_name in WIRELESS_APPLICATIONS:
         config['application'] = 'wireless' 
     else:
         raise ValueError(f'Unsupport sensing modality: {config["dataset_name"]}')
