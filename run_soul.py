@@ -194,14 +194,17 @@ for epoch in range(1, config['epochs'] + 1):
             logger.info(f'Best model saved with accuracy: {best_acc:.2f}%')
             torch.save(
                 model.module.state_dict() if config['is_distributed'] else model.state_dict(), 
-                os.path.join(config['model_dir'], f'best_{config["model"].lower()}_{config["neuron_type"].lower()}_{config["dataset_name"].lower()}_{config["seed"]}.pt')
+                os.path.join(
+                    config['model_dir'], 
+                    f'best_{config["model"].lower()}_{config["neuron_type"].lower()}_{config["dataset_name"].lower()}_T{config["time_step"]}_{config["seed"]}.pt'
+                )
             )
 
     scheduler.step()
 
 # # monitor max memory footprint with the best model
 # if not config['is_distributed'] or dist.get_rank() == 0:
-#     best_model_path = os.path.join(config['model_dir'], f'best_{config["model"].lower()}_{config["neuron_type"].lower()}_{config["dataset_name"].lower()}_{config["seed"]}.pt')
+#     best_model_path = os.path.join(config['model_dir'], f'best_{config["model"].lower()}_{config["neuron_type"].lower()}_{config["dataset_name"].lower()}_T{config["time_step"]}_{config["seed"]}.pt')
 #     logger.info(f'The size of model parameter checkpoint file: {os.path.getsize(best_model_path) / (1024 ** 2):.2f} MB')
 #     best_params = torch.load(
 #         best_model_path, 
