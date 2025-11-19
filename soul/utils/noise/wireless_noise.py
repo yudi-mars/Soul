@@ -17,7 +17,7 @@ def add_gaussian_noise(x: torch.Tensor, sigma: float):
 
     return x + noise
 
-def add_dropouts_noise(x: torch.Tensor, drop_rate: float, fill_value: float=0.0):
+def add_dropouts_noise(x: torch.Tensor, drop_ratio: float, fill_value: float=0.0):
     '''
     Simulate packet/frame loss — randomly set certain frames along the T dimension to all zeros or a fixed fill value
 
@@ -33,7 +33,7 @@ def add_dropouts_noise(x: torch.Tensor, drop_rate: float, fill_value: float=0.0)
     time_step, B, A, S, T = x.shape
     out = x.clone()
 
-    mask = (torch.rand(B, T, device=x.device) >= drop_rate)
+    mask = (torch.rand(B, T, device=x.device) >= drop_ratio)
     # mask shape (B, T); broadcast to (B, A, S, T)
     mask = mask.unsqueeze(1).unsqueeze(1).unsqueeze(0).expand(time_step, B, A, S, T)
     out = out * mask + (~mask) * fill_value
@@ -70,3 +70,16 @@ def add_impulse_noise(x: torch.Tensor, burst_prob: float, amplitude_scale: float
         x[t] = out
 
     return out
+
+
+if __name__ == '__main__':
+    batch = torch.randn(2, 1, 3, 5, 15)
+    print(batch)
+    
+    print('=' * 6 + 'gaussian noise' + '=' * 6)
+    batch_aug = add_gaussian_noise(batch.clone(), sigma=0.1)
+    print(batch_aug)
+
+    print('=' * 6 + 'dropouts noise' + '=' * 6)
+    batch_aug = add_dropouts_noise(batch.clone(), drop_ratio=0.3)
+    print(batch_aug)

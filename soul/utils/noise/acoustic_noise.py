@@ -44,8 +44,8 @@ def add_impulse_noise(x: torch.Tensor, prob: float, amplitude: float=2.):
 
 def add_dropouts_noise(
         x: torch.Tensor,
-        time_mask_ratio: float = 0.0,
-        freq_mask_ratio: float = 0.0,
+        drop_ratio: float = 0.0,
+        freq_drop_ratio: float = 0.0,
         num_time_masks: int = 1,
         num_freq_masks: int = 1,
         fill_value: float = 0.0):
@@ -56,9 +56,9 @@ def add_dropouts_noise(
     ----------
     x : torch.Tensor
         tensor shape (B, W, C)
-    time_mask_ratio : int, optional
+    drop_ratio : int, optional
         Maximum proportion of time-axis masking (in frames), by default 0
-    freq_mask_param : int, optional
+    freq_drop_ratio : int, optional
         Maximum proportion of frequency-axis masking (in channels), by default 0
     num_time_masks : int, optional
         Number of time-axis masks applied per sample, by default 1
@@ -72,16 +72,16 @@ def add_dropouts_noise(
         out = x[t].clone()
         
         # time window dropout
-        if time_mask_ratio > 0:
-            max_w = int(W * time_mask_ratio)
+        if drop_ratio > 0:
+            max_w = int(W * drop_ratio)
             for _ in range(num_time_masks):
                 w = random.randint(0, max_w)
                 w0 = random.randint(0, max(0, W - w))
                 out[:, w0:w0 + w, :] = fill_value
 
         # frequency channel dropout
-        if freq_mask_ratio > 0:
-            max_f = int(C * freq_mask_ratio)
+        if freq_drop_ratio > 0:
+            max_f = int(C * freq_drop_ratio)
             for _ in range(num_freq_masks):
                 f = random.randint(0, max_f)
                 f0 = random.randint(0, max(0, C - f))
@@ -93,22 +93,16 @@ def add_dropouts_noise(
 
 
 if __name__ == '__main__':
-    batch = torch.randn(2, 1, 8, 10)
+    batch = torch.randn(2, 1, 10, 5) # (T, B, W, C)
     print(batch)
     
     print('=' * 6 + 'dropout noise' + '=' * 6)
-    batch_aug = add_dropouts_noise(
-        batch.clone(),
-        time_mask_ratio=0.10,
-        freq_mask_ratio=0.20,
-        num_time_masks=2,
-        num_freq_masks=2,
-        fill_value=0.0)
+    batch_aug = add_dropouts_noise(batch.clone(), drop_ratio=0.3)
     print(batch_aug)
 
-    print('=' * 6 + 'impulse noise' + '=' * 6)
-    batch_aug = add_impulse_noise(batch.clone(), prob=0.5, amplitude=2.)
-    print(batch_aug)
+    # print('=' * 6 + 'impulse noise' + '=' * 6)
+    # batch_aug = add_impulse_noise(batch.clone(), prob=0.5, amplitude=2.)
+    # print(batch_aug)
 
     print('=' * 6 + 'gaussian noise' + '=' * 6)
     batch_aug = add_gaussian_noise(batch.clone(), sigma=0.1)

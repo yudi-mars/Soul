@@ -56,7 +56,7 @@ def add_impulse_noise(x: torch.Tensor, p: float, amplitude: float=2.0):
 
     return x + perturb
 
-def add_dropouts_noise(x: torch.Tensor, drop_rate: float, fill_value: float = 0.0):
+def add_dropouts_noise(x: torch.Tensor, drop_ratio: float = 0.1, fill_value: float = 0.0):
     '''
     Simulate sample loss / missing samples within a time window
 
@@ -64,14 +64,29 @@ def add_dropouts_noise(x: torch.Tensor, drop_rate: float, fill_value: float = 0.
     ----------
     x : torch.Tensor
         input (T, B, C, W)
-    drop_rate : float
+    drop_ratio : float
         Probability of loss for each point in the time window (or each channel–time cell)
     fill_value : float, optional
         Fill value for missing samples, by default 0.0
     '''
-    mask = torch.randn_like(x) >= drop_rate
+    time_step, B, C, W = x.shape
+    out = x.clone()
 
-    return x * mask + (~mask) * fill_value
+    mask = (torch.rand(B, W, device=x.device) >= drop_ratio)
+    # mask shape (B, W); broadcast to (B, C, W)
+    mask = mask.unsqueeze(1).unsqueeze(0).expand(time_step, B, C, W)
+    out = out * mask + (~mask) * fill_value
 
+    return out
 
+if __name__ == '__main__':
+    batch = torch.randn(2, 1, 3, 20) # (T, B, C, W)
+    print(batch)
+    
+    print('=' * 6 + 'gaussian noise' + '=' * 6)
+    batch_aug = add_gaussian_noise(batch.clone(), sigma=0.1)
+    print(batch_aug)
 
+    print('=' * 6 + 'dropouts noise' + '=' * 6)
+    batch_aug = add_dropouts_noise(batch.clone(), drop_ratio=0.9)
+    print(batch_aug)

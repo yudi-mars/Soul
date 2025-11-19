@@ -1,24 +1,24 @@
 import torch
 import random
 
-def add_gaussian_noise(inputs: torch.tensor, sigma: float):
+def add_gaussian_noise(x: torch.tensor, sigma: float):
     '''
     Additive gaussian noise for vision sensing inputs
 
     Parameters
     ----------
-    inputs : torch.tensor
+    x : torch.tensor
         input (T, B, C, H, W), float in [0, 1]
     sigma : float
         noise standard deviation
     '''
-    for t in range(inputs.shape[0]):
-        noise = torch.randn_like(inputs[t]) * sigma
-        inputs[t] += noise
+    for t in range(x.shape[0]):
+        noise = torch.randn_like(x[t]) * sigma
+        x[t] += noise
 
-    return inputs
+    return x
 
-def add_impulse_noise(inputs: torch.Tensor, prob: float):
+def add_impulse_noise(x: torch.Tensor, prob: float):
     '''
     Impulse noise for vision sensing inputs (a.k.a., Salt & Pepper)
 
@@ -29,21 +29,21 @@ def add_impulse_noise(inputs: torch.Tensor, prob: float):
     prob : float
         replacing probability for each pixel to be "salt & pepper"
     '''
-    for t in range(inputs.shape[0]):
-        B, C, H, W = inputs[t].shape
+    for t in range(x.shape[0]):
+        B, C, H, W = x[t].shape
 
-        out = inputs[t].clone() # (B, C, H, W)
-        mask = torch.rand(B, 1, H, W, device=inputs.device) < prob
-        salt = torch.rand(B, 1, H, W, device=inputs.device) < 0.5
+        out = x[t].clone() # (B, C, H, W)
+        mask = torch.rand(B, 1, H, W, device=x.device) < prob
+        salt = torch.rand(B, 1, H, W, device=x.device) < 0.5
 
         mask = mask.repeat(1, C, 1, 1)
         salt = salt.repeat(1, C, 1, 1)
         out[mask & salt] = 1.0
         out[mask & (~salt)] = 0.0
 
-        inputs[t] = out
+        x[t] = out
 
-    return inputs
+    return x
 
 def add_dropouts_noise(
         x: torch.Tensor,
@@ -110,11 +110,11 @@ if __name__ == '__main__':
     print('=' * 6 + 'gaussian noise' + '=' * 6)
     batch_aug = add_gaussian_noise(batch.clone(), sigma=0.1)
     print(batch_aug)
-    
-    print('=' * 6 + 'impulse noise' + '=' * 6)
-    batch_aug = add_impulse_noise(batch.clone(), prob=0.3)
+
+    print('=' * 6 + 'dropouts noise' + '=' * 6)
+    batch_aug = add_dropouts_noise(batch.clone(), drop_ratio=0.9)
     print(batch_aug)
 
-    print('=' * 6 + 'speckle noise' + '=' * 6)
-    batch_aug = add_speckle_noise(batch.clone(), sigma=0.1)
-    print(batch_aug)
+    # print('=' * 6 + 'speckle noise' + '=' * 6)
+    # batch_aug = add_speckle_noise(batch.clone(), sigma=0.1)
+    # print(batch_aug)
