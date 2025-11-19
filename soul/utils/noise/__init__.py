@@ -1,7 +1,7 @@
-import motion_noise as mn
-import wireless_noise as wn
-import vision_noise as vn
-import acoustic_noise as an
+from . import motion_noise as mn
+from . import wireless_noise as wn
+from . import vision_noise as vn
+from . import acoustic_noise as an
 
 noising_map = {
     'wireless': {
