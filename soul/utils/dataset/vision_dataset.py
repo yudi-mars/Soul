@@ -482,7 +482,7 @@ class iCIFAR10DVS(VisionData):
 
     def download_data(self):
         CIFAR10DVS(self.data_dir, data_type='frame', frames_number=self.T, split_by='number')
-
+        
         self.filepath = os.path.join(self.data_dir, f'frames_number_{self.T}_split_by_number')
         self.clslist = os.listdir(self.filepath)
         self.clslist.sort()

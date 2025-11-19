@@ -7,7 +7,7 @@ Description:
 """
 import torch
 
-def direct_coding(data, num_steps):
+def encode(data, num_steps):
     '''
     direct coding for inputs by repeating roughly
 

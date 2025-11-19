@@ -52,7 +52,7 @@ def parse_args():
         "--data_dir", 
         "-data_dir", 
         type=str, 
-        default='~/data/cifar10', 
+        default='/home/zhangweisong/Code/datasets/',
         help="path for input datasets"
     )
     parser.add_argument(
@@ -73,7 +73,7 @@ def parse_args():
         "--batch_size", 
         "-b", 
         type=int, 
-        default=128, 
+        default=64, 
         help="batch size for training"
     )
     parser.add_argument(
@@ -123,7 +123,7 @@ def parse_args():
         "--model", 
         "-m", 
         type=str, 
-        default='SpikingVGG9', 
+        default='sewresnet18', 
         help="model name"
     )
     parser.add_argument(

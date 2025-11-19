@@ -54,7 +54,7 @@ def rate_conv(data):
     return spike_data
 
 
-def rate_coding(data, num_steps=False, gain=1, offset=0, first_spike_time=0, time_var_input=False):
+def encode(data, num_steps=False, gain=1, offset=0, first_spike_time=0, time_var_input=False):
     '''
     Spike rate encoding of input data. Convert tensor into Poisson spike trains using the 
     features as the mean of a binomial distribution. If `num_steps` is specified, then the 
