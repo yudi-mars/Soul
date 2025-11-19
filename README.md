@@ -1,85 +1,86 @@
---------------------------------------------------------------------------------
-
-# Soul: A Toolbox for Developing Edge Intelligence Applications with Spiking Neural Networks
-
+---
 <p align="center">
     <img src="./assets/code-logo.jpg" width="50%">
 </p>
-
---------------------------------------------------------------------------------
+---
 
 *“I have always been convinced that the only way to get artificial intelligence to work is to do the computation in a way similar to the human brain.”——Geoffrey Hinton*
 
-<p align="center">
-  <a href="#Overview">Overview</a> •
-  <a href="#Guidance">Guidance</a> •
-  <a href="#Results-Analysis">Results Analysis</a> •
-  <a href="#Documentation">Documentation</a>
-</p>
-
-SOUL (**S**NN-based **O**pen so**U**rce too**L**kit) is developed based on Python and PyTorch for reproducing and developing SNN-based brain-inspired computing algorithms in a unified, comprehensive, and efficient framework for research purposes and practical deployment at the edge.
-
 ## Overview
 
-TBD 一张图 @yudi
+Soul is a Python- and PyTorch-based open-source toolkit for building spiking neural network (SNN) applications. It provides a unified, efficient framework designed for both research and edge deployment, enabling you to reproduce brain-inspired computing algorithms and develop new models with minimal overhead. With SOUL (**S**NN-based **O**pen so**U**rce too**L**kit), you can seamlessly experiment with SNNs in a comprehensive environment that bridges academic exploration and real-world edge intelligence.
 
+__TBD 一张图 @yudi__
 
-### Dataset Support
+## Usage
 
-1. Vision Sensing
-    - [CIFAR10/100](https://www.cs.utoronto.ca/~kriz/learning-features-2009-TR.pdf) [[Download Link](https://www.cs.toronto.edu/~kriz/cifar.html)]
-    - [SVHN](https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/37648.pdf) [[Download Link](http://ufldl.stanford.edu/housenumbers/)]
-    - [Tiny-ImageNet](https://ieeexplore.ieee.org/abstract/document/5206848/) [[Download Link](https://www.kaggle.com/c/tiny-imagenet)]
-    - [MNIST](http://yann.lecun.com/exdb/mnist/) [[Download Link](https://www.kaggle.com/datasets/hojjatk/mnist-dataset)]
-    - [Fashion-MNIST](https://arxiv.org/abs/1708.07747) [[Download Link](https://github.com/zalandoresearch/fashion-mnist)]
+You can run the library directly from the command line. For example:
 
-2. Motion Sensing
-    - [UCI HAR](https://www.sciencedirect.com/science/article/abs/pii/S0925231215010930) [[Download Link](https://archive.ics.uci.edu/dataset/240/human+activity+recognition+using+smartphones)]
-    - [HHAR](https://dl.acm.org/doi/10.1145/2809695.2809718) [[Download Link](https://archive.ics.uci.edu/dataset/344/heterogeneity+activity+recognition)]  <!-- *Note: Only Phone-related data is used in this repository* -->
-    - [MotionSense](https://dl.acm.org/doi/10.1145/3302505.3310068) [[Download Link](https://www.kaggle.com/datasets/malekzadeh/motionsense-dataset)]
-    - [Shoaib](https://www.mdpi.com/1424-8220/14/6/10146) [[Download Link](https://www.researchgate.net/publication/266384007_Sensors_Activity_Recognition_DataSet)]
-
-3. Acoustic Sensing
-    - [UrbanSound8K](https://dl.acm.org/doi/10.1145/2647868.2655045) [[Download Link](https://urbansounddataset.weebly.com/download-urbansound8k.html)]
-    - [Google Speech Commands](https://arxiv.org/abs/1804.03209) [[Download Link](https://huggingface.co/datasets/google/speech_commands)]
-    - [GTZAN](https://ieeexplore.ieee.org/abstract/document/1021072) [[Download Link](https://www.kaggle.com/datasets/andradaolteanu/gtzan-dataset-music-genre-classification)]
-    - [ESC-50](https://dl.acm.org/doi/abs/10.1145/2733373.2806390) [[Download Link](https://github.com/karoldvl/ESC-50/archive/master.zip)]
-
-4. Wireless Sensing
-    - [UT-HAR](https://ieeexplore.ieee.org/document/8067693) [[Download Link](https://github.com/ermongroup/Wifi_Activity_Recognition?tab=readme-ov-file)]
-    - [NTU-HumanID](https://ieeexplore.ieee.org/abstract/document/9726794) [[Download Link](https://drive.google.com/drive/folders/1R0R8SlVbLI1iUFQCzh_mH90H_4CW2iwt)]
-    - [BullyDetect](https://ieeexplore.ieee.org/abstract/document/10734315) [[Download Link](http://www.sdp8.net/Dataset?id=5ab0f5fd-a678-400a-afb2-757b2d85bc68)]
-    - [ARIL](https://arxiv.org/pdf/1904.04964) [[Download Link](http://www.sdp8.net/Dataset?id=9d263468-4869-4dbb-85aa-2c63ba0a1e0f)]
-    <!-- - [NTU-HAR](https://ieeexplore.ieee.org/document/9667414) [[Download Link](https://drive.google.com/drive/folders/1R0R8SlVbLI1iUFQCzh_mH90H_4CW2iwt)] -->
-    <!-- - [Widar](https://ieeexplore.ieee.org/document/9516988) [[Download Link](https://tns.thss.tsinghua.edu.cn/widar3.0/)] -->
-
-5. Neuromorphic Sensing
-    - [CIFAR10-DVS](https://www.frontiersin.org/journals/neuroscience/articles/10.3389/fnins.2017.00309/full) [[Download Link](https://figshare.com/articles/dataset/CIFAR10-DVS_New/4724671)]
-    - [DVS-Gesture](https://ieeexplore.ieee.org/document/8100264) [[Download Link](https://ibm.ent.box.com/s/3hiq58ww1pbbjrinh367ykfdf60xsfm8/folder/50167556794)]
-    - [Spiking Heidelberg Digits](https://ieeexplore.ieee.org/document/9311226) [[Download Link](https://zenkelab.org/resources/spiking-heidelberg-datasets-shd/)]
-    - [Spiking Speech Commands](https://ieeexplore.ieee.org/document/9311226) [[Download Link](https://zenkelab.org/resources/spiking-heidelberg-datasets-shd/)]
-
-## Guidance
-
-### Command in Console 
-
-- Running `Soul` with a single GPU in default settings
+- Run `Soul` on a single GPU (default settings):
     ```shell
-    CUDA_VISIBLE_DEVICES=[GPU-ID] python run_soul.py
+    CUDA_VISIBLE_DEVICES=[GPU-ID] python run_soul.py -dataset=[Dataset Name] -data_dir=[Dataset Directory] -T=[Number of timesteps] -m=[Model Name] -n=[Neuron Type]
     ```
 
-- Running `Soul` with multiple GPUs in default settings
+- Run `Soul` on multiple GPUs (default settings):
     ```shell
-    CUDA_VISIBLE_DEVICES=[GPU-ID1],[GPU-ID2],... torchrun --nproc_per_node=[Number of used GPU] run_soul.py
+    CUDA_VISIBLE_DEVICES=[GPU-ID1],[GPU-ID2],... torchrun --nproc_per_node=[Number of used GPU] run_soul.py -dataset=[Dataset Name] -data_dir=[Dataset Directory] -T=[Number of timesteps] -m=[Model Name] -n=[Neuron Type]
     ```
 
-## Results Analysis
+If you want to dive deeper into all the available command-line options, configuration settings, and parameters, please check out our [full documentation](). _TBD @Cajol1e (Sphinx Documentation)_
 
-TBD 
+## Results
 
-## Documentation
+For a deeper dive into our experimental results and their analysis, please check out our detailed [Wiki page](). _TBD with some benchmarking results_ 
 
-TBD @Cajol1e (Sphinx Documentation)
+## Dataset Support
+
+For each dataset we provide both a **Research/Reference Link** (paper or dataset description) and a **Download Link** to facilitate integration with the toolkit.
+
+### Vision Sensing  
+| Dataset | Description | Research Link | Download Link |
+|---------|-------------|--------------|--------------|
+| CIFAR-10 / CIFAR-100 | Standard small-image classification benchmarks | [Paper](https://www.cs.utoronto.ca/~kriz/learning-features-2009-TR.pdf) | [Download](https://www.cs.toronto.edu/~kriz/cifar.html) |
+| SVHN | Street View House Numbers dataset for digit recognition | [Paper](https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/37648.pdf) | [Download](http://ufldl.stanford.edu/housenumbers/) |
+| Tiny-ImageNet | Scaled-down version of ImageNet (200 classes, 64×64 images) | [Paper](https://ieeexplore.ieee.org/abstract/document/5206848/) | [Download](https://www.kaggle.com/c/tiny-imagenet) |
+| MNIST | Handwritten digit recognition benchmark | [Dataset](http://yann.lecun.com/exdb/mnist/) | [Download](https://www.kaggle.com/datasets/hojjatk/mnist-dataset) |
+| Fashion-MNIST | Drop-in replacement for MNIST with fashion items | [Paper](https://arxiv.org/abs/1708.07747) | [Download](https://github.com/zalandoresearch/fashion-mnist) |
+
+### Motion Sensing  
+| Dataset | Description | Research Link | Download Link |
+|---------|-------------|--------------|--------------|
+| **UCI HAR** | Smartphone-sensor human activity recognition | [Paper](https://www.sciencedirect.com/science/article/abs/pii/S0925231215010930) | [Download](https://archive.ics.uci.edu/dataset/240/human+activity+recognition+using+smartphones) |
+| **HHAR** | Heterogeneity human activity recognition (phone sensors) | [Paper](https://dl.acm.org/doi/10.1145/2809695.2809718) | [Download](https://archive.ics.uci.edu/dataset/344/heterogeneity+activity+recognition) |
+| **MotionSense** | iPhone/AppleWatch sensor data for multiple activities | [Paper](https://dl.acm.org/doi/10.1145/3302505.3310068) | [Download](https://www.kaggle.com/datasets/malekzadeh/motionsense-dataset) |
+| **Shoaib** | Accelerometer/gyroscope data for activity recognition | [Paper](https://www.mdpi.com/1424-8220/14/6/10146) | [Download](https://www.researchgate.net/publication/266384007_Sensors_Activity_Recognition_DataSet) |
+
+### Acoustic Sensing  
+| Dataset | Description | Research Link | Download Link |
+|---------|-------------|--------------|--------------|
+| **UrbanSound8K** | Urban sounds classification, 10 classes | [Paper](https://dl.acm.org/doi/10.1145/2647868.2655045) | [Download](https://urbansounddataset.weebly.com/download-urbansound8k.html) |
+| **GSC** | Short spoken-words dataset for keyword recognition | [Paper](https://arxiv.org/abs/1804.03209) | [Download](https://huggingface.co/datasets/google/speech_commands) |
+| **GTZAN** | Music-genre classification across 10 genres | [Paper](https://ieeexplore.ieee.org/abstract/document/1021072) | [Download](https://www.kaggle.com/datasets/andradaolteanu/gtzan-dataset-music-genre-classification) |
+| **ESC-50** | 50 classes environmental sound classification | [Paper](https://dl.acm.org/doi/abs/10.1145/2733373.2806390) | [Download](https://github.com/karoldvl/ESC-50/archive/master.zip) |
+
+### Wireless Sensing  
+| Dataset | Description | Research Link | Download Link |
+|---------|-------------|--------------|--------------|
+| **UT-HAR** | WiFi-CSI human activity recognition | [Paper](https://ieeexplore.ieee.org/document/8067693) | [Download](https://github.com/ermongroup/Wifi_Activity_Recognition?tab=readme-ov-file) |
+| **NTU-HumanID** | Device-free human gait identification via WiFi | [Paper](https://ieeexplore.ieee.org/abstract/document/9726794) | [Download](https://drive.google.com/drive/folders/1R0R8SlVbLI1iUFQCzh_mH90H_4CW2iwt) |
+| **BullyDetect** | Wireless sensing dataset for bullying-incident detection | [Paper](https://ieeexplore.ieee.org/abstract/document/10734315) | [Download](http://www.sdp8.net/Dataset?id=5ab0f5fd-a678-400a-afb2-757b2d85bc68) |
+| **ARIL** | WiFi-reflection human-action recognition dataset | [Paper](https://arxiv.org/pdf/1904.04964) | [Download](http://www.sdp8.net/Dataset?id=9d263468-4869-4dbb-85aa-2c63ba0a1e0f) |
+| **NTU-HAR** | Wi-Fi CSI-based human activity recognition | [Paper](https://ieeexplore.ieee.org/document/9667414) | [Download](https://drive.google.com/drive/folders/1R0R8SlVbLI1iUFQCzh_mH90H_4CW2iwt) |
+| **Widar 3.0** | Wi-Fi-based gesture recognition using Body-coordinate Velocity Profile (BVP) and CSI/DFS | [Paper](https://ieeexplore.ieee.org/document/9516988) | [Download](https://tns.thss.tsinghua.edu.cn/widar3.0/) |
+
+### Neuromorphic Sensing  
+| Dataset | Description | Research Link | Download Link |
+|---------|-------------|--------------|--------------|
+| **CIFAR10-DVS** | Event-based version of CIFAR-10 captured with DVS sensor | [Paper](https://www.frontiersin.org/journals/neuroscience/articles/10.3389/fnins.2017.00309/full) | [Download](https://figshare.com/articles/dataset/CIFAR10-DVS_New/4724671) |
+| **DVS-Gesture** | Dynamic Vision Sensor dataset for gesture recognition | [Paper](https://ieeexplore.ieee.org/document/8100264) | [Download](https://ibm.ent.box.com/s/3hiq58ww1pbbjrinh367ykfdf60xsfm8/folder/50167556794) |
+| **SHD** | Event-based audio dataset for digit recognition | [Paper](https://ieeexplore.ieee.org/document/9311226) | [Download](https://zenkelab.org/resources/spiking-heidelberg-datasets-shd/) |
+| **SSC** | Event-based speech commands dataset | [Paper](https://ieeexplore.ieee.org/document/9311226) | [Download](https://zenkelab.org/resources/spiking-heidelberg-datasets-shd/) |
+
+> **Note:** After downloading and extracting the datasets, you only need to point the `data_dir` argument to the root directory of the dataset in your configuration (or command-line). The SOUL toolkit will automatically process the data in that directory and run accordingly.
+
 
 ## Cite
 
@@ -89,6 +90,6 @@ TBD
 
 ## Contact Us
 
-If there are any questions, please feel free to propose new features by opening an issue or contact with the author: **Di Yu**([yudi2023@zju.edu.cn](mailto:yudi2023@zju.edu.cn)), **Changze Lv**([czlv24@m.fudan.edu.cn](mailto:czlv24@m.fudan.edu.cn)), and **Wentao Tong**([toldzera@zju.edu.cn](mailto:toldzera@zju.edu.cn)).
+If there are any questions, please feel free to propose new features by opening an issue or contact with the author: **Di Yu**([yudi2023@zju.edu.cn](mailto:yudi2023@zju.edu.cn)), **Changze Lv**([czlv24@m.fudan.edu.cn](mailto:czlv24@m.fudan.edu.cn)), **Zhuo Chen**([chenzhuocs@zju.edu.cn](mailto:chenzhuocs@zju.edu.cn)), and **Wentao Tong**([toldzera@zju.edu.cn](mailto:toldzera@zju.edu.cn)).
 
 Enjoy the code!
