@@ -46,7 +46,7 @@ for dataset in "${!datasets[@]}"; do
     echo ">>> Data directory: ${data_dir}"
     
     CUDA_VISIBLE_DEVICES=$GPU_ID \
-    python run_lenet.py \
+    python run_ann_lenet.py \
       -m=$MODEL \
       -b=$BATCH_SIZE \
       -data_dir=$data_dir \
