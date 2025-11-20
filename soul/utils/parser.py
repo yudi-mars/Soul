@@ -52,7 +52,7 @@ def parse_args():
         "--data_dir", 
         "-data_dir", 
         type=str, 
-        default='/home/zhangweisong/Code/datasets/',
+        default='~/data/cifar10',
         help="path for input datasets"
     )
     parser.add_argument(
@@ -123,7 +123,7 @@ def parse_args():
         "--model", 
         "-m", 
         type=str, 
-        default='sewresnet18', 
+        default='lenet', 
         help="model name"
     )
     parser.add_argument(
