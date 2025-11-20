@@ -1,5 +1,5 @@
-from .binary_par import encode as binary_par_encode
-from .binary_seq import encode as binary_seq_encode
+from .binary_parallel import encode as binary_par_encode
+from .binary_sequential import encode as binary_seq_encode
 from .bsa import encode as bsa_encode
 from .burst import encode as burst_encode
 from .direct import encode as direct_code
@@ -17,8 +17,8 @@ from .temporal import encode as temporal_encode
 
 
 coding_map = {
-    'binary_par': binary_par_encode,
-    'binary_seq': binary_seq_encode,
+    'binary_parallel': binary_par_encode,
+    'binary_sequential': binary_seq_encode,
     'bsa': bsa_encode,
     'burst': burst_encode,
     'direct': direct_code,

@@ -1,73 +1,68 @@
 '''
 Filename: tcr_mw.py
 Author: Weisong Zhang <zws1415@zju.edu.cn>
-Date Created: 2025-11-19
+Date Created: 2025-11-20
 Description:
-    Motion (W, C) → (T, W, C) using Temporal-Contrast Moving-Window (MW).
-    Baseline is a moving average over a short window along W; when |x-mean|
-    exceeds an adaptive threshold, emit a spike with latency mapped from the
-    deviation magnitude.
-
-References:
-    - Auge et al., "A Survey of Encoding Techniques for Signal Processing in SNNs",
-      Neural Processing Letters, 2021 (Temporal Contrast: MW).
+    Temporal-Contrast MW with shape-aware routing:
+      - motion/acoustic: (W,C) -> (T,W,C), moving-window mean along W
+      - vision         : (C,H,W) -> (T,C,H,W), local mean by avg-pool
 '''
-
 from __future__ import annotations
 import torch
+import torch.nn.functional as F
 
 __all__ = ["encode"]
 
-def _ensure_T(num_steps):
-    if not num_steps or num_steps is False: return 10
-    if isinstance(num_steps, int) and num_steps > 0: return int(num_steps)
-    raise ValueError(f"num_steps must be positive int or False, got {num_steps!r}")
-
-def _minmax01_wc(x: torch.Tensor, eps=1e-8) -> torch.Tensor:
-    x = x.to(torch.float32)
-    xmin = x.amin(dim=0, keepdim=True)
-    xmax = x.amax(dim=0, keepdim=True)
-    rng = (xmax - xmin).clamp_min(eps)
-    return (x - xmin) / rng
+def _T(n): return int(n) if n and n>0 else 10
+def _minmax_wc(x):
+    xmin = x.amin(0, keepdim=True); xmax = x.amax(0, keepdim=True)
+    return (x - xmin) / (xmax - xmin + 1e-8)
+def _minmax_chw(x):
+    xmin = x.amin((1,2), keepdim=True); xmax = x.amax((1,2), keepdim=True)
+    return (x - xmin) / (xmax - xmin + 1e-8)
 
 @torch.no_grad()
 def encode(inputs: torch.Tensor, num_steps=False) -> torch.Tensor:
-    T = _ensure_T(num_steps)
-    x = inputs if torch.is_tensor(inputs) else torch.as_tensor(inputs, dtype=torch.float32)
-    if x.dim() != 2:
-        raise ValueError(f"MW motion expects (W, C), got {tuple(x.shape)}")
-    x = _minmax01_wc(x).contiguous()
+    T = _T(num_steps)
+    x = inputs.to(torch.float32).contiguous()
 
-    W, C = x.shape
-    win = max(3, min(9, W // 10 or 3))  # small window relative to sequence length
-    spikes = torch.zeros((T, W, C), device=x.device, dtype=x.dtype)
+    if x.dim()==2:  # (W,C)
+        W,C = x.shape; x = _minmax_wc(x)
+        win = max(3, min(9, W // 10 or 3))
+        mean = torch.zeros_like(x)
+        csum = torch.zeros((1,C), device=x.device, dtype=x.dtype)
+        for w in range(W):
+            csum = csum + x[w:w+1,:]
+            if w - win >= 0: csum = csum - x[w-win:w-win+1,:]
+            mean[w:w+1,:] = csum / float(min(w+1, win))
+        dev = (x - mean).abs()
+        thr = torch.quantile(dev, q=torch.tensor(0.75, device=x.device), dim=0, keepdim=True).clamp_min(1e-4)
+        a = (torch.relu(dev - thr) / (dev.amax(0, keepdim=True) + 1e-8)).clamp(0,1)
+        t_star = torch.round((T-1)*(1-a)).to(torch.int64).clamp(0,T-1)
+        spk = torch.zeros((T,W,C), device=x.device, dtype=x.dtype)
+        m = a>0
+        if m.any():
+            spk[t_star[m], *m.nonzero(as_tuple=True)] = 1.0
+        else:
+            j = dev.argmax(0); spk[0, j, torch.arange(C, device=x.device)] = 1.0
+        return spk
 
-    # precompute moving mean (causal)
-    mean = torch.zeros_like(x)
-    csum = torch.zeros((1, C), device=x.device, dtype=x.dtype)
-    for w in range(W):
-        csum = csum + x[w:w+1, :]
-        if w - win >= 0:
-            csum = csum - x[w - win:w - win + 1, :]
-        denom = min(w + 1, win)
-        mean[w:w+1, :] = csum / float(denom)
+    if x.dim()==3:  # (C,H,W)
+        C,H,W = x.shape; x = _minmax_chw(x)
+        mean = F.avg_pool2d(x.unsqueeze(0), 5, 1, 2).squeeze(0)
+        dev  = (x - mean).abs()
+        thr = torch.quantile(dev.view(C,-1), q=torch.tensor(0.75, device=x.device), dim=1, keepdim=True)
+        thr = thr.view(C,1,1).clamp_min(1e-4)
+        a = (torch.relu(dev - thr) / (dev.amax((1,2), keepdim=True) + 1e-8)).clamp(0,1)
+        t_star = torch.round((T-1)*(1-a)).to(torch.int64).clamp(0,T-1)
+        spk = torch.zeros((T,C,H,W), device=x.device, dtype=x.dtype)
+        m = a>0
+        if m.any():
+            ti = t_star[m]; c,h,w = m.nonzero(as_tuple=True)
+            spk[ti, c, h, w] = 1.0
+        else:
+            c = a.view(C,-1).argmax(1); h = c // W; w = c % W
+            spk[0, torch.arange(C, device=x.device), h, w] = 1.0
+        return spk
 
-    dev = (x - mean).abs()
-    # adaptive threshold per channel
-    p = 0.75
-    thr = torch.quantile(dev, q=torch.tensor(p, dtype=torch.float32, device=x.device), dim=0, keepdim=True).clamp_min(1e-4)
-    maxd = dev.amax(dim=0, keepdim=True).clamp_min(1e-8)
-    a = torch.relu(dev - thr) / maxd                        # [W, C]
-    t_star = torch.round((T - 1) * (1.0 - a)).to(torch.int64).clamp(0, T - 1)
-
-    m = (a > 0)
-    if m.any():
-        tw = t_star[m]
-        w_idx, c_idx = m.nonzero(as_tuple=True)
-        spikes[tw, w_idx, c_idx] = 1.0
-    else:
-        # ensure at least one event
-        j = dev.argmax(dim=0)
-        spikes[0, j, torch.arange(C, device=x.device)] = 1.0
-
-    return spikes
+    raise ValueError(f"MW expects (W,C) or (C,H,W), got {tuple(x.shape)}")
