@@ -125,6 +125,9 @@ else:
 if config['dataset_name'].lower() in ['dvsgesture', 'ssc', 'shd', 'cifar10dvs']:
     config['time_step'] = 10 
 
+# report noise configuration
+logger.info(f'Noise phase: {config["noise_phase"]}; Noise type: {config["noise_type"]}; Noise intensity: {config["noise_intensity"]}')
+
 # report all configuration
 for k, v in sorted(config.items()):
     logger.debug(f'{k} = {v}')

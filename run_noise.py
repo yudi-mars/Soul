@@ -25,6 +25,9 @@ logger = setup_logger(os.path.join(log_path, f'noise-record-{get_local_time()}.l
 
 logger.info('Noise experiments for robustness evaluation of SNNs vs. ANNs')
 
+# report noise configuration
+logger.info(f'Noise phase: {config["noise_phase"]}; Noise type: {config["noise_type"]}; Noise intensity: {config["noise_intensity"]}')
+
 # report all configuration
 for k, v in sorted(config.items()):
     logger.debug(f'{k} = {v}')
