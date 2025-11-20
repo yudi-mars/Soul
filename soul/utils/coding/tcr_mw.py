@@ -42,7 +42,8 @@ def encode(inputs: torch.Tensor, num_steps=False) -> torch.Tensor:
         spk = torch.zeros((T,W,C), device=x.device, dtype=x.dtype)
         m = a>0
         if m.any():
-            spk[t_star[m], *m.nonzero(as_tuple=True)] = 1.0
+            idx = m.nonzero(as_tuple=True)
+            spk[t_star[m], idx[0], idx[1]] = 1.0
         else:
             j = dev.argmax(0); spk[0, j, torch.arange(C, device=x.device)] = 1.0
         return spk
