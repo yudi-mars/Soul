@@ -4,8 +4,6 @@ from tqdm import tqdm
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import torch.distributed as dist
-from torch.nn.parallel import DistributedDataParallel as DDP
 
 from soul.model import *
 from soul.neuron import *
@@ -23,7 +21,7 @@ log_path = os.path.join(
     config['neuron_type'].lower()
 )
 ensure_dir(log_path)
-logger = setup_logger(os.path.join(log_path, f'record-{get_local_time()}.log'), default_level=config['state'])
+logger = setup_logger(os.path.join(log_path, f'noise-record-{get_local_time()}.log'), default_level=config['state'])
 
 logger.info('Noise experiments for robustness evaluation of SNNs vs. ANNs')
 

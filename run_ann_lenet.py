@@ -117,7 +117,10 @@ log_path = os.path.join(
     'ann',
 )
 ensure_dir(log_path)
-logger = setup_logger(os.path.join(log_path, f'record-{get_local_time()}.log'), default_level=config['state'])
+if config['noise_intensity'] > 0.:
+    logger = setup_logger(os.path.join(log_path, f'noise-record-{get_local_time()}.log'), default_level=config['state'])
+else:
+    logger = setup_logger(os.path.join(log_path, f'record-{get_local_time()}.log'), default_level=config['state'])
 
 if config['dataset_name'].lower() in ['dvsgesture', 'ssc', 'shd', 'cifar10dvs']:
     config['time_step'] = 10 
@@ -201,6 +204,10 @@ for epoch in range(1, config['epochs'] + 1):
         # default data shape (B, T, input_size) -> (T, B, input_size)
         inputs = inputs.transpose(0, 1)
 
+        # apply noise if needed
+        if config['noise_phase'] == 'train' and config['noise_intensity'] > 0.:
+            inputs = noising_map[config['application']][config['noise_type']](inputs, config['noise_intensity'])
+
         outputs = model(inputs)
         acc1 = accuracy(outputs, targets, topk=(1,))[0]
 
@@ -225,6 +232,10 @@ for epoch in range(1, config['epochs'] + 1):
             # default data shape (B, T, input_size) -> (T, B, input_size)
             inputs = inputs.transpose(0, 1)
 
+            # apply noise if needed
+            if config['noise_phase'] == 'test' and config['noise_intensity'] > 0.:
+                inputs = noising_map[config['application']][config['noise_type']](inputs, config['noise_intensity'])
+
             outputs = model(inputs)
             acc1 = accuracy(outputs, targets, topk=(1,))[0]
             loss = criterion(outputs, targets)
@@ -241,9 +252,10 @@ for epoch in range(1, config['epochs'] + 1):
 
         best_acc = test_acc
         logger.info(f'Best model saved with accuracy: {best_acc:.2f}%')
-        torch.save(
-            model.state_dict(), 
-            os.path.join(config['model_dir'], f'best_lenet_ann_{config["dataset_name"].lower()}_{config["seed"]}.pt')
-        )
+        if not config['noise_intensity'] > 0.:
+            torch.save(
+                model.state_dict(), 
+                os.path.join(config['model_dir'], f'best_lenet_ann_{config["dataset_name"].lower()}_{config["seed"]}.pt')
+            )
 
     scheduler.step()
