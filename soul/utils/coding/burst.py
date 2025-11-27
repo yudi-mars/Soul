@@ -31,29 +31,25 @@ def encode(inputs: torch.Tensor, num_steps=False) -> torch.Tensor:
     x = x.to(torch.float32).contiguous()
 
     if x.dim() == 3:
-        # (C, H, W) -> flatten positions to [P, C]
         C, H, W = x.shape
-        pc = x.permute(1, 2, 0).reshape(H * W, C)  # [P, C], P=H*W
+        pc = x.permute(1, 2, 0).reshape(H * W, C) 
         mode = "chw"
     elif x.dim() == 2:
-        # (W, C) -> [P, C] where P=W
         W, C = x.shape
-        pc = x.reshape(W, C)                       # [P, C]
+        pc = x.reshape(W, C)                      
         mode = "wc"
     else:
         raise ValueError(f"Burst coding expects (C,H,W) or (W,C), got {tuple(x.shape)}")
 
-    # Clamp to [0,1]; upstream can normalize if needed.
-    pc = pc.clamp_(0.0, 1.0)                       # [P, C]
+    pc = pc.clamp_(0.0, 1.0)                      
     P, C = pc.shape
 
     # Burst parameters
-    burst_max = min(4, T)                          # spikes per element in [1, burst_max]
+    burst_max = min(4, T)                         
     isi_max = max(1, (T - 1) // max(1, burst_max - 1)) if burst_max > 1 else T
 
-    # Vectorized scheduling on flattened grid
-    vals = pc.reshape(-1)                           # [P*C]
-    B_per = (1 + torch.floor(vals * (burst_max - 1))).to(torch.int64)        # [P*C], in [1, burst_max]
+    vals = pc.reshape(-1)                         
+    B_per = (1 + torch.floor(vals * (burst_max - 1))).to(torch.int64)       
     if isi_max <= 1:
         isi_per = torch.ones_like(B_per)
     else:
@@ -63,7 +59,7 @@ def encode(inputs: torch.Tensor, num_steps=False) -> torch.Tensor:
     base = torch.arange(P * C, device=pc.device)
 
     for k in range(burst_max):
-        t_k = k * isi_per                          # [P*C]
+        t_k = k * isi_per                     
         valid = (k < B_per) & (t_k < T)
         if valid.any():
             spikes_flat.index_put_(
@@ -72,12 +68,9 @@ def encode(inputs: torch.Tensor, num_steps=False) -> torch.Tensor:
                 accumulate=False
             )
 
-    # Restore to required shape
     if mode == "chw":
-        # [T, P*C] -> [T, H, W, C] -> [T, C, H, W]
         spikes = spikes_flat.reshape(T, H, W, C).permute(0, 3, 1, 2).contiguous()
-    else:  # "wc"
-        # [T, P*C] -> [T, W, C]
+    else: 
         spikes = spikes_flat.reshape(T, W, C).contiguous()
 
     return spikes
