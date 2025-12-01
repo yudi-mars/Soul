@@ -3,7 +3,8 @@ Filename: vision_dataset.py
 Author: Di Yu <yudi2023@zju.edu.cn>
 Date Created: 2025-07-10
 Description:
-    Load data from motion sensor with some data augmentation operations
+    Load data from vision sensor with some data augmentation operations
+    neuromorphic sensors like DVS, ATIS, DAVIS, etc. are considered in this module and the data loading and processing code are mainly referred to SpikingJelly.
 
 References:
     - Wei Fang et al., "SpikingJelly: An open-source machine learning infrastructure platform for spike-based intelligence", Science Advances'2023.
