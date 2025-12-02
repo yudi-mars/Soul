@@ -1,7 +1,4 @@
-from pathlib import Path
-
 import numpy as np
-import tomli
 import torch
 import tqdm
 import yaml
@@ -21,7 +18,7 @@ conf = {
     "input_channels": 3,
     "input_height": 32,
     "input_width": 32,
-    "hidden_dim": 128,
+    "hidden_dim": 1024,
     "neuron": LIFNode(lif_conf),
 }
 model = SpikingMLP(conf)
@@ -100,7 +97,9 @@ print(
 # partition
 core_capacity = 64
 num_cores = int(np.ceil(num_neurons / core_capacity))
-print(f"Num cores: {num_cores}")
+mesh_y = int(np.ceil(np.sqrt(num_cores)))
+mesh_x = mesh_y
+print(f"Num cores: {num_cores}, {mesh_y}x{mesh_x}")
 num_neurons_core = np.ceil(num_neurons / num_cores).astype(np.int32)
 position = np.arange(num_neurons) // num_neurons_core
 
@@ -127,7 +126,7 @@ for syn in synapses:
     pre_num = num_neurons_layer[syn["from"]]
     pre_idx = neuron_start[syn["from"]]
     post_idx = neuron_start[syn["to"]]
-    core_conns[pre_idx:pre_idx+pre_num] = dump_core_conns(
+    core_conns[pre_idx : pre_idx + pre_num] = dump_core_conns(
         src,
         dst,
         pre_num,
@@ -153,14 +152,12 @@ spikes = (rng.random((num_neurons, conf["time_step"])) < p).astype(np.uint8)
 true_total_spikes = np.sum(np.sum(phy_core_conns, axis=1) * np.sum(spikes, axis=1))
 
 # simulation, using NeuSim
-sim_conf_file = Path("external/NeuSim/tests/noc_tests/configs/config.toml")
-sim_conf = tomli.loads(sim_conf_file.read_text())
 res = sim.run(
     position=phy_position,
     core_conns=phy_core_conns,
     spikes=spikes,
     packet_size=1,
-    topology_size=(2, 2),
+    topology_size=(mesh_y, mesh_x),
     num_threads=1,
 )
 # print(res.retcode)

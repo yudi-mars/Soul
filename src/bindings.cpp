@@ -93,7 +93,7 @@ public:
     res.retcode = 0;
     res.total_cycles = cores[0].clk.cycle_count;
     res.total_recv_flits = routers[0].clk.stats.num_recv_flits.load();
-    
+
     res.total_recv_spikes = 0;
     for (auto &core : cores) {
       res.total_recv_spikes += core.stats.total_recv_spikes;
@@ -142,6 +142,22 @@ SimResult run_sim(
   uint32_t max_tick = 0;
   if (kwargs.contains("max_tick")) {
     max_tick = kwargs["max_tick"].cast<uint32_t>();
+  }
+
+  auto r = core_conns.unchecked<2>();
+  auto num_cores = r.shape(1);
+  auto total_cores = 1;
+  for (auto dim : global_params.topo_size) {
+    total_cores *= dim;
+  }
+  if (num_cores > total_cores) {
+    throw std::invalid_argument(
+      std::format(
+        "Number of cores ({}) exceeds topology size ({})",
+        num_cores,
+        total_cores
+      )
+    );
   }
 
   auto top = Top {};
