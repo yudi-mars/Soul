@@ -119,14 +119,15 @@ def dump_core_conns(src, dst, pre_num, post_idx, pos, num_cores, use_tqdm=False)
     return core_conns
 
 
-core_conns = []
+core_conns = np.zeros([num_neurons, num_cores], dtype=np.uint8)
 for syn in synapses:
     if "synapses" not in syn:
         continue
     src, dst, _ = syn["synapses"]
     pre_num = num_neurons_layer[syn["from"]]
+    pre_idx = neuron_start[syn["from"]]
     post_idx = neuron_start[syn["to"]]
-    syn_core_conns = dump_core_conns(
+    core_conns[pre_idx:pre_idx+pre_num] = dump_core_conns(
         src,
         dst,
         pre_num,
@@ -135,8 +136,6 @@ for syn in synapses:
         num_cores,
         use_tqdm=True,
     )
-    core_conns.append(syn_core_conns)
-core_conns = np.vstack(core_conns)
 
 # mapping
 mapping_l2p = np.arange(num_cores)
@@ -144,12 +143,14 @@ mapping_p2l = np.arange(num_cores)
 for i in range(num_cores):
     mapping_p2l[mapping_l2p[i]] = i
 phy_position = mapping_l2p[position].astype(np.uint32)
-phy_core_conns = core_conns[:, mapping_p2l].astype(np.bool_)
+phy_core_conns = core_conns[:, mapping_p2l].astype(np.uint8)
 
 # prepare spikes
 rng = np.random.default_rng(seed=42)
 p = 0.1
-spikes = (rng.random((conf["time_step"], num_neurons)) < p).astype(np.bool_)
+spikes = (rng.random((num_neurons, conf["time_step"])) < p).astype(np.uint8)
+
+true_total_spikes = np.sum(np.sum(phy_core_conns, axis=1) * np.sum(spikes, axis=1))
 
 # simulation, using NeuSim
 sim_conf_file = Path("external/NeuSim/tests/noc_tests/configs/config.toml")
@@ -158,12 +159,13 @@ res = sim.run(
     position=phy_position,
     core_conns=phy_core_conns,
     spikes=spikes,
-    traffic_table=(sim_conf_file / sim_conf["traffic_table_filename"]).as_posix(),
-    max_packet_size=sim_conf["max_packet_size"],
-    topology_size=(sim_conf["mesh_dim_y"], sim_conf["mesh_dim_x"]),
-    num_threads=8,
-    # max_tick=1000,
+    packet_size=1,
+    topology_size=(2, 2),
+    num_threads=1,
 )
-print(res)
+# print(res.retcode)
 print(res.total_cycles)
-print(res.total_received_flits)
+print(res.total_recv_flits)
+print(res.total_firing_cnt, np.sum(spikes))
+print(res.total_recv_spikes, res.total_sent_spikes, true_total_spikes)
+assert res.total_recv_spikes == true_total_spikes
