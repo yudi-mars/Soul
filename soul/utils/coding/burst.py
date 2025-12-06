@@ -23,13 +23,23 @@ def _ensure_time_steps(num_steps):
         return int(num_steps)
     raise ValueError(f"num_steps must be a positive int or False, got {num_steps!r}")
 
+def _minmax01(x: torch.Tensor, eps: float = 1e-8) -> torch.Tensor:
+    x = x.to(torch.float32)
+    x_min = x.amin()
+    x_max = x.amax()
+    rng = x_max - x_min
+    if rng <= eps:
+        return torch.zeros_like(x)
+    return (x - x_min) / rng
+
 @torch.no_grad()
 def encode(inputs: torch.Tensor, num_steps=False) -> torch.Tensor:
     """Burst coding with time-first output; supports (C,H,W) and (W,C)."""
     T = _ensure_time_steps(num_steps)
     x = inputs if torch.is_tensor(inputs) else torch.as_tensor(inputs, dtype=torch.float32)
     x = x.to(torch.float32).contiguous()
-
+    x = _minmax01(x)
+    
     if x.dim() == 3:
         C, H, W = x.shape
         pc = x.permute(1, 2, 0).reshape(H * W, C) 

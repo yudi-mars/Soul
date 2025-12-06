@@ -23,22 +23,23 @@ def _ensure_T(num_steps):
     if isinstance(num_steps, int) and num_steps > 0: return int(num_steps)
     raise ValueError(f"num_steps must be positive int or False, got {num_steps!r}")
 
-def _minmax01(x: torch.Tensor, dim: int, eps=1e-8) -> torch.Tensor:
-    # normalize along a specific dim (per-channel over that dim)
-    xmin = x.amin(dim=dim, keepdim=True)
-    xmax = x.amax(dim=dim, keepdim=True)
-    rng = (xmax - xmin).clamp_min(eps)
-    return (x - xmin) / rng
+def _minmax01(x: torch.Tensor, eps: float = 1e-8) -> torch.Tensor:
+    x = x.to(torch.float32)
+    x_min = x.amin()
+    x_max = x.amax()
+    rng = x_max - x_min
+    if rng <= eps:
+        return torch.zeros_like(x)
+    return (x - x_min) / rng
 
 @torch.no_grad()
 def encode(inputs: torch.Tensor, num_steps=False, kernel_len=9) -> torch.Tensor:
     T = _ensure_T(num_steps)
     x = inputs if torch.is_tensor(inputs) else torch.as_tensor(inputs, dtype=torch.float32)
     x = x.to(torch.float32).contiguous()
-
+    x = _minmax01(x).clamp_(0.0, 1.0)
     if x.dim() == 2:
         W, C = x.shape
-        x = _minmax01(x, dim=0)
         klen = min(max(3, kernel_len), W)
         t = torch.arange(klen, device=x.device, dtype=x.dtype)
         ker = torch.exp(-t / (0.3 * klen)); ker = ker / (ker.sum() + 1e-8)
@@ -86,8 +87,6 @@ def encode(inputs: torch.Tensor, num_steps=False, kernel_len=9) -> torch.Tensor:
 
     elif x.dim() == 3:
         C, H, W = x.shape
-        xmin = x.amin(dim=(1, 2), keepdim=True); xmax = x.amax(dim=(1, 2), keepdim=True)
-        x = (x - xmin) / (xmax - xmin + 1e-8)
 
         pc = x.permute(1, 2, 0).reshape(H * W, C)     # [P, C]
         P = pc.shape[0]

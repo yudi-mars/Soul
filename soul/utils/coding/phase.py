@@ -25,7 +25,7 @@ def _ensure_time_steps(num_steps):
 def _phase_like_encoder(x: torch.Tensor, T: int) -> torch.Tensor:
 
     x_float = x.to(dtype=torch.float32)
-    q = (x_float * 256.0).long()  # 假设 x ∈ [0,1)，则 q ∈ [0,255]
+    q = (x_float * 256.0).long()
 
     out_shape = (T,) + tuple(x.shape)
     outputs = torch.zeros(out_shape, dtype=x_float.dtype, device=x.device)
@@ -34,7 +34,7 @@ def _phase_like_encoder(x: torch.Tensor, T: int) -> torch.Tensor:
     for i in range(T):
         if i < 8:
             bit_idx = 8 - i - 1
-            mask = ((q >> bit_idx) & 1) != 0  # bool, 形状与 x 相同
+            mask = ((q >> bit_idx) & 1) != 0 
             outputs[i][mask] = val
             val /= 2.0
         else:
@@ -42,13 +42,21 @@ def _phase_like_encoder(x: torch.Tensor, T: int) -> torch.Tensor:
 
     return outputs
 
+def _minmax01(x: torch.Tensor, eps: float = 1e-8) -> torch.Tensor:
+    x = x.to(torch.float32)
+    x_min = x.amin()
+    x_max = x.amax()
+    rng = x_max - x_min
+    if rng <= eps:
+        return torch.zeros_like(x)
+    return (x - x_min) / rng
 
 def encode(inputs: torch.Tensor, num_steps: int = 4) -> torch.Tensor:
 
-    if not torch.is_tensor(inputs):
-        inputs = torch.as_tensor(inputs, dtype=torch.float32)
+    x = inputs if torch.is_tensor(inputs) else torch.as_tensor(inputs, dtype=torch.float32)
+    x = _minmax01(x).clamp_(0.0, 1.0)
 
     inputs = inputs.to(dtype=torch.float32)
 
     T = _ensure_time_steps(num_steps)
-    return _phase_like_encoder(inputs, T)
+    return _phase_like_encoder(x, T)

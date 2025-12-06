@@ -149,7 +149,7 @@ def latency_code_linear(
         Data tensor for a single batch of shape [batch x input_size]
     num_steps : int, optional
         Number of time steps. Explicitly needed if ``normalize=True``, by default False
-    threshold : float, optional
+    threshold : float,  optional
         Input features below the threhold will fire at the final time step, by default 0.01
     tau : float, optional
         Linear time constant used to calculate firing time, by default 1
@@ -348,7 +348,7 @@ def encode(
     off_target=0,
     clip=False,
     normalize=True,
-    linear=False,
+    linear=True,
     interpolate=False,
     bypass=False,
     epsilon=1e-7,

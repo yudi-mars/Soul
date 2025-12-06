@@ -20,7 +20,23 @@ References:
 from __future__ import annotations
 import torch
 
-__all__ = ["encode", "population_encode_gaussian"]
+__all__ = ["encode"]
+
+def _ensure_time_steps(num_steps):
+    if not num_steps or num_steps is False:
+        return 10
+    if isinstance(num_steps, int) and num_steps > 0:
+        return num_steps
+    raise ValueError(f"num_steps must be a positive int or False, got {num_steps!r}")
+
+def _minmax01(x: torch.Tensor, eps: float = 1e-8) -> torch.Tensor:
+    x = x.to(torch.float32)
+    x_min = x.amin()
+    x_max = x.amax()
+    rng = x_max - x_min
+    if rng <= eps:
+        return torch.zeros_like(x)
+    return (x - x_min) / rng
 
 def population_encode_gaussian(
     x: torch.Tensor,
@@ -46,40 +62,17 @@ def population_encode_gaussian(
     return y
 
 @torch.no_grad()
-@torch.no_grad()
 def encode(inputs: torch.Tensor, num_steps=False) -> torch.Tensor:
-    # ---- check T and cast ----
-    T = 1 if (not num_steps or num_steps is False) else int(num_steps)
-    if T <= 0:
-        raise ValueError(f"num_steps must be positive, got {num_steps!r}")
+    T = _ensure_time_steps(num_steps)
     x = inputs if torch.is_tensor(inputs) else torch.as_tensor(inputs, dtype=torch.float32)
-    x = x.to(torch.float32).contiguous()
+    x = _minmax01(x).clamp_(0.0, 1.0)
 
-    # ---- Norse-equivalent population responses on last dim (K=T) ----
-    # centers in [0,1], beta: inverse variance
     low, high, beta = 0.0, 1.0, 100.0
     centers = torch.linspace(low, high, T, device=x.device, dtype=x.dtype)
 
-    # normalize x to [0,1] per channel/axis to be consistent
-    def _minmax(x):
-        if x.dim() == 3:  # (C,H,W)
-            xmin = x.amin(dim=(1,2), keepdim=True); xmax = x.amax(dim=(1,2), keepdim=True)
-        elif x.dim() == 2:  # (W,C)
-            xmin = x.amin(dim=0, keepdim=True);     xmax = x.amax(dim=0, keepdim=True)
-        else:
-            xmin = x.amin(); xmax = x.amax()
-        return (x - xmin) / (xmax - xmin + 1e-8)
-
-    x01 = _minmax(x)
-
-    # compute Gaussian responses: last dim = K (=T)
-    # y[..., k] = exp(-beta * (x01 - centers[k])^2)
-    diff2 = (x01.unsqueeze(-1) - centers.view(*([1] * x01.ndim), -1)) ** 2
+    diff2 = (x.unsqueeze(-1) - centers.view(*([1] * x.ndim), -1)) ** 2
     y = torch.exp(-beta * diff2)  # shape:
-    # - vision : (C,H,W,K)
-    # - motion : (W,C,K)
 
-    # ---- map population dim (K) to TIME dim (T) ----
     if x.dim() == 3:        # vision: (C,H,W) -> (T,C,H,W)
         C,H,W,_ = y.shape
         return y.permute(3, 0, 1, 2).contiguous()  # (K->T, C, H, W)

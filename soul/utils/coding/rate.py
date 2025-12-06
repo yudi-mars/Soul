@@ -13,6 +13,15 @@ import torch
 
 dtype = torch.float
 
+def _minmax01(x: torch.Tensor, eps: float = 1e-8) -> torch.Tensor:
+    x = x.to(torch.float32)
+    x_min = x.amin()
+    x_max = x.amax()
+    rng = x_max - x_min
+    if rng <= eps:
+        return torch.zeros_like(x)
+    return (x - x_min) / rng
+
 def rate_conv(data):
     '''
     Convert tensor into Poisson spike trains using the features as
@@ -134,7 +143,7 @@ def encode(data, num_steps=False, gain=1, offset=0, first_spike_time=0, time_var
             "The first dimension of the input data + ``first_spike_time`` "
             "will determine ``num_steps``."
         )
-    
+    data = _minmax01(data).clamp_(0.0, 1.0)
     device = data.device
     # for time-varying input data
     if time_var_input:
