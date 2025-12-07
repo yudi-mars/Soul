@@ -34,10 +34,10 @@ If you want to dive deeper into all the available command-line options, configur
 
 ## Results
 
-### Performance of LeNet-structured SNNs equipped with different LIF variants across sensing tasks
+### Performance of LeNet-structured SNNs with different LIF variants
 
 <p align="center">
-    <img src="./assets/cmp-lif-sensing.png" width="50%">
+    <img src="./assets/cmp-lif-sensing.png" width="100%">
 </p>
 
 ## Dataset Support
