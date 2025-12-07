@@ -12,7 +12,9 @@
 
 Soul is a Python- and PyTorch-based open-source toolkit for building spiking neural network (SNN) applications. It provides a unified, efficient framework designed for both research and edge deployment, enabling you to reproduce brain-inspired computing algorithms and develop new models with minimal overhead. With SOUL (**S**NN-based **O**pen so**U**rce too**L**kit), you can seamlessly experiment with SNNs in a comprehensive environment that bridges academic exploration and real-world edge intelligence.
 
-__TBD 一张图 @yudi__
+<p align="center">
+<img src="assets/overview.png" align="center" width="100%" style="margin: 0 auto">
+</p>
 
 ## Usage
 
