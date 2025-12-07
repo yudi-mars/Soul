@@ -10,7 +10,7 @@
 
 ## Overview
 
-Soul is a Python- and PyTorch-based open-source toolkit for building spiking neural network (SNN) applications. It provides a unified, efficient framework designed for both research and edge deployment, enabling you to reproduce brain-inspired computing algorithms and develop new models with minimal overhead. With SOUL (**S**NN-based **O**pen so**U**rce too**L**kit), you can seamlessly experiment with SNNs in a comprehensive environment that bridges academic exploration and real-world edge intelligence.
+Soul is an open-source Python and PyTorch toolkit for building spiking neural network (SNN) applications. It provides a unified, efficient framework designed for both research and edge deployment, enabling you to reproduce brain-inspired computing algorithms and develop new models with minimal overhead. With SOUL (**S**NN-based **O**pen so**U**rce too**L**kit), you can seamlessly experiment with SNNs in a comprehensive environment that bridges academic exploration and real-world edge intelligence.
 
 <p align="center">
 <img src="assets/overview.png" align="center" width="100%" style="margin: 0 auto">
@@ -30,7 +30,7 @@ You can run the library directly from the command line. For example:
     CUDA_VISIBLE_DEVICES=[GPU-ID1],[GPU-ID2],... torchrun --nproc_per_node=[Number of used GPU] run_soul.py -dataset=[Dataset Name] -data_dir=[Dataset Directory] -T=[Number of timesteps] -m=[Model Name] -n=[Neuron Type]
     ```
 
-If you want to dive deeper into all the available command-line options, configuration settings, and parameters, please check out our [full documentation](). _TBD @Cajol1e (Sphinx Documentation)_
+If you want to dive deeper into all the available command-line options, configuration settings, and parameters, please check out our [complete documentation](https://soul-docs.readthedocs.io/en/latest/).
 
 ## Results
 
@@ -38,7 +38,7 @@ For a deeper dive into our experimental results and their analysis, please check
 
 ## Dataset Support
 
-For each dataset we provide both a **Research/Reference Link** (paper or dataset description) and a **Download Link** to facilitate integration with the toolkit.
+For each dataset, we provide both a **Research/Reference Link** (to a paper or dataset description) and a **Download Link** to facilitate integration with the toolkit.
 
 ### Vision Sensing  
 | Dataset | Description | Research Link | Download Link |
@@ -94,6 +94,6 @@ TBD
 
 ## Contact Us
 
-If there are any questions, please feel free to propose new features by opening an issue or contact with the author: **Di Yu**([yudi2023@zju.edu.cn](mailto:yudi2023@zju.edu.cn)), **Changze Lv**([czlv24@m.fudan.edu.cn](mailto:czlv24@m.fudan.edu.cn)), **Zhuo Chen**([chenzhuocs@zju.edu.cn](mailto:chenzhuocs@zju.edu.cn)), and **Wentao Tong**([toldzera@zju.edu.cn](mailto:toldzera@zju.edu.cn)).
+If there are any questions, please feel free to propose new features by opening an issue or contacting the author: **Di Yu**([yudi2023@zju.edu.cn](mailto:yudi2023@zju.edu.cn)), **Changze Lv**([czlv24@m.fudan.edu.cn](mailto:czlv24@m.fudan.edu.cn)), **Zhuo Chen**([chenzhuocs@zju.edu.cn](mailto:chenzhuocs@zju.edu.cn)), and **Wentao Tong**([toldzera@zju.edu.cn](mailto:toldzera@zju.edu.cn)).
 
 Enjoy the code!
