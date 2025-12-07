@@ -34,13 +34,19 @@ If you want to dive deeper into all the available command-line options, configur
 
 ## Results
 
-For a deeper dive into our experimental results and their analysis, please check out our detailed [Wiki page](). _TBD with some benchmarking results_ 
+### Performance of LeNet-structured SNNs equipped with different LIF variants across sensing tasks
+
+<p align="center">
+    <img src="./assets/cmp-lif-sensing.png" width="50%">
+</p>
 
 ## Dataset Support
 
 For each dataset, we provide both a **Research/Reference Link** (to a paper or dataset description) and a **Download Link** to facilitate integration with the toolkit.
 
-### Vision Sensing  
+<details>
+  <summary><b>Vision Sensing</b></summary>
+    
 | Dataset | Description | Research Link | Download Link |
 |:---------:|:-------------:|:--------------:|:--------------:|
 | CIFAR-10 / CIFAR-100 | Standard small-image classification benchmarks | [Paper](https://www.cs.utoronto.ca/~kriz/learning-features-2009-TR.pdf) | [Download](https://www.cs.toronto.edu/~kriz/cifar.html) |
@@ -49,7 +55,11 @@ For each dataset, we provide both a **Research/Reference Link** (to a paper or d
 | MNIST | Handwritten digit recognition benchmark | [Dataset](http://yann.lecun.com/exdb/mnist/) | [Download](https://www.kaggle.com/datasets/hojjatk/mnist-dataset) |
 | Fashion-MNIST | Drop-in replacement for MNIST with fashion items | [Paper](https://arxiv.org/abs/1708.07747) | [Download](https://github.com/zalandoresearch/fashion-mnist) |
 
-### Motion Sensing  
+</details>
+
+<details>
+  <summary><b>Motion Sensing</b></summary>
+
 | Dataset | Description | Research Link | Download Link |
 |:---------:|:-------------:|:--------------:|:--------------:|
 | **UCI HAR** | Smartphone-sensor human activity recognition | [Paper](https://www.sciencedirect.com/science/article/abs/pii/S0925231215010930) | [Download](https://archive.ics.uci.edu/dataset/240/human+activity+recognition+using+smartphones) |
@@ -57,7 +67,11 @@ For each dataset, we provide both a **Research/Reference Link** (to a paper or d
 | **MotionSense** | iPhone/AppleWatch sensor data for multiple activities | [Paper](https://dl.acm.org/doi/10.1145/3302505.3310068) | [Download](https://www.kaggle.com/datasets/malekzadeh/motionsense-dataset) |
 | **Shoaib** | Accelerometer/gyroscope data for activity recognition | [Paper](https://www.mdpi.com/1424-8220/14/6/10146) | [Download](https://www.researchgate.net/publication/266384007_Sensors_Activity_Recognition_DataSet) |
 
-### Acoustic Sensing  
+</details>
+
+<details>
+  <summary><b>Acoustic Sensing  </b></summary>
+
 | Dataset | Description | Research Link | Download Link |
 |:---------:|:-------------:|:--------------:|:--------------:|
 | **UrbanSound8K** | Urban sounds classification, 10 classes | [Paper](https://dl.acm.org/doi/10.1145/2647868.2655045) | [Download](https://urbansounddataset.weebly.com/download-urbansound8k.html) |
@@ -65,7 +79,11 @@ For each dataset, we provide both a **Research/Reference Link** (to a paper or d
 | **GTZAN** | Music-genre classification across 10 genres | [Paper](https://ieeexplore.ieee.org/abstract/document/1021072) | [Download](https://www.kaggle.com/datasets/andradaolteanu/gtzan-dataset-music-genre-classification) |
 | **ESC-50** | 50 classes environmental sound classification | [Paper](https://dl.acm.org/doi/abs/10.1145/2733373.2806390) | [Download](https://github.com/karoldvl/ESC-50/archive/master.zip) |
 
-### Wireless Sensing  
+</details>
+
+<details>
+  <summary><b>Wireless Sensing  </b></summary>
+ 
 | Dataset | Description | Research Link | Download Link |
 |:---------:|:-------------:|:--------------:|:--------------:|
 | **UT-HAR** | WiFi-CSI human activity recognition | [Paper](https://ieeexplore.ieee.org/document/8067693) | [Download](https://github.com/ermongroup/Wifi_Activity_Recognition?tab=readme-ov-file) |
@@ -75,13 +93,19 @@ For each dataset, we provide both a **Research/Reference Link** (to a paper or d
 | **NTU-HAR** | Wi-Fi CSI-based human activity recognition | [Paper](https://ieeexplore.ieee.org/document/9667414) | [Download](https://drive.google.com/drive/folders/1R0R8SlVbLI1iUFQCzh_mH90H_4CW2iwt) |
 | **Widar 3.0** | Wi-Fi-based gesture recognition using Body-coordinate Velocity Profile (BVP) and CSI/DFS | [Paper](https://ieeexplore.ieee.org/document/9516988) | [Download](https://tns.thss.tsinghua.edu.cn/widar3.0/) |
 
-### Neuromorphic Sensing  
+</details>
+
+<details>
+  <summary><b>Neuromorphic Sensing  </b></summary>
+
 | Dataset | Description | Research Link | Download Link |
 |:---------:|:-------------:|:--------------:|:--------------:|
 | **CIFAR10-DVS** | Event-based version of CIFAR-10 captured with DVS sensor | [Paper](https://www.frontiersin.org/journals/neuroscience/articles/10.3389/fnins.2017.00309/full) | [Download](https://figshare.com/articles/dataset/CIFAR10-DVS_New/4724671) |
 | **DVS-Gesture** | Dynamic Vision Sensor dataset for gesture recognition | [Paper](https://ieeexplore.ieee.org/document/8100264) | [Download](https://ibm.ent.box.com/s/3hiq58ww1pbbjrinh367ykfdf60xsfm8/folder/50167556794) |
 | **SHD** | Event-based audio dataset for digit recognition | [Paper](https://ieeexplore.ieee.org/document/9311226) | [Download](https://zenkelab.org/resources/spiking-heidelberg-datasets-shd/) |
 | **SSC** | Event-based speech commands dataset | [Paper](https://ieeexplore.ieee.org/document/9311226) | [Download](https://zenkelab.org/resources/spiking-heidelberg-datasets-shd/) |
+
+</details>
 
 > **Note:** After downloading and extracting the datasets, you only need to point the `data_dir` argument to the root directory of the dataset in your configuration (or command-line). The SOUL toolkit will automatically process the data in that directory and run accordingly.
 
