@@ -1,7 +1,7 @@
 ---
 
 <p align="center">
-    <img src="./assets/code-logo.jpg" width="50%">
+    <img src="./assets/code-logo.jpg" width="50%" loading="lazy">
 </p>
 
 ---
