@@ -26,7 +26,29 @@ Requirements:
 ```
 onnx >= 1.20.0
 networkx >= 3.4.2
-torch >= 1.13.1 (torch >= 2.0 may raise unpredictable errors, we never test it)
+torch >= 1.13.1 (torch >= 2.0 may raise unpredictable errors, we never test it) -> (bug of torch >= 2.0 is fixed now)
 other necessary packeges if possible.
 ```
 
+Better api support:
+
+```
+from gen_graph import export_graph
+graph = export_graph(model,input_shape,debug=False) # Under Debug mode, onnx file and json file will be saved
+```
+
+Issues:
+
+You should re-define a new Heaviside method to export graph:
+
+```
+From:
+def heaviside(x)
+    return (x > 0).float()
+To:
+class HeavisideFunction(torch.nn.Module):
+    def forward(self, x):
+        return (x > 0).float()     
+```
+
+Otherwise there will be bugs, this issue has been pushed to the repo of Soul, @yudi will fix this later.   
