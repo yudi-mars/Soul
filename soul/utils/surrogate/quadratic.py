@@ -9,7 +9,9 @@ References:
     - Bellec, G. et al., "Long short-term memory and learning-to-learn in networks of spiking neurons", NeurIPS'2018.
 '''
 import torch
-from .base import SurrogateFunctionBase, heaviside
+from .base import SurrogateFunctionBase, HeavisideFunction
+
+heaviside = HeavisideFunction()
 
 @torch.jit.script
 def piecewise_quadratic_backward(grad_output: torch.Tensor, x: torch.Tensor, alpha: float):

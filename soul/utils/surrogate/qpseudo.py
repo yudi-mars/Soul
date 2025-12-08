@@ -9,7 +9,9 @@ References:
     - Herranz-Celotti, L. et al., "Stabilizing Spiking Neuron Training", NeurIPS'2015.
 """
 import torch
-from .base import SurrogateFunctionBase, heaviside
+from .base import SurrogateFunctionBase, HeavisideFunction
+
+heaviside = HeavisideFunction()
 
 class q_pseudo_spike(torch.autograd.Function):
     @staticmethod

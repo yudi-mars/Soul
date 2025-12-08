@@ -9,7 +9,9 @@ References:
     - Shrestha, S. B. et al., "Slayer: Spike layer error reassignment in time", NeurIPS'2018.
 '''
 import torch
-from .base import SurrogateFunctionBase, heaviside
+from .base import SurrogateFunctionBase, HeavisideFunction
+
+heaviside = HeavisideFunction()
 
 @torch.jit.script
 def piecewise_exp_backward(grad_output: torch.Tensor, x: torch.Tensor, alpha: float):

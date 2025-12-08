@@ -11,7 +11,9 @@ References:
 import math
 import torch
 
-from .base import SurrogateFunctionBase, heaviside
+from .base import SurrogateFunctionBase, HeavisideFunction
+
+heaviside = HeavisideFunction()
 
 @torch.jit.script
 def atan_backward(grad_output: torch.Tensor, x: torch.Tensor, alpha: float):

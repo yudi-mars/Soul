@@ -10,7 +10,9 @@ References:
 '''
 import torch
 import torch.nn.functional as F
-from .base import SurrogateFunctionBase, heaviside
+from .base import SurrogateFunctionBase, HeavisideFunction
+
+heaviside = HeavisideFunction()
 
 @torch.jit.script
 def soft_sign_backward(grad_output: torch.Tensor, x: torch.Tensor, alpha: float):

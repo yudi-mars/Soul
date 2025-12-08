@@ -30,3 +30,7 @@ class SurrogateFunctionBase(nn.Module):
 @torch.jit.script
 def heaviside(x: torch.Tensor):
     return (x >= 0).to(x)
+
+class HeavisideFunction(torch.nn.Module): 
+    def forward(self, x): 
+        return (x > 0).float()
