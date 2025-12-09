@@ -9,14 +9,17 @@ References:
     - Wei Fang et al., "SpikingJelly: An open-source machine learning infrastructure platform for spike-based intelligence", Science Advances'2023.
     https://github.com/fangwei123456/spikingjelly
 """
-import torch
-import torch.nn as nn
+
 import copy
 from abc import abstractmethod
 
+import torch
+import torch.nn as nn
+
+
 class StepModule:
     def supported_step_mode(self):
-        return ('s', 'm')
+        return ("s", "m")
 
     @property
     def step_mode(self):
@@ -25,20 +28,23 @@ class StepModule:
     @step_mode.setter
     def step_mode(self, value: str):
         if value not in self.supported_step_mode():
-            raise ValueError(f'step_mode can only be {self.supported_step_mode()}, but got "{value}"!')
+            raise ValueError(
+                f'step_mode can only be {self.supported_step_mode()}, but got "{value}"!'
+            )
         self._step_mode = value
+
 
 class MemoryModule(nn.Module, StepModule):
     def __init__(self):
         super().__init__()
         self._memories = {}
         self._memories_rv = {}
-        self._backend = 'torch'
-        self.step_mode = 's'
+        self._backend = "torch"
+        self.step_mode = "s"
 
     @property
     def supported_backends(self):
-        return ('torch',)
+        return ("torch",)
 
     @property
     def backend(self):
@@ -47,7 +53,9 @@ class MemoryModule(nn.Module, StepModule):
     @backend.setter
     def backend(self, value: str):
         if value not in self.supported_backends:
-            raise NotImplementedError(f'{value} is not a supported backend of {self._get_name()}!')
+            raise NotImplementedError(
+                f"{value} is not a supported backend of {self._get_name()}!"
+            )
         self._backend = value
 
     @abstractmethod
@@ -63,18 +71,47 @@ class MemoryModule(nn.Module, StepModule):
         return torch.cat(y_seq, 0)
 
     def forward(self, *args, **kwargs):
-        if self.step_mode == 's':
+        if torch.onnx.is_in_onnx_export():
+
+            class MemoryModuleFunction(torch.autograd.Function):
+                @staticmethod
+                def forward(ctx, x):
+                    """前向传播"""
+                    return x
+                    # # ctx.num_args = len(args)
+                    # if self.step_mode == "s":
+                    #     return self.single_step_forward(x)
+                    # elif self.step_mode == "m":
+                    #     return self.multi_step_forward(x)
+
+                @staticmethod
+                def backward(ctx, grad_output):
+                    """反向传播"""
+                    # 实现梯度计算
+                    return grad_output
+
+                @staticmethod
+                def symbolic(g, x):
+                    """ONNX 符号化"""
+                    name = type(self).__name__
+                    output = g.op(f"soul::{name}", x, spike_shape_i=x.type().sizes())
+                    output.setType(x.type())
+                    return output
+
+            return MemoryModuleFunction.apply(*args, **kwargs)
+
+        if self.step_mode == "s":
             return self.single_step_forward(*args, **kwargs)
-        elif self.step_mode == 'm':
+        elif self.step_mode == "m":
             return self.multi_step_forward(*args, **kwargs)
         else:
             raise ValueError(self.step_mode)
 
     def extra_repr(self):
-        return f'step_mode={self.step_mode}, backend={self.backend}'
+        return f"step_mode={self.step_mode}, backend={self.backend}"
 
     def register_memory(self, name: str, value):
-        assert not hasattr(self, name), f'{name} has been set as a member variable!'
+        assert not hasattr(self, name), f"{name} has been set as a member variable!"
         self._memories[name] = value
         self.set_reset_value(name, value)
 
@@ -86,15 +123,15 @@ class MemoryModule(nn.Module, StepModule):
         self._memories_rv[name] = copy.deepcopy(value)
 
     def __getattr__(self, name: str):
-        if '_memories' in self.__dict__:
-            memories = self.__dict__['_memories']
+        if "_memories" in self.__dict__:
+            memories = self.__dict__["_memories"]
             if name in memories:
                 return memories[name]
 
         return super().__getattr__(name)
 
     def __setattr__(self, name: str, value) -> None:
-        _memories = self.__dict__.get('_memories')
+        _memories = self.__dict__.get("_memories")
         if _memories is not None and name in _memories:
             _memories[name] = value
         else:
@@ -146,4 +183,3 @@ class MemoryModule(nn.Module, StepModule):
         replica = super()._replicate_for_data_parallel()
         replica._memories = self._memories.copy()
         return replica
-    
