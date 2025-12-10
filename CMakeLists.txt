@@ -27,7 +27,7 @@ set(ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 # 强制将生成的库文件放到 Python 包的源代码目录下
 # 假设你的 python 包文件夹叫 pylib_wrapper
 set_target_properties(sim PROPERTIES
-    LIBRARY_OUTPUT_DIRECTORY "${ROOT_DIR}/soul"
+    LIBRARY_OUTPUT_DIRECTORY "${ROOT_DIR}/soul/backend/neusim"
     # Windows 还需要设置 Runtime
-    RUNTIME_OUTPUT_DIRECTORY "${ROOT_DIR}/soul"
+    RUNTIME_OUTPUT_DIRECTORY "${ROOT_DIR}/soul/backend/neusim"
 )

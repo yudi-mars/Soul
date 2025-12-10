@@ -16,6 +16,7 @@ using namespace std;
 
 struct SimResult {
   int retcode;
+  double duration;
   uint32_t total_cycles;
   uint32_t total_recv_flits;
   uint32_t total_recv_spikes;
@@ -53,12 +54,12 @@ public:
     auto num_neurons = r1.shape(0);
     auto num_cores = r1.shape(1);
     auto max_ts = r2.shape(1);
-    printf(
-      "Loading SNN: %ld neurons, %ld cores, %ld timesteps\n",
-      num_neurons,
-      num_cores,
-      max_ts
-    );
+    // printf(
+    //   "Loading SNN: %ld neurons, %ld cores, %ld timesteps\n",
+    //   num_neurons,
+    //   num_cores,
+    //   max_ts
+    // );
     // printf(
     //   "Neuron 0 conn: %d %d %d %d\n", r1(0, 0), r1(0, 1), r1(0, 2), r1(0, 3)
     // );
@@ -88,9 +89,10 @@ public:
     }
   }
 
-  auto result_stats() -> SimResult {
+  auto result_stats(double duration) -> SimResult {
     SimResult res;
     res.retcode = 0;
+    res.duration = duration;
     res.total_cycles = cores[0].clk.cycle_count;
     res.total_recv_flits = routers[0].clk.stats.num_recv_flits.load();
 
@@ -163,8 +165,8 @@ SimResult run_sim(
   auto top = Top {};
   top.load_snn(position, core_conns, spikes);
 
-  top.run(max_tick);
-  return top.result_stats();
+  auto duration = top.run(max_tick);
+  return top.result_stats(duration);
 }
 
 PYBIND11_MODULE(sim, m) {
