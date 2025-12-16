@@ -1,5 +1,6 @@
 #include "neu-sim/core/SyncCore.hpp"
 #include "neu-sim/params.hpp"
+#include "neu-sim/power_params.hpp"
 #include "neu-sim/top.hpp"
 #include <algorithm>
 #include <cassert>
@@ -21,7 +22,9 @@ struct SimResult {
   uint32_t total_recv_flits;
   uint32_t total_recv_spikes;
   uint32_t total_sent_spikes;
+  uint32_t total_update_cnt;
   uint32_t total_firing_cnt;
+  uint64_t total_hops;
 };
 
 class Top : public TopBase<SyncCore> {
@@ -54,29 +57,10 @@ public:
     auto num_neurons = r1.shape(0);
     auto num_cores = r1.shape(1);
     auto max_ts = r2.shape(1);
-    // printf(
-    //   "Loading SNN: %ld neurons, %ld cores, %ld timesteps\n",
-    //   num_neurons,
-    //   num_cores,
-    //   max_ts
-    // );
-    // printf(
-    //   "Neuron 0 conn: %d %d %d %d\n", r1(0, 0), r1(0, 1), r1(0, 2), r1(0, 3)
-    // );
+
     for (py::ssize_t i = 0; i < num_neurons; i++) {
       const uint8_t *axon_ptr = r1.data(i, 0);
       const uint8_t *spike_ptr = r2.data(i, 0);
-      // if (i == 0) {
-      //   printf("Neuron %ld ts: %d\n", i, spike_ptr[0]);
-      // }
-      // printf(
-      //   "Neuron %ld conn: %d %d %d %d\n",
-      //   i,
-      //   axon_ptr[0],
-      //   axon_ptr[1],
-      //   axon_ptr[2],
-      //   axon_ptr[3]
-      // );
       cores[rp(i)].add_neuron(
         std::span<const uint8_t>(axon_ptr, num_cores),
         std::span<const uint8_t>(spike_ptr, max_ts)
@@ -106,10 +90,21 @@ public:
       res.total_sent_spikes += core.stats.total_sent_spikes;
     }
 
+    res.total_update_cnt = 0;
+    for (auto &core : cores) {
+      res.total_update_cnt += core.stats.update_cnt;
+    }
+
     res.total_firing_cnt = 0;
     for (auto &core : cores) {
       res.total_firing_cnt += core.stats.firing_cnt;
     }
+
+    res.total_hops = 0;
+    for (auto &router : routers) {
+      res.total_hops += router.stats.total_flits;
+    }
+
     return res;
   }
 };
@@ -140,6 +135,12 @@ SimResult run_sim(
   if (kwargs.contains("packet_size")) {
     global_params.packet_size = kwargs["packet_size"].cast<uint32_t>();
   }
+
+  // if (kwargs.contains("power_config")) {
+  //   global_power_params.parse_config(
+  //     kwargs["power_config"].cast<std::string>()
+  //   );
+  // }
 
   uint32_t max_tick = 0;
   if (kwargs.contains("max_tick")) {
@@ -179,7 +180,9 @@ PYBIND11_MODULE(sim, m) {
     .def_readwrite("total_recv_flits", &SimResult::total_recv_flits)
     .def_readwrite("total_recv_spikes", &SimResult::total_recv_spikes)
     .def_readwrite("total_sent_spikes", &SimResult::total_sent_spikes)
+    .def_readwrite("total_update_cnt", &SimResult::total_update_cnt)
     .def_readwrite("total_firing_cnt", &SimResult::total_firing_cnt)
+    .def_readwrite("total_hops", &SimResult::total_hops)
     .def("__repr__", [](const SimResult &r) { // 可选：定义打印格式
       return "<example.SimResult retcode=" + std::to_string(r.retcode) + ">";
     });
