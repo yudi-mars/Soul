@@ -175,6 +175,10 @@ def onnx_to_networkx(onnx_model):
             if attr.name == "spike_shape":
                 # (T, B, ...) -> (...)
                 attr_dict[attr.name] = val[2:]
+                if node.op_type not in ["LIFNode"]:
+                    raise NotImplementedError(
+                        f"Only support LIFNode neuron for now, got {node.op_type}"
+                    )
         G.add_node(node_id, type="Op", op_type=node.op_type, attributes=attr_dict)
 
         # 记录该节点产生的输出张量
@@ -419,7 +423,7 @@ def dump_conv2d(in_shape, op_attr):
         srcs = np.array(srcs, dtype=np.int32)
     except Exception:
         srcs = np.array(srcs, dtype=np.ndarray)
-    
+
     for src in srcs:
         assert src.dtype == np.int32
 
@@ -479,7 +483,7 @@ def dump_pool2d(in_shape, op_attr):
         srcs = np.array(srcs, dtype=np.int32)
     except Exception:
         srcs = np.array(srcs, dtype=np.ndarray)
-    
+
     for src in srcs:
         assert src.dtype == np.int32
     return srcs, out_shape
@@ -498,7 +502,7 @@ def dump_globalpool2d(in_shape):
         srcs = np.array(srcs, dtype=np.int32)
     except Exception:
         srcs = np.array(srcs, dtype=np.ndarray)
-    
+
     for src in srcs:
         assert src.dtype == np.int32
     return srcs, out_shape
