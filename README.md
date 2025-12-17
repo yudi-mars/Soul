@@ -40,6 +40,22 @@ If you want to dive deeper into all the available command-line options, configur
     <img src="./assets/cmp-lif-sensing.png" width="100%">
 </p>
 
+### Performance of SNNs with different architectures
+
+<p align="center">
+    <img src="./assets/cmp-topology.png" width="100%">
+</p>
+
+<p align="center">
+    <img src="./assets/cmp-topology-performance-cd.png" width="75%">
+</p>
+
+### Performance of SNNs with different input encoding strategies
+
+<p align="center">
+    <img src="./assets/cmp-encoding-sensing.png" width="100%">
+</p>
+
 ## Dataset Support
 
 For each dataset, we provide both a **Research/Reference Link** (to a paper or dataset description) and a **Download Link** to facilitate integration with the toolkit.
