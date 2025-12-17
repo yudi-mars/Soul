@@ -21,7 +21,7 @@ class NeuSimEnergyModel:
         self.spike_energy = loihi_spike_energy * self.sop_energy / loihi_sop_energy
         self.hop_energy = loihi_hop_energy * self.sop_energy / loihi_sop_energy
 
-    def estimate_energy(self, sim_res, detail=False) -> float:
+    def estimate_energy(self, sim_res, detail=False):
         sop_energy = self.sop_energy * sim_res.total_recv_spikes
         neuron_energy = self.neuron_energy * (
             sim_res.total_update_cnt - sim_res.total_firing_cnt

@@ -1,6 +1,5 @@
+import copy
 import io
-import json
-from pathlib import Path
 
 import networkx as nx
 import numpy as np
@@ -8,10 +7,24 @@ import onnx
 import torch
 import tqdm
 
+from soul.utils.monitor import BaseMonitor
 
-def export_onnx(
-    model, input_shape: tuple[int], full_onnx_file=None, clean_onnx_file=None
-):
+
+class CompileResult:
+    onnx_model: onnx.ModelProto
+    clean_onnx_model: onnx.ModelProto
+    graph: nx.DiGraph
+    neuron_graph: nx.DiGraph
+    num_neurons: int
+    num_synapses: int
+    num_cores: int
+    position: np.ndarray
+    mapping_l2p: np.ndarray
+    phy_position: np.ndarray
+    phy_core_conns: np.ndarray
+
+
+def export_onnx(model, input_shape: tuple[int, ...]):
     dummy_input = torch.randn((1, 1, *input_shape))  # T, B, input_shape
     buffer = io.BytesIO()
     torch.onnx.export(
@@ -28,16 +41,11 @@ def export_onnx(
     )
     buffer.seek(0)
     onnx_model = onnx.load(buffer)
-    if full_onnx_file is not None:
-        onnx.save(onnx_model, full_onnx_file)
-    # onnx_model = onnx.shape_inference.infer_shapes(onnx_model)
-    onnx_model = clean_weights_and_biases(onnx_model)
-    onnx_model = clean_shape_nodes(onnx_model)
-    onnx_model = clean_hanging_nodes(onnx_model)
-    if clean_onnx_file is not None:
-        onnx.save(onnx_model, clean_onnx_file)
+    clean_onnx_model = clean_weights_and_biases(onnx_model)
+    clean_onnx_model = clean_shape_nodes(clean_onnx_model)
+    clean_onnx_model = clean_hanging_nodes(clean_onnx_model)
 
-    return onnx_model
+    return onnx_model, clean_onnx_model
 
 
 def clean_weights_and_biases(onnx_model):
@@ -283,9 +291,8 @@ def get_neuron_graph(graph, neuron_nodes, found_paths):
 
 
 def parse_neuron_graph(graph, neuron_graph):
-    for edge in neuron_graph.edges(data=True):
+    for edge in tqdm.tqdm(neuron_graph.edges(data=True), desc="Parsing neuron graph"):
         source, target, attrs = edge
-        # print(f"{source} -> {target}")
         path = attrs["path"]
         assert len(path) > 2, "路径中间节点数应至少为1"
         source_node = neuron_graph.nodes[source]
@@ -293,7 +300,6 @@ def parse_neuron_graph(graph, neuron_graph):
         in_shape = source_node["attributes"]["spike_shape"]
         out_shape = target_node["attributes"]["spike_shape"]
         path_ops = [graph.nodes[n].get("op_type") for n in path[1:-1]]
-        # print(path_ops)
         src = None
         if "Gemm" in path_ops:
             src = fusion_layers(src, dump_linear(np.prod(in_shape), np.prod(out_shape)))
@@ -301,8 +307,6 @@ def parse_neuron_graph(graph, neuron_graph):
             tmp_shape = in_shape
             for node in path[1:-1]:
                 this_src = None
-                # if source == "Input_input":
-                #     print(tmp_shape, graph.nodes[node]["op_type"], end=" -> ")
                 op_attr = graph.nodes[node]["attributes"]
                 if graph.nodes[node]["op_type"] == "Conv":
                     this_src, tmp_shape = dump_conv2d(tmp_shape, op_attr)
@@ -313,11 +317,9 @@ def parse_neuron_graph(graph, neuron_graph):
                     "GlobalMaxPool",
                 ]:
                     this_src, tmp_shape = dump_globalpool2d(tmp_shape)
+                # print("fusion_layers", f"{source} -> {target}", tmp_shape)
                 src = fusion_layers(src, this_src)
-                # if source == "Input_input":
-                #     print(tmp_shape)
-                #     if this_src is not None:
-                #         print(len(this_src), len(src))
+                # print("fusion_layers done")
         if len(src) != np.prod(out_shape):
             raise ValueError(
                 f"{source} -> {target}: {path} \n"
@@ -573,44 +575,59 @@ def mapping(num_cores, position, core_conns):
 
 def compile(
     model,
-    input_shape: tuple[int],
-    full_onnx_file=None,
-    clean_onnx_file=None,
-    graph_file=None,
-    neuron_graph_file=None,
+    input_shape: tuple[int, ...],
     core_capacity=4096,
-):
-    onnx_model = export_onnx(
+) -> CompileResult:
+    res = CompileResult()
+    onnx_model, clean_onnx_model = export_onnx(
         model,
         input_shape,
-        full_onnx_file=full_onnx_file,
-        clean_onnx_file=clean_onnx_file,
     )
+    res.onnx_model = onnx_model
+    res.clean_onnx_model = clean_onnx_model
 
-    graph = onnx_to_networkx(onnx_model)
-    if graph_file is not None:
-        Path(graph_file).write_text(
-            json.dumps(
-                nx.readwrite.json_graph.node_link_data(graph, edges="edges"), indent=2
-            )
-        )
+    graph = onnx_to_networkx(clean_onnx_model)
+    res.graph = graph
 
     neuron_graph = find_neuron_paths(graph)
-    # print(f"Found {len(neuron_graph.nodes)} neuron nodes")
-    # print(f"Found {len(neuron_graph.edges)} neuron paths")
-    if neuron_graph_file is not None:
-        Path(neuron_graph_file).write_text(
-            json.dumps(
-                nx.readwrite.json_graph.node_link_data(neuron_graph, edges="edges"),
-                indent=2,
-            )
-        )
+    res.neuron_graph = copy.deepcopy(neuron_graph)
 
     neuron_graph = parse_neuron_graph(graph, neuron_graph)
     (num_neurons, num_synapses, num_cores), position, core_conns = partition(
         neuron_graph, core_capacity=core_capacity
     )
+    res.num_neurons = num_neurons
+    res.num_synapses = num_synapses
+    res.num_cores = num_cores
+    res.position = position
 
     mapping_l2p, phy_position, phy_core_conns = mapping(num_cores, position, core_conns)
+    res.mapping_l2p = mapping_l2p
+    res.phy_position = phy_position
+    res.phy_core_conns = phy_core_conns
 
-    return (num_neurons, num_synapses, num_cores), phy_position, phy_core_conns
+    return res
+
+
+def convert_spikes(compile_res: CompileResult, monitor: BaseMonitor) -> np.ndarray:
+    names = compile_res.neuron_graph.nodes()
+    spikes_to_sim = []
+    for name in names:
+        if name == "Input_input":
+            T = monitor.input_record.shape[0]
+            spikes_to_sim.append(monitor.input_record.flatten(2).detach().cpu().numpy())
+        elif name == "Output_output":
+            B, num_classes = monitor.output_record.shape
+            spikes_to_sim.append(np.zeros((T, B, num_classes), dtype=np.uint8))
+        else:
+            assert name[0] == "/"
+            segs = name[1:].replace("/", ".").split(".")[:-1]
+            segs_valid = []
+            for i, seg in enumerate(segs):
+                if i == len(segs) - 1 or seg != segs[i + 1]:
+                    segs_valid.append(seg)
+            name2 = ".".join(segs_valid)
+            recs = monitor[name2]
+            assert len(recs) == 1, f"Expected one record for {name2}, got {len(recs)}"
+            spikes_to_sim.append(recs[0].flatten(2).detach().cpu().numpy())
+    return np.concatenate(spikes_to_sim, axis=-1).astype(np.uint8).transpose(1, 2, 0) # B, N, T
