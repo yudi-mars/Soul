@@ -337,6 +337,14 @@ def latency_interpolate(spike_time, num_steps, on_target=1, off_target=0):
 
     return interpolated_targets
 
+def _minmax01(x: torch.Tensor, eps: float = 1e-8) -> torch.Tensor:
+    x = x.to(torch.float32)
+    x_min = x.amin()
+    x_max = x.amax()
+    rng = x_max - x_min
+    if rng <= eps:
+        return torch.zeros_like(x)
+    return (x - x_min) / rng
 
 def encode(
     data, 
@@ -412,20 +420,10 @@ def encode(
         latency encoding spike train of features or labels
     '''
 
-    if torch.min(data) < 0 or torch.max(data) > 1:
-        if torch.abs(torch.mean(data)) < 2 and torch.abs(torch.std(data) - 1) < 0.5:
-            data = torch.sigmoid(data)
-        else:
-            data_min = torch.min(data)
-            data_max = torch.max(data)
-            data = (data - data_min) / (data_max - data_min)
-    
-    if torch.min(data) < 0 or torch.max(data) > 1:
-        raise ValueError(
-            f"Elements of ``data`` must be between [0, 1], but input "
-            f"is [{torch.min(data)}, {torch.max(data)}]"
-        )
-    
+    data = data if torch.is_tensor(data) else torch.as_tensor(data, dtype=torch.float32)
+    data = data.to(torch.float32).contiguous()
+    data = _minmax01(data)
+
     if threshold < 0 or threshold > 1:
         raise Exception(f"``threshold`` [{threshold}] must be between [0, 1]")
     
