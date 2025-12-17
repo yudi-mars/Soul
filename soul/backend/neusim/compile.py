@@ -6,6 +6,7 @@ import numpy as np
 import onnx
 import torch
 import tqdm
+from rich.progress import track
 
 from soul.utils.monitor import BaseMonitor
 
@@ -291,7 +292,9 @@ def get_neuron_graph(graph, neuron_nodes, found_paths):
 
 
 def parse_neuron_graph(graph, neuron_graph):
-    for edge in tqdm.tqdm(neuron_graph.edges(data=True), desc="Parsing neuron graph"):
+    for edge in track(
+        neuron_graph.edges(data=True), description="Parsing neuron graph"
+    ):
         source, target, attrs = edge
         path = attrs["path"]
         assert len(path) > 2, "路径中间节点数应至少为1"
@@ -630,4 +633,6 @@ def convert_spikes(compile_res: CompileResult, monitor: BaseMonitor) -> np.ndarr
             recs = monitor[name2]
             assert len(recs) == 1, f"Expected one record for {name2}, got {len(recs)}"
             spikes_to_sim.append(recs[0].flatten(2).detach().cpu().numpy())
-    return np.concatenate(spikes_to_sim, axis=-1).astype(np.uint8).transpose(1, 2, 0) # B, N, T
+    return (
+        np.concatenate(spikes_to_sim, axis=-1).astype(np.uint8).transpose(1, 2, 0)
+    )  # B, N, T

@@ -96,16 +96,6 @@ assert res.total_recv_spikes == res.total_sent_spikes == true_total_spikes
 print(f"Total Hops: {res.total_hops}")
 
 energy_model = NeuSimEnergyModel("loihi")
-total_energy, (sop_energy, neuron_energy, spike_energy, hop_energy) = (
-    energy_model.estimate_energy(res, detail=True)
-)
-# print(
-#     res.total_update_cnt,
-#     res.total_firing_cnt,
-#     compile_res.num_neurons * conf["time_step"],
-# )
-# print(sop_energy / total_energy)
-# print(neuron_energy / total_energy)
-# print(spike_energy / total_energy)
-# print(hop_energy / total_energy)
-print(f"Total energy: {total_energy} J")
+energy_model.estimate_energy(res)
+print(f"Total energy: {energy_model.total_energy} J")
+energy_model.print_energy_breakdown()
