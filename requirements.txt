@@ -13,3 +13,4 @@ h5py
 scikit-learn
 einops
 thop
+rich
