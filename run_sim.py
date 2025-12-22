@@ -8,7 +8,7 @@ import torch
 import yaml
 
 from soul.backend.neusim import NeuSimEnergyModel, compile, convert_spikes, sim
-from soul.model.vision import SEWResNet18, SpikingMLP
+from soul.model.vision import MSResNet18, SpikingVGG19
 from soul.neuron import LIFNode
 from soul.utils.monitor import BaseMonitor
 from soul.utils.surrogate import surrogate_map
@@ -33,16 +33,17 @@ conf = {
     "mlp_ratio": 1.0,
 }
 
-model = SpikingMLP(conf)
-model = SEWResNet18(conf)
+# model = SpikingMLP(conf)
+torch.random.manual_seed(42)
+model = MSResNet18(conf)
+model = SpikingVGG19(conf)
 model_name = type(model).__name__
-# model = SpikingVGG9(conf)
-input_shape = (3, 32, 32)
+input_shape = (3, 64, 64)
 
 print("Start compilation...")
 compile_res = compile(model, input_shape, core_capacity=4096)
 onnx.save(compile_res.clean_onnx_model, f"{model_name}.onnx")
-Path(f"{model_name}").write_text(
+Path(f"{model_name}.json").write_text(
     json.dumps(
         nx.readwrite.json_graph.node_link_data(compile_res.neuron_graph, edges="edges"),
         indent=2,

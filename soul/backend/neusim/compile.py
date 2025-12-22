@@ -1,5 +1,6 @@
 import copy
 import io
+import math
 
 import networkx as nx
 import numpy as np
@@ -291,7 +292,7 @@ def get_neuron_graph(graph, neuron_nodes, found_paths):
     return neuron_graph
 
 
-def parse_neuron_graph(graph, neuron_graph):
+def parse_neuron_graph(graph, neuron_graph, is_vgg=False):
     for edge in track(
         neuron_graph.edges(data=True), description="Parsing neuron graph"
     ):
@@ -320,6 +321,11 @@ def parse_neuron_graph(graph, neuron_graph):
                     "GlobalMaxPool",
                 ]:
                     this_src, tmp_shape = dump_globalpool2d(tmp_shape)
+                elif graph.nodes[node]["op_type"] in ["Resize"] and is_vgg:
+                    this_src, tmp_shape = dump_avgpool2d(
+                        tmp_shape, (tmp_shape[0], 7, 7)
+                    )
+
                 # print("fusion_layers", f"{source} -> {target}", tmp_shape)
                 src = fusion_layers(src, this_src)
                 # print("fusion_layers done")
@@ -343,6 +349,8 @@ def fusion_layers(src1, src2):
     if src2 is None:
         return src1
     srcs = [np.unique(np.concat(src1[s])) for s in src2]
+    del src2
+
     try:
         srcs = np.array(srcs, dtype=np.int32)
     except Exception:
@@ -513,6 +521,33 @@ def dump_globalpool2d(in_shape):
     return srcs, out_shape
 
 
+def dump_avgpool2d(in_shape, out_shape):
+    iC, iH, iW = in_shape
+    oC, oH, oW = out_shape
+    assert iC == oC
+    srcs = []
+    iidx = np.arange(iH * iW, dtype=np.int32).reshape(iH, iW)
+    for i in range(iC):
+        for oy in range(oH):
+            for ox in range(oW):
+                sy = math.floor(oy * (iH / oH))
+                ey = math.ceil((oy + 1) * (iH / oH))
+                sx = math.floor(ox * (iW / oW))
+                ex = math.ceil((ox + 1) * (iW / oW))
+                src = iidx[sy:ey, sx:ex].flatten() + i * iH * iW
+                srcs.append(src)
+    srcs = np.array(srcs, dtype=np.ndarray)
+
+    try:
+        srcs = np.array(srcs, dtype=np.int32)
+    except Exception:
+        srcs = np.array(srcs, dtype=np.ndarray)
+
+    for src in srcs:
+        assert src.dtype == np.int32
+    return srcs, out_shape
+
+
 def dump_core_conns(src, pre_num, post_idx, pos, num_cores, use_tqdm=False):
     core_conns = np.zeros([pre_num, num_cores], dtype=np.bool_)
     if use_tqdm:
@@ -595,7 +630,8 @@ def compile(
     neuron_graph = find_neuron_paths(graph)
     res.neuron_graph = copy.deepcopy(neuron_graph)
 
-    neuron_graph = parse_neuron_graph(graph, neuron_graph)
+    is_vgg = type(model).__name__ == "VGG"
+    neuron_graph = parse_neuron_graph(graph, neuron_graph, is_vgg=is_vgg)
     (num_neurons, num_synapses, num_cores), position, core_conns = partition(
         neuron_graph, core_capacity=core_capacity
     )

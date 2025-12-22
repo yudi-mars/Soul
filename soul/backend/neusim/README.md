@@ -13,7 +13,6 @@ There is an example in `run_sim.py`.
 
 1. prepare SNN model
 ```python
-from soul.backend.neusim import NeuSimEnergyModel, compile, convert_spikes, sim
 from soul.model.vision import SEWResNet18
 from soul.neuron import LIFNode
 
