@@ -208,10 +208,11 @@ def init_config():
     match = re.match(r'^([a-zA-Z]+)', config['model'])
     if match:
         model_cofig_name = match.group(1)
+        target_config_file = os.path.join(current_path, f"../config/model/{app_dir}/{model_cofig_name.lower()}.yaml")
+        model_default_config = yaml.safe_load(open(target_config_file, 'r', encoding="utf-8"))
+        config.update(model_default_config)
     else:
-        raise NotImplementedError(f'No yaml config for model: {config["model"]}')
-    target_config_file = os.path.join(current_path, f"../config/model/{app_dir}/{model_cofig_name.lower()}.yaml")
-    model_default_config = yaml.safe_load(open(target_config_file, 'r', encoding="utf-8"))
-    config.update(model_default_config)
-
+        # raise NotImplementedError(f'No yaml config for model: {config["model"]}')
+        print(f'Warning: No yaml config for model: {config["model"]}, some parameter value may lose!')
+    
     return config
