@@ -38,17 +38,14 @@ def encode(inputs: torch.Tensor, num_steps=False) -> torch.Tensor:
     """Poisson rate coding with in-encoder normalization; time-first output [T, ...]."""
     T = _ensure_time_steps(num_steps)
     x = inputs if torch.is_tensor(inputs) else torch.as_tensor(inputs, dtype=torch.float32)
-    x = _minmax01(x).clamp_(0.0, 1.0)
+    x = x.to(torch.float32).contiguous()
+    x = _minmax01(x)
 
-    if x.dim() == 4:      # [B, C, H, W]
-        B, C, H, W = x.shape
-        p = x.expand(T, B, C, H, W)
-        return (torch.rand_like(p) < p).to(x.dtype)
-    elif x.dim() == 3:    # [C, H, W] -> batch=1
+    if x.dim() == 3:
         C, H, W = x.shape
         p = x.unsqueeze(0).expand(T, C, H, W)
         return (torch.rand_like(p) < p).to(x.dtype)
-    elif x.dim() == 2:    # [B, C] or [W, C]
+    elif x.dim() == 2:
         B, C = x.shape
         p = x.expand(T, B, C)
         return (torch.rand_like(p) < p).to(x.dtype)

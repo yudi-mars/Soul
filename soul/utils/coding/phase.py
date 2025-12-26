@@ -52,11 +52,8 @@ def _minmax01(x: torch.Tensor, eps: float = 1e-8) -> torch.Tensor:
     return (x - x_min) / rng
 
 def encode(inputs: torch.Tensor, num_steps: int = 4) -> torch.Tensor:
-
-    x = inputs if torch.is_tensor(inputs) else torch.as_tensor(inputs, dtype=torch.float32)
-    x = _minmax01(x).clamp_(0.0, 1.0)
-
-    inputs = inputs.to(dtype=torch.float32)
-
     T = _ensure_time_steps(num_steps)
+    x = inputs if torch.is_tensor(inputs) else torch.as_tensor(inputs, dtype=torch.float32)
+    x = x.to(torch.float32).contiguous()
+    x = _minmax01(x)
     return _phase_like_encoder(x, T)

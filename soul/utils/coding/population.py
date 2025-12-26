@@ -65,7 +65,8 @@ def population_encode_gaussian(
 def encode(inputs: torch.Tensor, num_steps=False) -> torch.Tensor:
     T = _ensure_time_steps(num_steps)
     x = inputs if torch.is_tensor(inputs) else torch.as_tensor(inputs, dtype=torch.float32)
-    x = _minmax01(x).clamp_(0.0, 1.0)
+    x = x.to(torch.float32).contiguous()
+    x = _minmax01(x)
 
     low, high, beta = 0.0, 1.0, 100.0
     centers = torch.linspace(low, high, T, device=x.device, dtype=x.dtype)

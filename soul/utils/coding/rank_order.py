@@ -7,88 +7,85 @@ Description:
     map ranks to discrete time steps, and emit a single spike at the mapped time.
 
 References:
-    - Alan Jeffares et al., "Spike-inspired rank coding for fast and accurate recurrent neural networks", Proc. ICLR 2022.
+    - Auge et al., "A Survey of Encoding Techniques for Signal Processing in Spiking Neural Networks", Neural Processing Letters, 2021
     https://github.com/codingrank
 '''
+from __future__ import annotations
 import torch
 
-@torch.no_grad()
-def encode(inputs: torch.Tensor, num_steps: int) -> torch.Tensor:
-    '''
-    Rank-Order coding across channel dimension.
-    For each spatial position, channels are sorted by intensity; ranks map to spike times.
-    Args:
-        inputs: Tensor [B, C, H, W] or [..., C] where C is the ranked axis.
-        num_steps: length T.
-    Returns:
-        spikes: [T, *inputs.shape] with one spike per (channel, position).
-    '''
+def _ensure_time_steps(num_steps: int) -> int:
     if not isinstance(num_steps, int) or num_steps <= 0:
         raise ValueError(f"num_steps must be a positive int, got {num_steps!r}")
-    T = int(num_steps)
+    return int(num_steps)
 
-    x = inputs
-    if x.dim() == 4:
-        # [B, C, H, W]
-        B, C, H, W = x.shape
-        flat = x.permute(0, 2, 3, 1).reshape(-1, C)         # [B*H*W, C]
-        order = torch.argsort(flat, dim=1, descending=True) # [N, C]
-        inv = torch.empty_like(order)
-        inv.scatter_(1, order, torch.arange(C, device=x.device).unsqueeze(0).expand_as(order))
-        ranks = inv.view(B, H, W, C).permute(0, 3, 1, 2)    # [B, C, H, W]
-        if C == 1:
-            t_star = torch.zeros_like(ranks, dtype=torch.long)
-        else:
-            t_star = (ranks.float() * max(T - 1, 0) / (C - 1)).round().long()
-        t_star = t_star.clamp_(0, max(T - 1, 0))
+def _minmax01(x: torch.Tensor) -> torch.Tensor:
+    """
+    Global min-max normalization to [0, 1]. (Monotonic; preserves rank order.)
+    If x is constant, returns zeros.
+    """
+    x_min = x.amin()
+    x_max = x.amax()
+    denom = x_max - x_min
+    if torch.isclose(denom, torch.tensor(0.0, device=x.device, dtype=x.dtype)):
+        return torch.zeros_like(x)
+    return (x - x_min) / (denom + 1e-8)
 
-        spikes = torch.zeros((T, B, C, H, W), device=x.device, dtype=x.dtype)
-        flat_spikes = spikes.view(T, -1)
-        idx = t_star.reshape(-1)
-        base = torch.arange(B * C * H * W, device=x.device)
-        flat_spikes.index_put_((idx, base), torch.ones_like(idx, dtype=x.dtype), accumulate=False)
-        return flat_spikes.view(T, B, C, H, W)
+def _rank_to_time(flat: torch.Tensor, T: int) -> torch.Tensor:
+    """
+    flat: [N] float32
+    returns: t [N] int64 in [0, T-1]
+    """
+    N = flat.numel()
+    if T == 1:
+        return torch.zeros((N,), device=flat.device, dtype=torch.long)
+    if N == 1:
+        return torch.zeros((1,), device=flat.device, dtype=torch.long)
 
-    elif x.dim() == 3:
-        # [C, H, W] -> treat as batch size 1
-        x4 = x.unsqueeze(0)  # [1, C, H, W]
-        B, C, H, W = x4.shape
-        flat = x4.permute(0, 2, 3, 1).reshape(-1, C)
-        order = torch.argsort(flat, dim=1, descending=True)
-        inv = torch.empty_like(order)
-        inv.scatter_(1, order, torch.arange(C, device=x.device).unsqueeze(0).expand_as(order))
-        ranks = inv.view(B, H, W, C).permute(0, 3, 1, 2)  # [1, C, H, W]
-        if C == 1:
-            t_star = torch.zeros_like(ranks, dtype=torch.long)
-        else:
-            t_star = (ranks.float() * max(T - 1, 0) / (C - 1)).round().long()
-        t_star = t_star.clamp_(0, max(T - 1, 0))
+    # Deterministic tie-breaker to avoid massive equal-value collapse.
+    # After _minmax01, values are ~[0,1], so eps=1e-6 is safe.
+    idx = torch.arange(N, device=flat.device, dtype=torch.float32)
+    flat = flat + 1e-6 * (idx / max(N - 1, 1))
 
-        spikes = torch.zeros((T, B, C, H, W), device=x.device, dtype=x.dtype)
-        flat_spikes = spikes.view(T, -1)
-        idx = t_star.reshape(-1)
-        base = torch.arange(B * C * H * W, device=x.device)
-        flat_spikes.index_put_((idx, base), torch.ones_like(idx, dtype=x.dtype), accumulate=False)
-        return flat_spikes.view(T, B, C, H, W)[:, 0]
+    order = torch.argsort(flat, descending=True)                   # [N]
+    rank = torch.empty_like(order)
+    rank.scatter_(0, order, torch.arange(N, device=flat.device))   # [0..N-1]
 
-    elif x.dim() == 2:
-        # [B, C]
-        B, C = x.shape
-        order = torch.argsort(x, dim=1, descending=True)
-        inv = torch.empty_like(order)
-        inv.scatter_(1, order, torch.arange(C, device=x.device).unsqueeze(0).expand_as(order))
-        if C == 1:
-            t_star = torch.zeros_like(inv, dtype=torch.long)
-        else:
-            t_star = (inv.float() * max(T - 1, 0) / (C - 1)).round().long()
-        t_star = t_star.clamp_(0, max(T - 1, 0))
+    t = (rank * (T - 1)) // (N - 1)                                # [N]
+    return t.to(torch.long)
 
-        spikes = torch.zeros((T, B, C), device=x.device, dtype=x.dtype)
-        flat_spikes = spikes.view(T, -1)
-        idx = t_star.reshape(-1)
-        base = torch.arange(B * C, device=x.device)
-        flat_spikes.index_put_((idx, base), torch.ones_like(idx, dtype=x.dtype), accumulate=False)
-        return flat_spikes.view(T, B, C)
+@torch.no_grad()
+def encode(inputs, num_steps: int) -> torch.Tensor:
+    """
+    Only exposes: inputs, num_steps.
 
-    else:
-        raise ValueError(f"Rank-Order expects [B,C,H,W] or [B,C], got {tuple(x.shape)}")
+    Args:
+        inputs: (W, C) or (C, D) or (C, H, W)
+        num_steps: T
+
+    Returns:
+        spikes: (T, *inputs.shape) float32 in {0, 1}
+    """
+    # --- your required unified preprocessing ---
+    T = _ensure_time_steps(num_steps)
+    x = inputs if torch.is_tensor(inputs) else torch.as_tensor(inputs, dtype=torch.float32)
+    x = x.to(torch.float32).contiguous()
+    x = _minmax01(x)
+
+    if x.ndim not in (2, 3):
+        raise ValueError(
+            f"Unsupported inputs.ndim={x.ndim}. Expected 2D or 3D only; got shape={tuple(x.shape)}"
+        )
+
+    # Keep sorting stable if any NaN/Inf exist
+    if not torch.isfinite(x).all():
+        x = x.clone()
+        x[~torch.isfinite(x)] = 0.0
+
+    rest = x.shape
+    flat = x.reshape(-1)                                           # [N]
+    t = _rank_to_time(flat, T)                                     # [N]
+
+    spikes = torch.zeros((T, flat.numel()), device=x.device, dtype=torch.float32)
+    spikes[t, torch.arange(flat.numel(), device=x.device)] = 1.0
+
+    return spikes.reshape(T, *rest)
