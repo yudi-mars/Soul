@@ -209,10 +209,17 @@ def init_config():
     if match:
         model_cofig_name = match.group(1)
         target_config_file = os.path.join(current_path, f"../config/model/{app_dir}/{model_cofig_name.lower()}.yaml")
-        model_default_config = yaml.safe_load(open(target_config_file, 'r', encoding="utf-8"))
-        config.update(model_default_config)
+        try:
+            model_default_config = yaml.safe_load(open(target_config_file, 'r', encoding="utf-8"))
+            config.update(model_default_config)
+        except FileNotFoundError:
+            print(f'Warning: no {config["model"]} yaml config file found, something may be wrong when loading model!')
     else:
         # raise NotImplementedError(f'No yaml config for model: {config["model"]}')
-        print(f'Warning: No yaml config for model: {config["model"]}, some parameter value may lose!')
+        print(f'Warning: No yaml config for model: {config["model"]}, use default lenet settings')
+        config['model'] = 'lenet'
+        target_config_file = os.path.join(current_path, f"../config/model/{app_dir}/lenet.yaml")
+        model_default_config = yaml.safe_load(open(target_config_file, 'r', encoding="utf-8"))
+        config.update(model_default_config)
     
     return config
