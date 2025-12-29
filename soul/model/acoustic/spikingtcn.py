@@ -109,6 +109,7 @@ class SpikingTCN(nn.Module):
         self.head.weight.data.normal_(0, 0.01)
 
     def forward(self, x):
+        #x = x.unsqueeze(2)
         functional.reset_net(self)
         # (1, B, N, W)
         y1 = self.tcn(x).mean(0) # -> (B, N, W)

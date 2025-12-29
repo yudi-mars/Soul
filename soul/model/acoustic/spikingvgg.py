@@ -108,7 +108,7 @@ class VGG(nn.Module):
         self.num_classes = config['num_classes']
         self.T = config['time_step']
 
-        prev_chs = config['input_channels']
+        prev_chs = 1
         pool_layer = MaxPool2d
         layers = []
         for v in cfg:
@@ -138,6 +138,7 @@ class VGG(nn.Module):
 
 
     def forward_features(self, x: torch.Tensor) -> torch.Tensor:
+        x = x.unsqueeze(2)
         functional.reset_net(self)
         x = self.features(x)
         return x

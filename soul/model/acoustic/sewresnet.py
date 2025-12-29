@@ -199,7 +199,7 @@ class SEWResNet(nn.Module):
         lif = config['neuron']
         num_classes = config['num_classes']
         self.T = config['time_step']
-        in_channels = config['input_channels']
+        in_channels = 1
         connect_f = config['connect_function']
         self.groups = config['groups']
         self.base_width = config['width_per_group']
@@ -275,8 +275,8 @@ class SEWResNet(nn.Module):
         return nn.Sequential(*layers)
     
     def forward_features(self, x: torch.Tensor) -> torch.Tensor:
+        x = x.unsqueeze(2)
         functional.reset_net(self)
-
         x = multi_time_forward(x, self.conv1)
         x = self.sn1(x)
         x = multi_time_forward(x, self.maxpool)

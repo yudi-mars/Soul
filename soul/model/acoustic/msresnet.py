@@ -113,7 +113,7 @@ class MSResNet(nn.Module):
         lif = config['neuron']
         num_classes = config['num_classes']
         self.T = config['time_step']
-        in_channels = config['input_channels']
+        in_channels = 1
 
         self.groups = config['groups']
         self.base_width = config['base_width']
@@ -151,8 +151,8 @@ class MSResNet(nn.Module):
         return nn.Sequential(*layers)
     
     def forward_features(self, x):
+        x = x.unsqueeze(2)
         functional.reset_net(self)
-        
         x = multi_time_forward(x, self.conv1)
         x = multi_time_forward(x, self.maxpool)
 
