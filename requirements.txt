@@ -11,3 +11,4 @@ matplotlib
 librosa
 h5py
 scikit-learn
+einops
