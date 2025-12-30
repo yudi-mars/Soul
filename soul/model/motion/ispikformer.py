@@ -239,3 +239,18 @@ class ISpikformer(nn.Module):
         x = self.head(x.flatten(1))
 
         return x
+
+def ISpikformer256(config):
+    config['depth'] = 2
+    config['embedding_dim'] = 256
+    return ISpikformer(config)
+
+def ISpikformer384(config):
+    config['depth'] = 4
+    config['embedding_dim'] = 384
+    return ISpikformer(config)
+
+def ISpikformer512(config):
+    config['depth'] = 8
+    config['embedding_dim'] = 512
+    return ISpikformer(config)
