@@ -46,9 +46,9 @@ If you want to dive deeper into all the available command-line options, configur
     <img src="./assets/cmp-topology.png" width="100%">
 </p>
 
-<p align="center">
+<!-- <p align="center">
     <img src="./assets/cmp-topology-performance-cd.png" width="75%">
-</p>
+</p> -->
 
 ### Performance of SNNs with different input encoding strategies
 
@@ -137,3 +137,9 @@ TBD
 If there are any questions, please feel free to propose new features by opening an issue or contacting the author: **Di Yu**([yudi2023@zju.edu.cn](mailto:yudi2023@zju.edu.cn)), **Changze Lv**([czlv24@m.fudan.edu.cn](mailto:czlv24@m.fudan.edu.cn)), **Zhuo Chen**([chenzhuocs@zju.edu.cn](mailto:chenzhuocs@zju.edu.cn)), and **Wentao Tong**([toldzera@zju.edu.cn](mailto:toldzera@zju.edu.cn)).
 
 Enjoy the code!
+
+## TODO List
+
+- [ ] 2026.1.24-2026.2.1 补全子刊中wireless CSI频率适配相关理论 @廖振宇
+- [ ] 2026.1.4-2026.1.6 熟悉使用NeuSim做推理，并成功运行结果 @张炜松 @郑赫霖 @陈卓
+- [ ] 2026.1.4-2026.1.6 熟悉使用Darwin片上推理操作，并成功运行结果 @张炜松 @郑赫霖 @童文韬
