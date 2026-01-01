@@ -6,8 +6,8 @@ Description:
     implementation for LIF variants for Spiking Neural Networks.
 
 References:
-    - Zhenxin Lei et al., "Spike2former: Efficient spiking transformer for high-performance image segmentation", AAAI'2025.
-    https://github.com/BICLab/Spike2Former
+    - Xinhao Luo et al., "Integer-valued training and spike-driven inference spiking neural network for high-performance and energy-efficient object detection", ECCV'2024.
+    https://github.com/BICLab/SpikeYOLO
 """
 import torch
 from typing import Callable
