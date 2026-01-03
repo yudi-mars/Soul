@@ -123,6 +123,7 @@ For each dataset, we provide both a **Research/Reference Link** (to a paper or d
 
 </details>
 
+
 > **Note:** After downloading and extracting the datasets, you only need to point the `data_dir` argument to the root directory of the dataset in your configuration (or command-line). The SOUL toolkit will automatically process the data in that directory and run accordingly.
 
 
@@ -147,8 +148,10 @@ Enjoy the code!
 - [ ] 2026.1.6-2026.1.9 熟悉使用NeuSim做推理，并成功运行结果 @张炜松 @郑赫霖 @陈卓
 - [ ] 2026.1.6-2026.1.9 熟悉使用Darwin片上推理操作，并成功运行结果 @张炜松 @郑赫霖 @童文韬
 - [ ] 2026.1.9-2026.1.20 完成三种延迟结果统计（真实+理论），理论推理能耗统计 @郑赫霖 @张炜松 @陈卓 @童文韬
-- [ ] 2026.1.21-2026.1.31 收尾Soul-Doc的内容并合并到main分支准备发布  @郑赫霖 @张炜松 
 - [ ] 2026.1.10-2026.1.12 定稿Fig 5 (Soul-NeuSim推广展望)正文展示 @余帝 @陈卓
 - [ ] 2026.1.20-2026.1.24 定稿Fig 4 (latency-energy)正文展示 @余帝
+- [ ] 2026.1.21-2026.1.31 收尾Soul-Doc的内容并合并到main分支准备发布  @郑赫霖 @张炜松 
+- [ ] 2026.1.21-2026.1.31 协助补全Soul项目内的各文件Reference Comment  @郑赫霖 @张炜松 有任何疑问找@余帝
+- [ ] 2026.1.24-2026.1.31 若latency、energy的相关结果均完成，在此基础上提交NeuSim分支合并申请 @陈卓
 - [ ] 2026.1.24-2026.2.1 补全子刊中wireless CSI频率适配相关理论以及Fig 3(各种分析图)正文展示 @廖振宇 @余帝
-- [ ] 2026.2.1-2026.2.13 收尾正文内容 @杜老师 @余帝
+- [ ] 2026.2.1-2026.2.14 收尾正文内容 @杜老师 @余帝
