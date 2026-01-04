@@ -41,7 +41,7 @@ config['surrogate_function'] = surrogate_map[config['surrogate']]
 config['neuron'] = neuron_map[config['neuron_type'].lower()](config) 
 
 # init model
-model = model_map[config['model'].lower()](config)
+model = model_map[config['application']][config['model'].lower()](config)
 
 # load model state dict
 best_model_path = os.path.join(
@@ -67,13 +67,18 @@ for inputs, _ in tqdm(test_loader, unit='batch', ncols=80, desc='Count OPs: '):
 
 
 # TODO 这里还有点问题 @wentao
-# total_sops = 0
-# for k, v in MODULE_SOP_DICT.items():
-#     total_sops += v
-# avg_sops = total_sops / len(test_loader)
-
-# cost_per_op = config['e_ac'] if config['sop'] else config['e_mac']
-# print(f"Average number of {'SOPs' if config['sop'] else 'FLOPs'} for model {config['model']} inference per sample: {avg_sops / 1e6:.2f} M")
-# print(f"#OPS: {:.2f} corresponding theoretical energy cost: {avg_sops * cost_per_op / 1e9:.2f} mj")
+total_sops = 0
+total_flops = 0
+for k, v in MODULE_SOP_DICT.items():
+    total_sops += v
+for k,v in MODULE_FLOPS_DICT.items():
+    total_flops += v
+avg_sops = total_sops / len(test_loader)
+avg_flops = total_flops / len(test_loader)
+avg_ops = avg_sops + avg_flops
+avg_energy_per_sample = avg_sops * config['e_ac'] + avg_flops * config['e_mac']
+print(f"Average number of SOPs for model {config['model']} inference per sample: {avg_sops / 1e6:.2f} M")
+print(f"Average number of FLOPs for model {config['model']} inference per sample: {avg_flops / 1e6:.2f} M")
+print(f"#OPS: {avg_ops:.2f} corresponding theoretical energy cost: {avg_energy_per_sample / 1e9:.2f} mj")
 ######
 
