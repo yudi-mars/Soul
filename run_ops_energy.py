@@ -66,7 +66,7 @@ for inputs, _ in tqdm(test_loader, unit='batch', ncols=80, desc='Count OPs: '):
     _ = model(inputs)
 
 
-# TODO 这里还有点问题 @wentao
+# calculate average energy cost per sample inference
 total_sops = 0
 total_flops = 0
 for k, v in MODULE_SOP_DICT.items():
@@ -79,6 +79,4 @@ avg_ops = avg_sops + avg_flops
 avg_energy_per_sample = avg_sops * config['e_ac'] + avg_flops * config['e_mac']
 print(f"Average number of SOPs for model {config['model']} inference per sample: {avg_sops / 1e6:.2f} M")
 print(f"Average number of FLOPs for model {config['model']} inference per sample: {avg_flops / 1e6:.2f} M")
-print(f"#OPS: {avg_ops:.2f} corresponding theoretical energy cost: {avg_energy_per_sample / 1e9:.2f} mj")
-######
-
+print(f"Average number of Operations (#OPs): {avg_ops:.2f}, corresponding theoretical energy cost: {avg_energy_per_sample / 1e9:.2f} mJ")
