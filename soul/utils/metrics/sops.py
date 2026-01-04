@@ -19,7 +19,7 @@ import torch.nn.functional as F
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 MODULE_SOP_DICT = {}
-
+MODULE_FLOPS_DICT = {}
 def ops_monitor(net, is_sop=False):
     m_dict = dict(net.named_modules())
     for key in m_dict.keys():
@@ -231,9 +231,15 @@ def ops_hook_conv(module_name, is_sop=True):
             lsar = grouped_conv_forward_with_sparsity(inputs,weight,0,stride,padding,groups=m.groups)
         pass
         if module_name not in MODULE_SOP_DICT.keys():
-            MODULE_SOP_DICT[module_name] = lsar * kn * kn * hn * wn *  in_channels * out_channels * B
+            if is_mac:
+                MODULE_FLOPS_DICT[module_name] = kn * kn * hn * wn *  in_channels * out_channels * B
+            else:
+                MODULE_SOP_DICT[module_name] = lsar * kn * kn * hn * wn *  in_channels * out_channels * B
         else:
-            MODULE_SOP_DICT[module_name] += lsar * kn * kn * hn * wn *  in_channels * out_channels * B
+            if is_mac:
+                MODULE_FLOPS_DICT[module_name] += kn * kn * hn * wn *  in_channels * out_channels * B
+            else:
+                MODULE_SOP_DICT[module_name] += lsar * kn * kn * hn * wn *  in_channels * out_channels * B
     return hook
 
 
@@ -250,13 +256,17 @@ def ops_hook_fc(module_name,is_sop=True):
             lsar = inputs.count_nonzero() / inputs.numel()
         weight = m.weight.data
         weight = weight.detach()
-        # inputs = inputs.reshape(B,C,H,W)
         inputs = inputs.detach()
         fc_forward_with_sparsity(inputs,weight)
         pass
         if module_name not in MODULE_SOP_DICT.keys():
-            MODULE_SOP_DICT[module_name] = lsar * batch_matrix_mul(inputs.shape,weight.shape)
+            if is_mac:
+                MODULE_FLOPS_DICT[module_name] = batch_matrix_mul(inputs.shape,weight.shape)
+            else:   
+                MODULE_SOP_DICT[module_name] = lsar * batch_matrix_mul(inputs.shape,weight.shape)
         else:
-            MODULE_SOP_DICT[module_name] += lsar * batch_matrix_mul(inputs.shape,weight.shape)
-
+            if is_mac:
+                MODULE_FLOPS_DICT[module_name] += batch_matrix_mul(inputs.shape,weight.shape)
+            else:
+                MODULE_SOP_DICT[module_name] += lsar * batch_matrix_mul(inputs.shape,weight.shape)
     return hook
