@@ -7,8 +7,8 @@ import onnx
 import torch
 import yaml
 
-from soul.backend.neusim import NeuSimEnergyModel, compile, convert_spikes, sim
-from soul.model.vision import MSResNet18, SpikingVGG19
+from soul.backend.neusim import NeuSimArch, compile, convert_spikes, sim
+from soul.model.vision import SEWResNet18
 from soul.neuron import LIFNode
 from soul.utils.monitor import BaseMonitor
 from soul.utils.surrogate import surrogate_map
@@ -19,7 +19,7 @@ lif_conf["surrogate_function"] = surrogate_map[lif_conf["surrogate"]]
 conf = {
     "num_classes": 10,
     "time_step": 4,
-    "input_channels": 3,
+    "input_channels": 1,
     "input_height": 32,
     "input_width": 32,
     "hidden_dim": 1024,
@@ -35,13 +35,15 @@ conf = {
 
 # model = SpikingMLP(conf)
 torch.random.manual_seed(42)
-model = MSResNet18(conf)
-model = SpikingVGG19(conf)
+# model = MSResNet18(conf)
+# model = SpikingVGG19(conf)
+model = SEWResNet18(conf)
 model_name = type(model).__name__
-input_shape = (3, 64, 64)
+input_shape = (1, 125, 45)
 
 print("Start compilation...")
-compile_res = compile(model, input_shape, core_capacity=4096)
+arch = NeuSimArch("loihi")
+compile_res = compile(model, input_shape, arch)
 onnx.save(compile_res.clean_onnx_model, f"{model_name}.onnx")
 Path(f"{model_name}.json").write_text(
     json.dumps(
@@ -58,45 +60,47 @@ print("=" * 30)
 # prepare spikes
 rng = np.random.default_rng(seed=42)
 p = 0.5
-dummy_input = (rng.random(size=(conf["time_step"], 1, *input_shape)) < p).astype(
-    np.uint8
-)
+batch_size = 2
+dummy_input = (
+    rng.random(size=(conf["time_step"], batch_size, *input_shape)) < p
+).astype(np.uint8)
 model.eval()
 monitor = BaseMonitor(model, instance=LIFNode)
 _ = model(torch.from_numpy(dummy_input).float())
-spikes = convert_spikes(compile_res, monitor)
-batch_id = 0
-spikes = spikes[batch_id]
-assert spikes.shape[0] == compile_res.num_neurons
+total_spikes = convert_spikes(compile_res, monitor)
 
-true_total_spikes = np.sum(
-    np.sum(compile_res.phy_core_conns, axis=1) * np.sum(spikes, axis=1)
-)
+for i in range(batch_size):
+    batch_id = i
+    spikes = total_spikes[batch_id]
+    assert spikes.shape[0] == compile_res.num_neurons
 
-# simulation, using NeuSim
-print("Start simulation...")
-meshy = int(np.sqrt(compile_res.num_cores))
-meshx = (compile_res.num_cores // meshy) + (
-    1 if compile_res.num_cores % meshy != 0 else 0
-)
+    true_total_spikes = np.sum(
+        np.sum(compile_res.phy_core_conns, axis=1) * np.sum(spikes, axis=1)
+    )
 
-res = sim.run(
-    position=compile_res.phy_position,
-    core_conns=compile_res.phy_core_conns,
-    spikes=spikes,
-    packet_size=1,
-    topology_size=(meshy, meshx),
-    num_threads=8,
-)
-# print(res.retcode)
-print(f"Total cycles: {res.total_cycles}")
-print(f"Total flits: {res.total_recv_flits}")
-print(f"Total/Real spikes: {res.total_firing_cnt}/{np.sum(spikes)}")
-print(f"Total/Real spike packets: {res.total_recv_spikes}/{true_total_spikes}")
-assert res.total_recv_spikes == res.total_sent_spikes == true_total_spikes
-print(f"Total Hops: {res.total_hops}")
+    # simulation, using NeuSim
+    print("Start simulation...")
+    meshy = int(np.sqrt(compile_res.num_cores))
+    meshx = (compile_res.num_cores // meshy) + (
+        1 if compile_res.num_cores % meshy != 0 else 0
+    )
 
-energy_model = NeuSimEnergyModel("loihi")
-energy_model.estimate_energy(res)
-print(f"Total energy: {energy_model.total_energy} J")
-energy_model.print_energy_breakdown()
+    res = sim.run(
+        position=compile_res.phy_position,
+        core_conns=compile_res.phy_core_conns,
+        spikes=spikes,
+        packet_size=1,
+        topology_size=(meshy, meshx),
+        num_threads=8,
+    )
+    # print(res.retcode)
+    print(f"Total cycles: {res.total_cycles}")
+    print(f"Total flits: {res.total_recv_flits}")
+    print(f"Total/Real spikes: {res.total_firing_cnt}/{np.sum(spikes)}")
+    print(f"Total/Real spike packets: {res.total_recv_spikes}/{true_total_spikes}")
+    assert res.total_recv_spikes == res.total_sent_spikes == true_total_spikes
+    print(f"Total Hops: {res.total_hops}")
+
+    energy_res = arch.estimate_energy(res)
+    print(f"Total energy: {energy_res.total_energy} J")
+    energy_res.print_energy_breakdown()

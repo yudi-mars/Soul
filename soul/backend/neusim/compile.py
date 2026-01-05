@@ -11,6 +11,8 @@ from rich.progress import track
 
 from soul.utils.monitor import BaseMonitor
 
+from .arch import NeuSimArch
+
 
 class CompileResult:
     onnx_model: onnx.ModelProto
@@ -614,7 +616,7 @@ def mapping(num_cores, position, core_conns):
 def compile(
     model,
     input_shape: tuple[int, ...],
-    core_capacity=4096,
+    arch=NeuSimArch("darwin3"),
 ) -> CompileResult:
     res = CompileResult()
     onnx_model, clean_onnx_model = export_onnx(
@@ -633,7 +635,7 @@ def compile(
     is_vgg = type(model).__name__ == "VGG"
     neuron_graph = parse_neuron_graph(graph, neuron_graph, is_vgg=is_vgg)
     (num_neurons, num_synapses, num_cores), position, core_conns = partition(
-        neuron_graph, core_capacity=core_capacity
+        neuron_graph, core_capacity=arch.neurons_per_core
     )
     res.num_neurons = num_neurons
     res.num_synapses = num_synapses
@@ -667,7 +669,8 @@ def convert_spikes(compile_res: CompileResult, monitor: BaseMonitor) -> np.ndarr
                     segs_valid.append(seg)
             name2 = ".".join(segs_valid)
             recs = monitor[name2]
-            assert len(recs) == 1, f"Expected one record for {name2}, got {len(recs)}"
+            if len(recs) != 1:
+                raise ValueError(f"Expected one record for {name2}, got {len(recs)}")
             spikes_to_sim.append(recs[0].flatten(2).detach().cpu().numpy())
     return (
         np.concatenate(spikes_to_sim, axis=-1).astype(np.uint8).transpose(1, 2, 0)
