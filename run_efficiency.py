@@ -5,7 +5,6 @@ for SNNs, the OPs refer to SOPs (Synapse Operations) and FLOPs for the first lay
 '''
 
 import os
-import torch.utils
 from tqdm import tqdm
 
 import torch

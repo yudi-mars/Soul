@@ -1,5 +1,4 @@
 import os
-import time
 from tqdm import tqdm
 
 import torch
@@ -268,7 +267,7 @@ for epoch in range(1, config['epochs'] + 1):
 
 ########################### inference process ###########################
 # # calculate theoretical energy cost per sample inference
-# best_model_path = os.path.join(config['model_dir'], os.path.join(config['model_dir'], f'best_lenet_ann_{config["dataset_name"].lower()}_{config["seed"]}.pt'))
+# best_model_path = os.path.join(config['model_dir'], f'best_lenet_ann_{config["dataset_name"].lower()}_{config["seed"]}.pt')
 # best_params = torch.load(
 #     best_model_path, 
 #     map_location='cpu'

@@ -169,6 +169,28 @@ def parse_args():
         default='train', 
         help="phase for noising, [optional] train, test"
     )
+    # latency evaluation specific settings
+    parser.add_argument(
+        "--warmup_runs", 
+        "-warmup", 
+        type=int, 
+        default=50, 
+        help="number of warmup runs before timing"
+    )
+    parser.add_argument(
+        "--num_streams", 
+        "-num_streams", 
+        type=int,
+        default=1, 
+        help="number of streams for latency evaluation"
+    )
+    parser.add_argument(
+        "--queries_per_stream", 
+        "-qps", 
+        type=int,
+        default=256, 
+        help="number of queries per stream for latency evaluation"
+    )
     
     args = parser.parse_args()
     return args
