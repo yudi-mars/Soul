@@ -22,6 +22,5 @@ coding_map = {
     'tsc': tsc_encode,
 }
 '''
-binary_parallel、binary_sequential、bsa、burst、phase、rank_order、ttfs、sdr、tcr_mw、tcr_sf、tcr_tbr、tsc
-direct、poisson、population、rate、
+bsa、burst、phase、rank_order、direct、poisson、population、rate、ttfs、tsc
 '''

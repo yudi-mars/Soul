@@ -180,5 +180,7 @@ class MSResNet(nn.Module):
 def MSResNet18(config):
     return MSResNet(config, BasicBlock, [2, 2, 2, 2])
 
+def MSResNet34(config):
+    return MSResNet(config, BasicBlock, [3, 4, 6, 3])
 def MSResNet50(config):
     return MSResNet(config, BottleBlock, [3, 4, 6, 3])
