@@ -3,7 +3,7 @@
 ## Build from source
 
 ```shell
-git submodule sync --recursive
+git submodule sync --init --recursive
 cmake -B build
 cmake --build build
 ```
