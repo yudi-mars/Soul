@@ -16,7 +16,7 @@ from typing import List
 import torch.nn.functional as F
 from soul.neuron import functional
 
-__all__ = ['SpikingResformer', 'SpikingResformer192', 'SpikingResformer256', 'SpikingResformer384', 'SpikingResformer512']
+__all__ = ['SpikingResformer', 'SpikingResformer192', 'SpikingResformer256', 'SpikingResformer384', 'SpikingResformer512', 'SpikingResformerPrototype']
 
 def multi_time_forward(x_seq, stateless_module):
     y_shape = [x_seq.shape[0], x_seq.shape[1]] # [T, B]
@@ -213,14 +213,6 @@ class SpikingResformer(nn.Module):
         feat_h = img_size_h // 4
         feat_w = img_size_w // 4
 
-        # this is for cifar10, dvs data reproducible
-        # self.prologue = nn.Sequential(
-        #     nn.Conv2d(in_channels, planes[0], 3, 1, 1, bias=False),
-        #     nn.BatchNorm2d(planes[0]),
-        # )
-        # feat_h = img_size_h
-        # feat_w = img_size_w
-
         assert len(planes) == len(layers) == len(num_heads) == len(patch_sizes)
         self.patch_sizes = patch_sizes 
         #
@@ -246,7 +238,7 @@ class SpikingResformer(nn.Module):
                     patch = patch_sizes[idx]
                     sub_layers.append(
                         DSSA(lif, planes[idx], num_heads[idx], lenth=1, patch_size=patch)
-)
+                    )
 
 
                 elif name == 'GWFFN':
@@ -262,14 +254,6 @@ class SpikingResformer(nn.Module):
         
         self.init_weight()
 
-    # def forward_features(self, x):
-    #     functional.reset_net(self)
-
-    #     x = multi_time_forward(x, self.prologue)
-    #     x = self.layers(x)
-    #     x = multi_time_forward(x, self.avgpool)
-        
-    #     return x
     def forward_features(self, x):
         functional.reset_net(self)
 
@@ -330,104 +314,8 @@ class SpikingResformer(nn.Module):
             elif isinstance(m, nn.BatchNorm2d):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
-  
-# class SpikingResformer(nn.Module):
-#     def __init__(
-#         self, 
-#         config, 
-#         layers: List[List[str]],
-#         planes: List[int],
-#         num_heads: List[int],
-#         patch_sizes: List[int],
-#     ):
-#         super().__init__()
 
-#         num_classes = config['num_classes']
-#         self.T = config['time_step']
-#         in_channels = config['input_channels']
-#         img_size_h = config['input_height']
-#         img_size_w = config['input_width']
-#         assert img_size_w == img_size_h
-#         lif = config['neuron']
-
-#         group_size = config['group_size']
-#         mlp_ratio = config['mlp_ratio']
-
-#         self.prologue = nn.Sequential(
-#             nn.Conv2d(in_channels, planes[0], 7, 2, 3, bias=False),
-#             nn.BatchNorm2d(planes[0]),
-#             nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
-#         )
-#         img_size = img_size_h // 4
-
-#         # this is for cifar10, dvs data reproducible
-#         # self.prologue = nn.Sequential(
-#         #     nn.Conv2d(in_channels, planes[0], 3, 1, 1, bias=False),
-#         #     nn.BatchNorm2d(planes[0]),
-#         # )
-#         # img_size = img_size_h
-
-#         assert len(planes) == len(layers) == len(num_heads) == len(patch_sizes)
-
-#         self.layers = nn.Sequential()
-#         for idx in range(len(planes)):
-#             sub_layers = nn.Sequential()
-#             if idx != 0:
-#                 sub_layers.append(
-#                     DownsampleLayer(lif, planes[idx - 1], planes[idx], stride=2)
-#                 )
-#                 img_size = img_size // 2
-#             for name in layers[idx]:
-#                 if name == 'DSSA':
-#                     sub_layers.append(
-#                         DSSA(lif, planes[idx], num_heads[idx], (img_size // patch_sizes[idx]) ** 2, patch_sizes[idx])
-#                     )
-#                 elif name == 'GWFFN':
-#                     sub_layers.append(
-#                         GWFFN(lif, planes[idx], group_size=group_size, ratio=mlp_ratio)
-#                     )
-#                 else:
-#                     raise ValueError(name)
-#             self.layers.append(sub_layers)
-
-#         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-#         self.head = nn.Linear(planes[-1], num_classes, bias=False)
-        
-#         self.init_weight()
-
-#     def forward_features(self, x):
-#         functional.reset_net(self)
-
-#         x = multi_time_forward(x, self.prologue)
-#         x = self.layers(x)
-#         x = multi_time_forward(x, self.avgpool)
-        
-#         return x
-
-#     def forward_head(self, x):
-#         x = torch.flatten(x, 2)
-#         x = self.head(x).mean(0)
-
-#         return x
-
-#     def forward(self, x):
-#         x = self.forward_features(x) # [T, B, D]  
-#         x = self.forward_head(x)
-
-#         return x
-
-#     def init_weight(self):
-#         for m in self.modules():
-#             if isinstance(m, (nn.Linear, nn.Conv2d)):
-#                 nn.init.trunc_normal_(m.weight, std=0.02)
-#                 if m.bias is not None:
-#                     nn.init.constant_(m.bias, 0)
-#             elif isinstance(m, nn.BatchNorm2d):
-#                 nn.init.constant_(m.weight, 1)
-#                 nn.init.constant_(m.bias, 0)
-
-
-def SpikingResformer192(config):
+def SpikingResformerPrototype(config):
     return SpikingResformer(
         config,
         [

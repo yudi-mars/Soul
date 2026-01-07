@@ -15,7 +15,7 @@ from copy import deepcopy
 
 from soul.neuron import functional
 
-__all__ = ['Spikformer', 'Spikformer256', 'Spikformer384', 'Spikformer512']
+__all__ = ['Spikformer', 'Spikformer256', 'Spikformer384', 'Spikformer512', 'SpikformerPrototype']
 
 class MLP(nn.Module):
     def __init__(self, lif, in_features, hidden_features=None, out_features=None):
@@ -151,34 +151,6 @@ class SPS(nn.Module):
         self.rpe_bn = nn.BatchNorm2d(embed_dims)
         self.rpe_lif = deepcopy(lif)
 
-    # def forward(self, x):
-    #     T, B, C, H, W = x.shape
-    #     x = self.proj_conv(x.flatten(0, 1)) # have some fire value
-    #     x = self.proj_bn(x).reshape(T, B, -1, H, W).contiguous()
-    #     x = self.proj_lif(x).flatten(0, 1).contiguous()
-
-    #     x = self.proj_conv1(x)
-    #     x = self.proj_bn1(x).reshape(T, B, -1, H, W).contiguous()
-    #     x = self.proj_lif1(x).flatten(0, 1).contiguous()
-
-    #     x = self.proj_conv2(x)
-    #     x = self.proj_bn2(x).reshape(T, B, -1, H, W).contiguous()
-    #     x = self.proj_lif2(x).flatten(0, 1).contiguous()
-    #     x = self.maxpool2(x)
-
-    #     x = self.proj_conv3(x)
-    #     x = self.proj_bn3(x).reshape(T, B, -1, H//2, W//2).contiguous()
-    #     x = self.proj_lif3(x).flatten(0, 1).contiguous()
-    #     x = self.maxpool3(x)
-
-    #     x_feat = x.reshape(T, B, -1, H//4, W//4).contiguous()
-    #     x = self.rpe_conv(x)
-    #     x = self.rpe_bn(x).reshape(T, B, -1, H//4, W//4).contiguous()
-    #     x = self.rpe_lif(x)
-    #     x = x + x_feat
-
-    #     x = x.flatten(-2).transpose(-1, -2)  # T, B, N, C
-    #     return x
     def forward(self, x):
         T, B, C, H, W = x.shape
 
@@ -276,6 +248,9 @@ class Spikformer(nn.Module):
         x = self.forward_head(x)
 
         return x
+    
+def SpikformerPrototype(config):
+    return Spikformer(config, depths=1, embed_dims=128)
 
 def Spikformer256(config):
     return Spikformer(config, depths=2, embed_dims=256)

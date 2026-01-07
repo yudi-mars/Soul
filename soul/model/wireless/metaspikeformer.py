@@ -19,7 +19,7 @@ from copy import deepcopy
 import torch
 from soul.neuron import functional
 
-__all__ = ['MetaSpikeformer', 'MetaSpikeformer256', 'MetaSpikeformer384', 'MetaSpikeformer512']
+__all__ = ['MetaSpikeformer', 'MetaSpikeformer256', 'MetaSpikeformer384', 'MetaSpikeformer512', 'MetaSpikeformerPrototype']
     
 class DownSampling(nn.Module):
     def __init__(self, lif, in_channels, embed_dim, kernel_size=3, stride=2, padding=1, first_layer=True):
@@ -383,6 +383,8 @@ class MetaSpikeformer(nn.Module):
 
         return x
 
+def MetaSpikeformerPrototype(config):
+    return MetaSpikeformer(config, depths=[1, 1], embed_dims=[64, 128, 128, 160]) 
 
 def MetaSpikeformer256(config): # 2-256
     return MetaSpikeformer(config, depths=[1, 1], embed_dims=[64, 128, 256, 320])

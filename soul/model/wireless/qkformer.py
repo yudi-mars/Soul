@@ -16,7 +16,7 @@ from functools import partial
 
 from soul.neuron import functional
 
-__all__ = ['QKFormer', 'QKFormer256', 'QKFormer384', 'QKFormer512']
+__all__ = ['QKFormer', 'QKFormer256', 'QKFormer384', 'QKFormer512', 'QKFormerPrototype']
 
 def set_v_threshold(neuron, value: float):
     vt = getattr(neuron, "v_threshold", None)
@@ -57,31 +57,6 @@ class PatchEmbedInit(nn.Module):
         self.proj_res_bn = nn.BatchNorm2d(embed_dims)
         self.proj_res_lif = deepcopy(lif)
 
-    # def forward(self, x):
-    #     T, B, C, H, W = x.shape
-
-    #     x = self.proj_conv(x.flatten(0, 1))
-    #     x = self.proj_bn(x)
-    #     x = self.proj_maxpool(x).reshape(T, B, -1, H//2, W//2).contiguous()
-    #     x = self.proj_lif(x).flatten(0, 1).contiguous()
-
-    #     x_feat = x
-    #     x = self.proj1_conv(x)
-    #     x = self.proj1_bn(x)
-    #     x = self.proj1_maxpool(x).reshape(T, B, -1, H // 4, W // 4).contiguous()
-    #     x = self.proj1_lif(x).flatten(0, 1).contiguous()
-
-    #     x = self.proj2_conv(x)
-    #     x = self.proj2_bn(x).reshape(T, B, -1, H//4, W//4).contiguous()
-    #     x = self.proj2_lif(x)
-
-    #     x_feat = self.proj_res_conv(x_feat)
-    #     x_feat = self.proj_res_bn(x_feat).reshape(T, B, -1, H//4, W//4).contiguous()
-    #     x_feat = self.proj_res_lif(x_feat)
-
-    #     x = x + x_feat
-
-    #     return x
     def forward(self, x):
         T, B, C, H, W = x.shape
 
@@ -236,28 +211,6 @@ class PatchEmbeddingStage(nn.Module):
         self.proj_res_bn = nn.BatchNorm2d(embed_dims)
         self.proj_res_lif = deepcopy(lif)
 
-    # def forward(self, x):
-    #     T, B, C, H, W = x.shape
-
-    #     x = x.flatten(0, 1).contiguous()
-    #     x_feat = x
-
-    #     x = self.proj3_conv(x)
-    #     x = self.proj3_bn(x)
-    #     x = self.proj3_maxpool(x).reshape(T, B, -1, H // 2, W // 2).contiguous()
-    #     x = self.proj3_lif(x).flatten(0, 1).contiguous()
-
-    #     x = self.proj4_conv(x)
-    #     x = self.proj4_bn(x).reshape(T, B, -1, H // 2, W // 2).contiguous()
-    #     x = self.proj4_lif(x)
-
-    #     x_feat = self.proj_res_conv(x_feat)
-    #     x_feat = self.proj_res_bn(x_feat).reshape(T, B, -1, H // 2, W // 2).contiguous()
-    #     x_feat = self.proj_res_lif(x_feat)
-
-    #     x = x + x_feat
-
-    #     return x
     def forward(self, x):
         T, B, C, H, W = x.shape
 
@@ -478,6 +431,9 @@ class QKFormer(nn.Module):
         x = self.forward_head(x)
 
         return x
+    
+def QKFormerPrototype(config):
+    return QKFormer(config, depths=3, embed_dims=256)
     
 def QKFormer256(config):
     return QKFormer(config, depths=4, embed_dims=256)
