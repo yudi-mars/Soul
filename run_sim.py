@@ -7,12 +7,13 @@ import onnx
 import torch
 import yaml
 
-from soul.backend.neusim import NeuSimArch, compile, convert_spikes, sim
+from soul.backend.neusim import NeuSimArch, convert_spikes
 from soul.model.vision import SEWResNet18
 from soul.neuron import LIFNode
 from soul.utils.monitor import BaseMonitor
 from soul.utils.surrogate import surrogate_map
 
+# prepare config and model
 lif_conf = yaml.safe_load(open("soul/config/neuron/lif.yaml", "r", encoding="utf-8"))
 lif_conf["surrogate_function"] = surrogate_map[lif_conf["surrogate"]]
 
@@ -33,17 +34,15 @@ conf = {
     "mlp_ratio": 1.0,
 }
 
-# model = SpikingMLP(conf)
 torch.random.manual_seed(42)
-# model = MSResNet18(conf)
-# model = SpikingVGG19(conf)
 model = SEWResNet18(conf)
 model_name = type(model).__name__
-input_shape = (1, 125, 45)
+input_shape = (1, 32, 32)  # C, H, W
 
+# compile
 print("Start compilation...")
 arch = NeuSimArch("loihi")
-compile_res = compile(model, input_shape, arch)
+compile_res = arch.compile(model, input_shape)
 onnx.save(compile_res.clean_onnx_model, f"{model_name}.onnx")
 Path(f"{model_name}.json").write_text(
     json.dumps(
@@ -69,6 +68,7 @@ monitor = BaseMonitor(model, instance=LIFNode)
 _ = model(torch.from_numpy(dummy_input).float())
 total_spikes = convert_spikes(compile_res, monitor)
 
+# simulate
 for i in range(batch_size):
     batch_id = i
     spikes = total_spikes[batch_id]
@@ -80,20 +80,10 @@ for i in range(batch_size):
 
     # simulation, using NeuSim
     print("Start simulation...")
-    meshy = int(np.sqrt(compile_res.num_cores))
-    meshx = (compile_res.num_cores // meshy) + (
-        1 if compile_res.num_cores % meshy != 0 else 0
-    )
+    res = arch.simulate(compile_res, spikes, packet_size=1, num_threads=8)
 
-    res = sim.run(
-        position=compile_res.phy_position,
-        core_conns=compile_res.phy_core_conns,
-        spikes=spikes,
-        packet_size=1,
-        topology_size=(meshy, meshx),
-        num_threads=8,
-    )
     # print(res.retcode)
+    print(f"Total latency: {res.latency * 1e3:.2f} ms")
     print(f"Total cycles: {res.total_cycles}")
     print(f"Total flits: {res.total_recv_flits}")
     print(f"Total/Real spikes: {res.total_firing_cnt}/{np.sum(spikes)}")
