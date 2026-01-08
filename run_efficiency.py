@@ -72,8 +72,8 @@ for k, v in MODULE_SOP_DICT.items():
     total_sops += v
 for k,v in MODULE_FLOPS_DICT.items():
     total_flops += v
-avg_sops = total_sops / len(test_loader)
-avg_flops = total_flops / len(test_loader)
+avg_sops = total_sops / (len(test_loader) * config['batch_size'])
+avg_flops = total_flops / (len(test_loader) * config['batch_size'])
 avg_ops = avg_sops + avg_flops
 avg_energy_per_sample = avg_sops * config['e_ac'] + avg_flops * config['e_mac']
 print(f"Average number of SOPs for model {config['model']} inference per sample: {avg_sops / 1e6:.2f} M")

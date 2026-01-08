@@ -33,7 +33,7 @@ def ops_monitor(net, is_sop=False):
             m.register_forward_hook(ops_hook_fc(key + ".weight",is_sop))
 
 def img2col(X, kernel_size, stride=1, pad=0):
-    kh = kw = kernel_size if isinstance(kernel_size, int) else kernel_size[0]
+    kh,kw = kernel_size if isinstance(kernel_size, tuple) else (kernel_size, kernel_size)
     sh = sw = stride if isinstance(stride, int) else stride[0]
 
     X_pad = F.pad(X, (pad, pad, pad, pad), mode='constant', value=0)
