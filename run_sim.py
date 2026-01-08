@@ -9,7 +9,7 @@ import yaml
 
 from soul.backend.neusim import NeuSimArch, convert_spikes
 from soul.model.vision import SEWResNet18
-from soul.model.acoustic import SpikingLeNet
+from soul.model.acoustic import SpikingLeNet, SEWResNet34
 from soul.neuron import LIFNode
 from soul.utils.monitor import BaseMonitor
 from soul.utils.surrogate import surrogate_map
@@ -21,8 +21,9 @@ lif_conf["surrogate_function"] = surrogate_map[lif_conf["surrogate"]]
 conf = {
     "num_classes": 10,
     "time_step": 4,
-    "input_channels": 128,
-    "input_dim": 128,
+    "input_channels": 1,
+    # "input_channels": 128,
+    # "input_dim": 128,
     "input_height": 32,
     "input_width": 32,
     "hidden_dim": 1024,
@@ -37,10 +38,12 @@ conf = {
 }
 
 torch.random.manual_seed(42)
-model = SpikingLeNet(conf)
-# model = SEWResNet18(conf)
+# model = SpikingLeNet(conf)
+# model_name = type(model).__name__
+# input_shape = (128, 128)  # H, W
+model = SEWResNet18(conf)
 model_name = type(model).__name__
-input_shape = (128, 128)  # C, H, W
+input_shape = (1, 32, 32)  # C, H, W
 
 # compile
 print("Start compilation...")
@@ -94,6 +97,7 @@ for i in range(batch_size):
 
     # print(res.retcode)
     print(f"Total latency: {res.latency * 1e3:.2f} ms")
+    print(f"Total memory: {res.memory_usage:.2f} MB")
     print(f"Total cycles: {res.total_cycles}")
     print(f"Total flits: {res.total_recv_flits}")
     print(f"Total/Real spikes: {res.total_firing_cnt}/{np.sum(spikes)}")

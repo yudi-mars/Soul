@@ -8,6 +8,7 @@ import onnx
 import torch
 import tqdm
 from rich.progress import track
+from torchinfo import summary
 
 from soul.utils.monitor import BaseMonitor
 
@@ -22,6 +23,7 @@ class CompileResult:
     num_neurons: int
     num_synapses: int
     num_cores: int
+    num_params: int
     position: np.ndarray
     mapping_l2p: np.ndarray
     phy_position: np.ndarray
@@ -159,6 +161,7 @@ def process_unsqueeze_nodes(onnx_model):
 
     return onnx_model
 
+
 def onnx_to_networkx(onnx_model):
     model = onnx_model
     graph = model.graph
@@ -210,7 +213,7 @@ def onnx_to_networkx(onnx_model):
                     )
             elif attr.name == "shape" and node.op_type == "Unsqueeze":
                 # (T, B, ...) -> (...)
-                attr_dict[attr.name] = val[2:] 
+                attr_dict[attr.name] = val[2:]
         G.add_node(node_id, type="Op", op_type=node.op_type, attributes=attr_dict)
 
         # 记录该节点产生的输出张量
@@ -647,6 +650,9 @@ def compile(
     )
     res.onnx_model = onnx_model
     res.clean_onnx_model = clean_onnx_model
+
+    model_stats = summary(copy.deepcopy(model), input_size=(1, 1, *input_shape), verbose=0)
+    res.num_params = model_stats.total_params
 
     graph = onnx_to_networkx(clean_onnx_model)
     res.graph = graph
