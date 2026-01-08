@@ -1,6 +1,5 @@
-import numpy as np
-
 from .energy import NeuSimEnergyModel
+import numpy as np
 
 
 class NeuSimArch:

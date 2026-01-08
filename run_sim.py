@@ -9,6 +9,7 @@ import yaml
 
 from soul.backend.neusim import NeuSimArch, convert_spikes
 from soul.model.vision import SEWResNet18
+from soul.model.acoustic import SpikingLeNet
 from soul.neuron import LIFNode
 from soul.utils.monitor import BaseMonitor
 from soul.utils.surrogate import surrogate_map
@@ -20,7 +21,8 @@ lif_conf["surrogate_function"] = surrogate_map[lif_conf["surrogate"]]
 conf = {
     "num_classes": 10,
     "time_step": 4,
-    "input_channels": 1,
+    "input_channels": 128,
+    "input_dim": 128,
     "input_height": 32,
     "input_width": 32,
     "hidden_dim": 1024,
@@ -35,15 +37,23 @@ conf = {
 }
 
 torch.random.manual_seed(42)
-model = SEWResNet18(conf)
+model = SpikingLeNet(conf)
+# model = SEWResNet18(conf)
 model_name = type(model).__name__
-input_shape = (1, 32, 32)  # C, H, W
+input_shape = (128, 128)  # C, H, W
 
 # compile
 print("Start compilation...")
 arch = NeuSimArch("loihi")
 compile_res = arch.compile(model, input_shape)
+onnx.save(compile_res.onnx_model, f"{model_name}_raw.onnx")
 onnx.save(compile_res.clean_onnx_model, f"{model_name}.onnx")
+Path(f"{model_name}_raw.json").write_text(
+    json.dumps(
+        nx.readwrite.json_graph.node_link_data(compile_res.graph, edges="edges"),
+        indent=2,
+    )
+)
 Path(f"{model_name}.json").write_text(
     json.dumps(
         nx.readwrite.json_graph.node_link_data(compile_res.neuron_graph, edges="edges"),
@@ -80,7 +90,7 @@ for i in range(batch_size):
 
     # simulation, using NeuSim
     print("Start simulation...")
-    res = arch.simulate(compile_res, spikes, packet_size=1, num_threads=8)
+    res = arch.simulate(compile_res, spikes, packet_size=1, num_threads=16)
 
     # print(res.retcode)
     print(f"Total latency: {res.latency * 1e3:.2f} ms")

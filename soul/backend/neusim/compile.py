@@ -45,11 +45,14 @@ def export_onnx(model, input_shape: tuple[int, ...]):
     )
     buffer.seek(0)
     onnx_model = onnx.load(buffer)
+    onnx_model = onnx.shape_inference.infer_shapes(onnx_model)
+    raw_onnx_model = copy.deepcopy(onnx_model)
     clean_onnx_model = clean_weights_and_biases(onnx_model)
     clean_onnx_model = clean_shape_nodes(clean_onnx_model)
     clean_onnx_model = clean_hanging_nodes(clean_onnx_model)
+    clean_onnx_model = process_unsqueeze_nodes(clean_onnx_model)
 
-    return onnx_model, clean_onnx_model
+    return raw_onnx_model, clean_onnx_model
 
 
 def clean_weights_and_biases(onnx_model):
@@ -142,6 +145,20 @@ def clean_hanging_nodes(onnx_model):
     return onnx_model
 
 
+def process_unsqueeze_nodes(onnx_model):
+    graph = onnx_model.graph
+
+    value_info_map = {vi.name: vi for vi in graph.value_info}
+    for node in graph.node:
+        if node.op_type == "Unsqueeze":
+            shape = []
+            for d in value_info_map[node.output[0]].type.tensor_type.shape.dim:
+                shape.append(d.dim_value)
+            new_attr = onnx.helper.make_attribute("shape", shape)
+            node.attribute.append(new_attr)
+
+    return onnx_model
+
 def onnx_to_networkx(onnx_model):
     model = onnx_model
     graph = model.graph
@@ -191,6 +208,9 @@ def onnx_to_networkx(onnx_model):
                     raise NotImplementedError(
                         f"Only support LIFNode neuron for now, got {node.op_type}"
                     )
+            elif attr.name == "shape" and node.op_type == "Unsqueeze":
+                # (T, B, ...) -> (...)
+                attr_dict[attr.name] = val[2:] 
         G.add_node(node_id, type="Op", op_type=node.op_type, attributes=attr_dict)
 
         # 记录该节点产生的输出张量
@@ -327,6 +347,8 @@ def parse_neuron_graph(graph, neuron_graph, is_vgg=False):
                     this_src, tmp_shape = dump_avgpool2d(
                         tmp_shape, (tmp_shape[0], 7, 7)
                     )
+                elif graph.nodes[node]["op_type"] == "Unsqueeze":
+                    tmp_shape = op_attr["shape"]
 
                 # print("fusion_layers", f"{source} -> {target}", tmp_shape)
                 src = fusion_layers(src, this_src)
