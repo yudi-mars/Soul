@@ -1,108 +1,167 @@
 import json
+import os
 from pathlib import Path
 
 import networkx as nx
 import numpy as np
-import onnx
+import onnx  # required by compile() export
 import torch
-import yaml
 
-from soul.backend.neusim import NeuSimArch, convert_spikes
-from soul.model.vision import SEWResNet18
-from soul.model.acoustic import SpikingLeNet, SEWResNet34
-from soul.neuron import LIFNode
+from soul.backend.neusim import NeuSimArch, compile, convert_spikes, sim
 from soul.utils.monitor import BaseMonitor
-from soul.utils.surrogate import surrogate_map
 
-# prepare config and model
-lif_conf = yaml.safe_load(open("soul/config/neuron/lif.yaml", "r", encoding="utf-8"))
-lif_conf["surrogate_function"] = surrogate_map[lif_conf["surrogate"]]
+# Keep the same import style as run_soul.py so model_map/neuron_map/surrogate_map are available.
+from soul.model import *   # noqa: F401,F403
+from soul.neuron import *  # noqa: F401,F403
+from soul.utils import *   # noqa: F401,F403
 
-conf = {
-    "num_classes": 10,
-    "time_step": 4,
-    "input_channels": 1,
-    # "input_channels": 128,
-    # "input_dim": 128,
-    "input_height": 32,
-    "input_width": 32,
-    "hidden_dim": 1024,
-    "neuron": LIFNode(lif_conf),
-    "groups": 1,
-    "base_width": 64,
-    "connect_function": "ADD",
-    "width_per_group": 64,
-    "zero_init_residual": False,
-    "mlp_hidden_dim": 2048,
-    "mlp_ratio": 1.0,
-}
+from collections import defaultdict
+import torch
 
-torch.random.manual_seed(42)
+def _targets_to_labels(targets):
+    if torch.is_tensor(targets):
+        t = targets.detach()
+        if t.ndim == 0:
+            return [int(t.item())]
+        if t.ndim == 1:
+            return [int(x) for x in t.tolist()]
+        if t.ndim == 2:
+            return [int(x) for x in t.argmax(dim=1).tolist()]
+        return [int(x) for x in t.view(-1).tolist()]
+    else:
+        # list / numpy
+        try:
+            import numpy as np
+            t = np.asarray(targets)
+            if t.ndim == 0:
+                return [int(t)]
+            if t.ndim == 1:
+                return [int(x) for x in t.tolist()]
+            if t.ndim == 2:
+                return [int(x) for x in t.argmax(axis=1).tolist()]
+            return [int(x) for x in t.reshape(-1).tolist()]
+        except Exception:
+            return [int(x) for x in targets]
 
-model = SEWResNet18(conf)
-model_name = type(model).__name__
-input_shape = (1, 32, 32)  # C, H, W
+def select_indices_per_class(targets, remaining_per_class):
+    labels = _targets_to_labels(targets)
+    selected = []
+    for i, y in enumerate(labels):
+        y = int(y)
+        if y in remaining_per_class and remaining_per_class[y] > 0:
+            selected.append(i)
+            remaining_per_class[y] -= 1
+    done = all(v == 0 for v in remaining_per_class.values())
+    return selected, done
 
-# compile
-print("Start compilation...")
-arch = NeuSimArch("loihi")
-compile_res = arch.compile(model, input_shape)
-onnx.save(compile_res.onnx_model, f"{model_name}_raw.onnx")
-onnx.save(compile_res.clean_onnx_model, f"{model_name}.onnx")
-Path(f"{model_name}_raw.json").write_text(
-    json.dumps(
-        nx.readwrite.json_graph.node_link_data(compile_res.graph, edges="edges"),
-        indent=2,
+def main():
+    config = init_config()
+    log_path = os.path.join(
+    config['log_dir'], 
+    config['dataset_name'].lower(), 
+    config['model'].lower(), 
+    config['arch'].lower()
     )
-)
-Path(f"{model_name}.json").write_text(
-    json.dumps(
-        nx.readwrite.json_graph.node_link_data(compile_res.neuron_graph, edges="edges"),
-        indent=2,
+    ensure_dir(log_path)
+    logger = setup_logger(os.path.join(log_path, f'record-{get_local_time()}.log'), default_level=config['state'])
+
+    config['surrogate_function'] = surrogate_map[config['surrogate']]
+    config['neuron'] = neuron_map[config['neuron_type'].lower()](config) 
+    
+    train_dataset, test_dataset = load_dataset(config)
+    loader = torch.utils.data.DataLoader(
+        test_dataset,
+        batch_size=config['batch_size'],
+        shuffle= False,
+        num_workers=config['workers'], 
+        pin_memory=False,
+        drop_last=False,
     )
-)
+    model = model_map[config["application"]][config["model"].lower()](config)
 
-print(f"Total neurons: {compile_res.num_neurons}")
-print(f"Total synapses: {compile_res.num_synapses}")
-print(f"Total cores: {compile_res.num_cores}")
-print("=" * 30)
-
-# prepare spikes
-rng = np.random.default_rng(seed=42)
-p = 0.5
-batch_size = 2
-dummy_input = (
-    rng.random(size=(conf["time_step"], batch_size, *input_shape)) < p
-).astype(np.uint8)
-model.eval()
-monitor = BaseMonitor(model, instance=LIFNode)
-_ = model(torch.from_numpy(dummy_input).float())
-total_spikes = convert_spikes(compile_res, monitor)
-
-# simulate
-for i in range(batch_size):
-    batch_id = i
-    spikes = total_spikes[batch_id]
-    assert spikes.shape[0] == compile_res.num_neurons
-
-    true_total_spikes = np.sum(
-        np.sum(compile_res.phy_core_conns, axis=1) * np.sum(spikes, axis=1)
+    best_model_path = os.path.join(
+        config['model_dir'], 
+        f'best_{config["model"].lower()}_lif_{config["dataset_name"].lower()}_T4_{config["seed"]}.pt'
     )
 
-    # simulation, using NeuSim
-    print("Start simulation...")
-    res = arch.simulate(compile_res, spikes, packet_size=1, num_threads=16)
+    if not os.path.exists(best_model_path):
+        best_model_path = os.path.join(
+            config['model_dir'], 
+            f'best_{config["model"].lower()}_lif_{config["dataset_name"].lower()}_{config["seed"]}.pt'
+        )
 
-    # print(res.retcode)
-    print(f"Total latency: {res.latency * 1e3:.2f} ms")
-    print(f"Total memory: {res.memory_usage:.2f} MB")
-    print(f"Total cycles: {res.total_cycles}")
-    print(f"Total flits: {res.total_recv_flits}")
-    print(f"Total/Real spikes: {res.total_firing_cnt}/{np.sum(spikes)}")
-    print(f"Total/Real spike packets: {res.total_recv_spikes}/{true_total_spikes}")
-    assert res.total_recv_spikes == res.total_sent_spikes == true_total_spikes
-    print(f"Total Hops: {res.total_hops}")
+    best_params = torch.load(
+      best_model_path, 
+      map_location='cpu'
+  )
+    device = torch.device("cpu")
+    model.load_state_dict(best_params)
+    model.to(device)
+    torch.set_grad_enabled(False)
+    model.eval()
 
-    energy_res = arch.estimate_energy(res)
-    print(f"Total energy: {energy_res.total_energy} J")
-    energy_res.print_energy_breakdown()
+    neuron_cls = config["neuron"].__class__
+    latency_sum_s = 0.0
+    energy_sum_j = 0.0
+    n_samples = 0
+    K = 10
+    num_classes = int(config["num_classes"])
+    remaining = {c: K for c in range(num_classes)}
+    logger.info("Sample partition: ", remaining)
+    for bidx, (inputs, targets) in enumerate(loader):
+        selected, done = select_indices_per_class(targets, remaining)
+        if not selected:
+            if done:
+                break
+            continue
+        inputs = inputs.to(device=device, dtype=torch.float32).contiguous().transpose(0, 1)
+
+        input_shape = tuple(inputs.shape[2:])
+
+        if bidx == 0:
+            logger.info("Start compilation...")
+            arch = NeuSimArch(config['arch'])
+            compile_res = compile(model, input_shape, arch)
+            '''
+            onnx_path = os.path.join(log_path, "model.onnx")
+            json_path = os.path.join(log_path, "neuron_graph.json")
+
+            onnx.save(compile_res.clean_onnx_model, onnx_path)
+            Path(json_path).write_text(
+                json.dumps(
+                    nx.readwrite.json_graph.node_link_data(compile_res.neuron_graph, edges="edges"),
+                    indent=2,
+                )
+            )'''
+            logger.info(f"Total neurons: {compile_res.num_neurons}")
+            logger.info(f"Total synapses: {compile_res.num_synapses}")
+            logger.info(f"Total cores: {compile_res.num_cores}")
+            logger.info("=" * 30)
+
+        monitor = BaseMonitor(model, instance=neuron_cls)
+        with torch.no_grad():
+            _ = model(inputs)
+        total_spikes = convert_spikes(compile_res, monitor)  # list/array per sample
+        
+        for i in selected:
+            res = arch.simulate(compile_res, total_spikes[i], packet_size=1, num_threads=16)
+            energy_res = arch.estimate_energy(res)
+
+            latency_sum_s += float(res.latency)
+            energy_sum_j += float(energy_res.total_energy)
+            n_samples += 1
+        if n_samples == 0:
+            raise RuntimeError("No samples were simulated (empty dataset?).")
+        if done:
+            break
+
+    avg_latency_ms = (latency_sum_s / n_samples) * 1e3
+    avg_energy_j = (energy_sum_j / n_samples) * 1e3
+
+    logger.info(f"Per-class first {K} samples: total_samples={n_samples}")
+    logger.info(f"Average latency: {avg_latency_ms:.4f} ms")
+    logger.info(f"Average energy: {avg_energy_j:.4f} mJ")
+    #energy_res.print_energy_breakdown()
+
+if __name__ == "__main__":
+    main()
