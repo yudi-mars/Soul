@@ -78,4 +78,4 @@ avg_ops = avg_sops + avg_flops
 avg_energy_per_sample = avg_sops * config['e_ac'] + avg_flops * config['e_mac']
 print(f"Average number of SOPs for model {config['model']} inference per sample: {avg_sops / 1e6:.2f} M")
 print(f"Average number of FLOPs for model {config['model']} inference per sample: {avg_flops / 1e6:.2f} M")
-print(f"Average number of Operations (#OPs): {avg_ops:.2f}, corresponding theoretical energy cost: {avg_energy_per_sample / 1e9:.2f} mJ")
+print(f"Average number of Operations (#OPs): {avg_ops:.2f}, corresponding theoretical energy cost: {avg_energy_per_sample / 1e6:.2f} μJ")
