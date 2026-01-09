@@ -38,9 +38,7 @@ conf = {
 }
 
 torch.random.manual_seed(42)
-# model = SpikingLeNet(conf)
-# model_name = type(model).__name__
-# input_shape = (128, 128)  # H, W
+
 model = SEWResNet18(conf)
 model_name = type(model).__name__
 input_shape = (1, 32, 32)  # C, H, W
