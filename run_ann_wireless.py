@@ -523,102 +523,72 @@ elif config['model'].lower() == 'vit':
 else:
     raise NotImplementedError(f'Model {config["model"]} not implemented yet!')
 model.to(device)
-########################### inference process ###########################
-#calculate theoretical energy cost per sample inference
-best_model_path = os.path.join(config['model_dir'], f'best_{config["model"].lower()}_ann_{config["dataset_name"].lower()}_{config["seed"]}.pt')
-best_params = torch.load(
-      best_model_path, 
-      map_location='cpu'
-  )
-model.load_state_dict(best_params)
-model.to(device)
-model.eval()
-#    TODO 验证下ann-lenet推理 calculate theoretical energy cost per sample inference
-print('Counting FLOPs/SOPs for theoretical inference cost')
-total_flops, num_samples = 0, 0
-for inputs, _ in tqdm(test_loader, unit='batch', ncols=80, desc='Count OPs: '):
-    inputs = inputs.to(device, non_blocking=True)
-    #default data shape (B, T, input_size) -> (T, B, input_size)
-    inputs = inputs.transpose(0, 1)
 
-    num_samples += inputs.size(1)
-
-    flops = count_flops(model, inputs)
-
-    total_flops += flops
-print(num_samples)
-avg_flops = total_flops / num_samples
-avg_energy_per_sample = avg_flops * config['e_mac']
-logger.info(f"Average number of Operations (#OPs): {avg_flops /1e6:.2f} M, corresponding theoretical energy cost: {avg_energy_per_sample / 1e9:.2f} mJ")
+# calculate number of parameters
+n_parameters = count_parameters(model, trainable=True) 
+logger.info(f"Number of params for model {config['model']}: {n_parameters / 1e6:.2f} M")
 
 
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(model.parameters(), lr=config['learning_rate'], weight_decay=config['weight_decay'])
+scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config["epochs"])
 
-########################### training process ###########################
-# # calculate number of parameters
-# n_parameters = count_parameters(model, trainable=True) 
-# logger.info(f"Number of params for model {config['model']}: {n_parameters / 1e6:.2f} M")
-
-
-# criterion = nn.CrossEntropyLoss()
-# optimizer = optim.Adam(model.parameters(), lr=config['learning_rate'], weight_decay=config['weight_decay'])
-# scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config["epochs"])
-
-# best_acc = 0.
-# for epoch in range(1, config['epochs'] + 1):
-#     model.train()
+best_acc = 0.
+for epoch in range(1, config['epochs'] + 1):
+    model.train()
     
-#     train_top1_meter, train_loss_meter = AverageMeter(), AverageMeter()
-#     loader = tqdm(train_loader, unit='batch', ncols=80, desc='Train: ')
-#     for inputs, targets in loader:
-#         inputs, targets = inputs.to(device, non_blocking=True), targets.to(device, non_blocking=True)
-#         optimizer.zero_grad()
+    train_top1_meter, train_loss_meter = AverageMeter(), AverageMeter()
+    loader = tqdm(train_loader, unit='batch', ncols=80, desc='Train: ')
+    for inputs, targets in loader:
+        inputs, targets = inputs.to(device, non_blocking=True), targets.to(device, non_blocking=True)
+        optimizer.zero_grad()
 
-#         # default data shape (B, T, input_size) -> (T, B, input_size)
-#         inputs = inputs.transpose(0, 1)
+        # default data shape (B, T, input_size) -> (T, B, input_size)
+        inputs = inputs.transpose(0, 1)
 
-#         outputs = model(inputs)
-#         acc1 = accuracy(outputs, targets, topk=(1,))[0]
+        outputs = model(inputs)
+        acc1 = accuracy(outputs, targets, topk=(1,))[0]
 
-#         loss = criterion(outputs, targets)
-#         loss.backward()
-#         optimizer.step()
+        loss = criterion(outputs, targets)
+        loss.backward()
+        optimizer.step()
 
-#         train_top1_meter.update(acc1.item(), targets.numel())
-#         train_loss_meter.update(loss.item(), targets.numel())
+        train_top1_meter.update(acc1.item(), targets.numel())
+        train_loss_meter.update(loss.item(), targets.numel())
 
-#     train_acc = train_top1_meter.avg
-#     train_loss = train_loss_meter.avg
+    train_acc = train_top1_meter.avg
+    train_loss = train_loss_meter.avg
 
-#     model.eval()
+    model.eval()
 
-#     test_top1_meter, test_loss_meter = AverageMeter(), AverageMeter()
-#     with torch.no_grad():
-#         for inputs, targets in test_loader:
-#             inputs, targets = inputs.to(device, non_blocking=True), targets.to(device, non_blocking=True)
+    test_top1_meter, test_loss_meter = AverageMeter(), AverageMeter()
+    with torch.no_grad():
+        for inputs, targets in test_loader:
+            inputs, targets = inputs.to(device, non_blocking=True), targets.to(device, non_blocking=True)
 
-#             # default data shape (B, T, input_size) -> (T, B, input_size)
-#             inputs = inputs.transpose(0, 1)
+            # default data shape (B, T, input_size) -> (T, B, input_size)
+            inputs = inputs.transpose(0, 1)
 
-#             outputs = model(inputs)
-#             acc1 = accuracy(outputs, targets, topk=(1,))[0]
-#             loss = criterion(outputs, targets)
+            outputs = model(inputs)
+            acc1 = accuracy(outputs, targets, topk=(1,))[0]
+            loss = criterion(outputs, targets)
 
-#             test_loss_meter.update(loss.item(), targets.numel())
-#             test_top1_meter.update(acc1.item(), targets.numel())
+            test_loss_meter.update(loss.item(), targets.numel())
+            test_top1_meter.update(acc1.item(), targets.numel())
 
-#     test_acc = test_top1_meter.avg
-#     test_loss = test_loss_meter.avg
+    test_acc = test_top1_meter.avg
+    test_loss = test_loss_meter.avg
 
-#     logger.info(f"[Epoch {epoch:3d}/{config['epochs']}] Train Loss: {train_loss:.4f}, Train Acc: {train_acc:.2f}%; Test Loss: {test_loss:.4f}, Test Acc: {test_acc:.2f}%")
-#     if test_acc > best_acc:
-#         ensure_dir(config['model_dir'])
+    logger.info(f"[Epoch {epoch:3d}/{config['epochs']}] Train Loss: {train_loss:.4f}, Train Acc: {train_acc:.2f}%; Test Loss: {test_loss:.4f}, Test Acc: {test_acc:.2f}%")
+    if test_acc > best_acc:
+        ensure_dir(config['model_dir'])
 
-#         best_acc = test_acc
-#         logger.info(f'Best model saved with accuracy: {best_acc:.2f}%')
-#         if not config['noise_intensity'] > 0.:
-#             torch.save(
-#                 model.state_dict(), 
-#                 os.path.join(config['model_dir'], f'best_{config["model"].lower()}_ann_{config["dataset_name"].lower()}_{config["seed"]}.pt')
-#             )
+        best_acc = test_acc
+        logger.info(f'Best model saved with accuracy: {best_acc:.2f}%')
+        if not config['noise_intensity'] > 0.:
+            torch.save(
+                model.state_dict(), 
+                os.path.join(config['model_dir'], f'best_{config["model"].lower()}_ann_{config["dataset_name"].lower()}_{config["seed"]}.pt')
+            )
 
-#     scheduler.step()
+    scheduler.step()
