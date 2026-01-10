@@ -338,21 +338,20 @@ def parse_neuron_graph(graph, neuron_graph, is_vgg=False):
                 this_src = None
                 op_attr = graph.nodes[node]["attributes"]
                 if graph.nodes[node]["op_type"] == "Conv":
-                    this_src, tmp_shape = dump_conv2d(tmp_shape, op_attr)
+                    this_src, tmp_shape = dump_conv(tmp_shape, op_attr)
                 elif graph.nodes[node]["op_type"] in ["MaxPool", "AvgPool"]:
-                    this_src, tmp_shape = dump_pool2d(tmp_shape, op_attr)
+                    this_src, tmp_shape = dump_pool(tmp_shape, op_attr)
                 elif graph.nodes[node]["op_type"] in [
                     "GlobalAveragePool",
                     "GlobalMaxPool",
                 ]:
-                    this_src, tmp_shape = dump_globalpool2d(tmp_shape)
+                    this_src, tmp_shape = dump_globalpool(tmp_shape)
                 elif graph.nodes[node]["op_type"] in ["Resize"] and is_vgg:
-                    this_src, tmp_shape = dump_avgpool2d(
-                        tmp_shape, (tmp_shape[0], 7, 7)
-                    )
+                    this_src, tmp_shape = dump_avgpool(tmp_shape, (7, 7))
                 elif graph.nodes[node]["op_type"] == "Unsqueeze":
                     tmp_shape = op_attr["shape"]
-
+                elif graph.nodes[node]["op_type"] == "Transpose":
+                    this_src, tmp_shape = dump_trasnpose(tmp_shape, op_attr["perm"])
                 # print("fusion_layers", f"{source} -> {target}", tmp_shape)
                 src = fusion_layers(src, this_src)
                 # print("fusion_layers done")
@@ -392,6 +391,32 @@ def dump_linear(in_dim, out_dim):
     for src in srcs:
         assert src.dtype == np.int32
     return srcs
+
+
+def dump_trasnpose(in_shape, perm):
+    assert len(in_shape) == len(perm) - 2
+    assert perm[0] == 0 and perm[1] == 1
+    perm = [p - 2 for p in perm[2:]]
+    idx = np.arange(np.prod(in_shape)).reshape(in_shape)
+    out_idx = np.transpose(idx, axes=perm)
+    out_shape = out_idx.shape
+
+    srcs = out_idx.flatten()[:, np.newaxis]
+
+    return srcs, out_shape
+
+
+def dump_conv(in_shape, op_attr):
+    if len(in_shape) == 2:
+        assert len(op_attr["kernel_shape"]) == 1
+        return dump_conv1d(in_shape, op_attr)
+    elif len(in_shape) == 3:
+        assert len(op_attr["kernel_shape"]) == 2
+        return dump_conv2d(in_shape, op_attr)
+    else:
+        raise NotImplementedError(
+            f"Only support 1D and 2D conv, got input shape: {in_shape}"
+        )
 
 
 def dump_conv2d(in_shape, op_attr):
@@ -470,6 +495,95 @@ def dump_conv2d(in_shape, op_attr):
     return srcs, out_shape
 
 
+def dump_conv1d(in_shape, op_attr):
+    in_channels = in_shape[0]
+    padding = op_attr["pads"]
+    assert padding[0] == padding[1]
+    padding = padding[0]
+    if "weight_shape" in op_attr:
+        assert in_channels == op_attr["weight_shape"][1]
+        out_channels = op_attr["weight_shape"][0]
+        layer = torch.nn.Conv1d(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=op_attr["kernel_shape"],
+            stride=op_attr["strides"],
+            padding=padding,
+            dilation=op_attr["dilations"],
+            groups=op_attr["group"],
+            bias=False,
+        )
+        if op_attr["group"] != 1:
+            # TODO: handle depthwise conv
+            raise NotImplementedError("group conv is not supported yet")
+    else:
+        ceil_mode = op_attr["ceil_mode"] == 1
+        layer = torch.nn.MaxPool1d(
+            kernel_size=op_attr["kernel_shape"],
+            stride=op_attr["strides"],
+            padding=padding,
+            dilation=op_attr["dilations"],
+            ceil_mode=ceil_mode,
+        )
+        if ceil_mode:
+            # TODO: handle ceil_mode
+            raise NotImplementedError("ceil_mode is not supported yet")
+    dummy_input = torch.randn((1, *in_shape))  # B, C, W
+    dummpy_output = layer(dummy_input)
+    out_shape = dummpy_output.shape[1:]  # C, W
+
+    C, W = in_shape
+    in_feats = C * W
+    in_idx = torch.arange(in_feats) + 1
+    in_idx = in_idx.reshape([C, 1, W]).float()
+    in_idx_unfold = (
+        torch.nn.functional.unfold(
+            in_idx,
+            kernel_size=(1, op_attr["kernel_shape"][0]),
+            padding=(0, padding),
+            stride=(1, op_attr["strides"][0]),
+            dilation=(1, op_attr["dilations"][0]),
+        )
+        .long()
+        .numpy()
+        .astype(np.int32)
+    )
+    out_feats_per_ch = np.prod(out_shape[1:])
+    assert in_idx_unfold.shape[1] == out_feats_per_ch
+
+    srcs = []
+    num_conns = 0
+    for j in range(out_feats_per_ch):
+        src = in_idx_unfold[:, j]
+        src = src[src > 0] - 1
+        num_conns += len(src)
+        srcs.append(src)
+
+    srcs = srcs * out_shape[0]
+    try:
+        srcs = np.array(srcs, dtype=np.int32)
+    except Exception:
+        srcs = np.array(srcs, dtype=np.ndarray)
+
+    for src in srcs:
+        assert src.dtype == np.int32
+
+    return srcs, out_shape
+
+
+def dump_pool(in_shape, op_attr):
+    if len(in_shape) == 2:
+        assert len(op_attr["kernel_shape"]) == 1
+        return dump_pool1d(in_shape, op_attr)
+    elif len(in_shape) == 3:
+        assert len(op_attr["kernel_shape"]) == 2
+        return dump_pool2d(in_shape, op_attr)
+    else:
+        raise NotImplementedError(
+            f"Only support 1D and 2D pool, got input shape: {in_shape}"
+        )
+
+
 def dump_pool2d(in_shape, op_attr):
     dummy_input = torch.randn((1, *in_shape))  # B, C, H, W
     padding = op_attr["pads"]
@@ -529,6 +643,79 @@ def dump_pool2d(in_shape, op_attr):
     return srcs, out_shape
 
 
+def dump_pool1d(in_shape, op_attr):
+    dummy_input = torch.randn((1, *in_shape))  # B, C, W
+    padding = op_attr["pads"]
+    assert padding[0] == padding[1]
+    padding = padding[0]
+
+    ceil_mode = op_attr["ceil_mode"] == 1
+    layer = torch.nn.MaxPool1d(
+        kernel_size=op_attr["kernel_shape"][0],
+        stride=op_attr["strides"][0],
+        padding=padding,
+        dilation=op_attr["dilations"][0],
+        ceil_mode=ceil_mode,
+    )
+    if ceil_mode:
+        # TODO: handle ceil_mode
+        raise NotImplementedError("ceil_mode is not supported yet")
+    dummy_input = torch.randn((1, *in_shape))  # B, C, 1, W
+    dummpy_output = layer(dummy_input)
+    out_shape = dummpy_output.shape[1:]  # C, W
+
+    C, W = in_shape
+    in_feats = 1 * 1 * W
+    in_feats_per_ch = 1 * W
+    in_idx = torch.arange(in_feats) + 1
+    in_idx = in_idx.reshape([1, 1, W]).float()
+    in_idx_unfold = (
+        torch.nn.functional.unfold(
+            in_idx,
+            kernel_size=op_attr["kernel_shape"],
+            padding=padding,
+            stride=op_attr["strides"],
+            dilation=op_attr["dilations"],
+        )
+        .long()
+        .numpy()
+        .astype(np.int32)
+    )
+    out_feats_per_ch = np.prod(out_shape[1:])
+    assert in_idx_unfold.shape[1] == out_feats_per_ch
+
+    srcs = []
+    num_conns = 0
+    for i in range(C):
+        for j in range(out_feats_per_ch):
+            src = in_idx_unfold[:, j]
+            src = src[src > 0] - 1 + i * in_feats_per_ch
+            num_conns += len(src)
+            srcs.append(src)
+
+    try:
+        srcs = np.array(srcs, dtype=np.int32)
+    except Exception:
+        srcs = np.array(srcs, dtype=np.ndarray)
+
+    for src in srcs:
+        assert src.dtype == np.int32
+    return srcs, out_shape
+
+
+def dump_globalpool(in_shape):
+    if len(in_shape) == 2:
+        in_shape = (in_shape[0], 1, in_shape[1])
+        srcs, out_shape = dump_globalpool2d(in_shape)
+        return srcs, (out_shape[0], out_shape[2])
+    elif len(in_shape) == 3:
+        return dump_globalpool2d(in_shape)
+    else:
+        raise NotImplementedError(
+            f"Only support 1D and 2D globalpool, got input shape: {in_shape}"
+        )
+
+
 def dump_globalpool2d(in_shape):
     C, H, W = in_shape
     out_shape = (C, 1, 1)
@@ -546,6 +733,21 @@ def dump_globalpool2d(in_shape):
     for src in srcs:
         assert src.dtype == np.int32
     return srcs, out_shape
+
+
+def dump_avgpool(in_shape, out_shape):
+    if len(in_shape) == 2:
+        in_shape = (in_shape[0], 1, in_shape[1])
+        out_shape = (in_shape[0], 1, out_shape[1])
+        srcs, out_shape = dump_avgpool2d(in_shape, out_shape)
+        return srcs, (out_shape[0], out_shape[2])
+    elif len(in_shape) == 3:
+        assert len(out_shape) == 2
+        return dump_avgpool2d(in_shape, (in_shape[0], *out_shape))
+    else:
+        raise NotImplementedError(
+            f"Only support 1D and 2D avgpool, got input shape: {in_shape}"
+        )
 
 
 def dump_avgpool2d(in_shape, out_shape):
@@ -644,15 +846,17 @@ def compile(
     arch=NeuSimArch("darwin3"),
 ) -> CompileResult:
     res = CompileResult()
+    model_stats = summary(
+        copy.deepcopy(model), input_size=(1, 1, *input_shape), verbose=0
+    )
+    res.num_params = model_stats.total_params
+
     onnx_model, clean_onnx_model = export_onnx(
         model,
         input_shape,
     )
     res.onnx_model = onnx_model
     res.clean_onnx_model = clean_onnx_model
-
-    model_stats = summary(copy.deepcopy(model), input_size=(1, 1, *input_shape), verbose=0)
-    res.num_params = model_stats.total_params
 
     graph = onnx_to_networkx(clean_onnx_model)
     res.graph = graph
