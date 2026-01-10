@@ -79,21 +79,28 @@ def main():
     )
     model = model_map[config["application"]][config["model"].lower()](config)
 
-    best_model_path = os.path.join(
+    save_model_path = os.path.join(
         config['model_dir'], 
+        config['dataset_name'].lower(), 
+        config['model'].lower(), 
+        config['neuron_type'].lower()
+    )
+
+    best_model_path = os.path.join(
+        save_model_path, 
         f'best_{config["model"].lower()}_lif_{config["dataset_name"].lower()}_T4_{config["seed"]}.pt'
     )
 
     if not os.path.exists(best_model_path):
         best_model_path = os.path.join(
-            config['model_dir'], 
+            save_model_path, 
             f'best_{config["model"].lower()}_lif_{config["dataset_name"].lower()}_{config["seed"]}.pt'
         )
 
     best_params = torch.load(
-      best_model_path, 
-      map_location='cpu'
-  )
+        best_model_path, 
+        map_location='cpu'
+    )
     device = torch.device("cpu")
     model.load_state_dict(best_params)
     model.to(device)

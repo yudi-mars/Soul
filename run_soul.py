@@ -188,14 +188,20 @@ for epoch in range(1, config['epochs'] + 1):
 
         logger.info(f"[Epoch {epoch:3d}/{config['epochs']}] Train Loss: {train_loss:.4f}, Train Acc: {train_acc:.2f}%; Test Loss: {test_loss:.4f}, Test Acc: {test_acc:.2f}%")
         if test_acc > best_acc:
-            ensure_dir(config['model_dir'])
+            save_model_path = os.path.join(
+                config['model_dir'], 
+                config['dataset_name'].lower(), 
+                config['model'].lower(), 
+                config['neuron_type'].lower()
+            )
+            ensure_dir(save_model_path)
 
             best_acc = test_acc
             logger.info(f'Best model saved with accuracy: {best_acc:.2f}%')
             torch.save(
                 model.module.state_dict() if config['is_distributed'] else model.state_dict(), 
                 os.path.join(
-                    config['model_dir'], 
+                    save_model_path, 
                     f'best_{config["model"].lower()}_{config["neuron_type"].lower()}_{config["dataset_name"].lower()}_T{config["time_step"]}_{config["seed"]}.pt'
                 )
             )

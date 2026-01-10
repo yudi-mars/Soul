@@ -39,8 +39,15 @@ config['surrogate_function'] = surrogate_map[config['surrogate']]
 config['neuron'] = neuron_map[config['neuron_type'].lower()](config) 
 
 model = model_map[config['application']][config['model'].lower()](config)
-best_model_path = os.path.join(
+save_model_path = os.path.join(
     config['model_dir'], 
+    config['dataset_name'].lower(), 
+    config['model'].lower(), 
+    config['neuron_type'].lower()
+)
+ensure_dir(save_model_path)
+best_model_path = os.path.join(
+    save_model_path, 
     f'best_{config["model"].lower()}_{config["neuron_type"].lower()}_{config["dataset_name"].lower()}_T{config["time_step"]}_{config["seed"]}.pt'
 )
 

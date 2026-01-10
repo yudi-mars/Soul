@@ -54,9 +54,15 @@ config['neuron'] = neuron_map[config['neuron_type'].lower()](config)
 model = model_map[config['application']][config['model'].lower()](config)
 
 # load model state dict
-best_model_path = os.path.join(
+save_model_path = os.path.join(
     config['model_dir'], 
-    f'best_{config["model"].lower()}_{config["neuron_type"].lower()}_{config["dataset_name"].lower()}_{config["seed"]}.pt'
+    config['dataset_name'].lower(), 
+    config['model'].lower(), 
+    config['neuron_type'].lower()
+)
+best_model_path = os.path.join(
+    save_model_path, 
+    f'best_{config["model"].lower()}_{config["neuron_type"].lower()}_{config["dataset_name"].lower()}_T{config["time_step"]}_{config["seed"]}.pt'
 )
 best_params = torch.load(
     best_model_path, 
