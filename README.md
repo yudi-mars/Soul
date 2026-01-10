@@ -10,10 +10,16 @@
 
 ## Overview
 
-Soul is an open-source Python and PyTorch toolkit for building spiking neural network (SNN) applications. It provides a unified, efficient framework designed for both research and edge deployment, enabling you to reproduce brain-inspired computing algorithms and develop new models with minimal overhead. With SOUL (**S**NN-based **O**pen so**U**rce too**L**kit), you can seamlessly experiment with SNNs in a comprehensive environment that bridges academic exploration and real-world edge intelligence.
+**Edge sensing and IoT workloads operate under stringent energy and latency constraints, for which spiking neural networks (SNNs) have emerged as a promising alternative to artificial neural networks (ANNs)**. However, despite growing interest, system-level and cross-modal evidence clarifying when and why SNNs outperform ANNs remains limited. Here, we present a unified benchmarking framework and open-source toolkit spanning datasets acquired from diverse sensing modalities, including vision, audio, motion, wireless, and event-based sensors. Under a consistent training and evaluation protocol, we systematically compare a wide range of spiking neuron models and SNN architectures against size-matched lightweight ANN baselines deployed on edge devices, jointly reporting correctness, timing, complexity and energy-efficiency. By establishing a fair, rigorous, and reproducible evaluation methodology, this work provides actionable guidance for selecting SNNs in edge sensing applications and a reference benchmark to inform algorithm–software–hardware co-design.
 
 <p align="center">
 <img src="assets/overview.png" align="center" width="100%" style="margin: 0 auto">
+</p>
+
+To support the study of recent advances in neuromorphic edge sensing, we introduce SOUL (**S**NN-based **O**pen so**U**rce too**L**kit), an open-source benchmarking toolkit for building SNN applications. SOUL provides a unified and efficient framework tailored for both research and edge deployment, enabling reproducible implementation of neuromorphic computing algorithms and rapid development of new models with minimal overhead. By design, SOUL facilitates seamless experimentation with SNNs within a comprehensive environment that bridges academic research and real-world edge intelligence.
+
+<p align="center">
+<img src="assets/workflow.png" align="center" width="100%" style="margin: 0 auto">
 </p>
 
 ## Usage
@@ -68,7 +74,7 @@ For each dataset, we provide both a **Research/Reference Link** (to a paper or d
 | CIFAR-10 / CIFAR-100 | Standard small-image classification benchmarks | [Paper](https://www.cs.utoronto.ca/~kriz/learning-features-2009-TR.pdf) | [Download](https://www.cs.toronto.edu/~kriz/cifar.html) |
 | SVHN | Street View House Numbers dataset for digit recognition | [Paper](https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/37648.pdf) | [Download](http://ufldl.stanford.edu/housenumbers/) |
 | Tiny-ImageNet | Scaled-down version of ImageNet (200 classes, 64×64 images) | [Paper](https://ieeexplore.ieee.org/abstract/document/5206848/) | [Download](https://www.kaggle.com/c/tiny-imagenet) |
-| MNIST | Handwritten digit recognition benchmark | [Dataset](http://yann.lecun.com/exdb/mnist/) | [Download](https://www.kaggle.com/datasets/hojjatk/mnist-dataset) |
+| MNIST | Handwritten digit recognition benchmark | - | [Download](https://www.kaggle.com/datasets/hojjatk/mnist-dataset) |
 | Fashion-MNIST | Drop-in replacement for MNIST with fashion items | [Paper](https://arxiv.org/abs/1708.07747) | [Download](https://github.com/zalandoresearch/fashion-mnist) |
 
 </details>
@@ -108,6 +114,8 @@ For each dataset, we provide both a **Research/Reference Link** (to a paper or d
 | **ARIL** | WiFi-reflection human-action recognition dataset | [Paper](https://arxiv.org/pdf/1904.04964) | [Download](http://www.sdp8.net/Dataset?id=9d263468-4869-4dbb-85aa-2c63ba0a1e0f) |
 | **NTU-HAR** | Wi-Fi CSI-based human activity recognition | [Paper](https://ieeexplore.ieee.org/document/9667414) | [Download](https://drive.google.com/drive/folders/1R0R8SlVbLI1iUFQCzh_mH90H_4CW2iwt) |
 | **Widar 3.0** | Wi-Fi-based gesture recognition using Body-coordinate Velocity Profile (BVP) and CSI/DFS | [Paper](https://ieeexplore.ieee.org/document/9516988) | [Download](https://tns.thss.tsinghua.edu.cn/widar3.0/) |
+| **AOPHand** | A 3D mmWave radar point-cloud dataset for real-time gesture language recognition | - | [Download](https://www.kaggle.com/datasets/ahtshamzafar/tiawr6843aop-gesture-language-data) |
+| **MMactvity** | 3D mmWave radar point-cloud dataset | [Paper](https://dl.acm.org/doi/pdf/10.1145/3349624.3356768) | [Download](https://github.com/nesl/RadHAR) |
 
 </details>
 
@@ -123,19 +131,35 @@ For each dataset, we provide both a **Research/Reference Link** (to a paper or d
 
 </details>
 
+<br>
 
-> **Note:** After downloading and extracting the datasets, you only need to point the `data_dir` argument to the root directory of the dataset in your configuration (or command-line). The SOUL toolkit will automatically process the data in that directory and run accordingly.
+> **Note:** After downloading and extracting the datasets, you only need to point the `data_dir` argument to the root directory of the dataset in your configuration (or command-line). SOUL will automatically process the raw data in that directory and run accordingly.
 
 
 ## Cite
 
+If you find RecBole useful for your research or development, please cite the following papers:
+
 ```
-TBD
+@article{deng2025edge,
+  title={Edge Intelligence with Spiking Neural Networks},
+  author={Deng, Shuiguang and Yu, Di and Lv, Changze and Du, Xin and Jiang, Linshan and Zhao, Xiaofan and Tong, Wentao and Zheng, Xiaoqing and Fang, Weijia and Zhao, Peng and others},
+  journal={arXiv preprint arXiv:2507.14069},
+  year={2025}
+}
 ```
 
-## Contact Us
+## License
 
-If there are any questions, please feel free to propose new features by opening an issue or contacting the author: **Di Yu**([yudi2023@zju.edu.cn](mailto:yudi2023@zju.edu.cn)), **Changze Lv**([czlv24@m.fudan.edu.cn](mailto:czlv24@m.fudan.edu.cn)), **Zhuo Chen**([chenzhuocs@zju.edu.cn](mailto:chenzhuocs@zju.edu.cn)), and **Wentao Tong**([toldzera@zju.edu.cn](mailto:toldzera@zju.edu.cn)).
+SOUL is released under the [Apache-2.0 License](./LICENSE). All datasets used in this project are intended for academic research purposes only.
+
+## Acknowledgments
+
+This project was supported by the National Key Research and Development Program of China under Grant 2022YFB4500100, the National Natural Science Foundation of China under Grant 62125206, the Zhejiang Provincial Natural Science Foundation of China under Grant No. LD24F020014, the National Key Research and Development Program of China No. 2024YDLN0005, and the Regional Innovation and Development Joint Fund of the National Natural Science Foundation of China No. U22A6001.
+
+## Contact the Team
+
+If there are any questions, please feel free to propose new features by opening an issue or contacting the authors: **Di Yu**([yudi2023@zju.edu.cn](mailto:yudi2023@zju.edu.cn)), **Changze Lv**([czlv24@m.fudan.edu.cn](mailto:czlv24@m.fudan.edu.cn)), **Zhuo Chen**([chenzhuocs@zju.edu.cn](mailto:chenzhuocs@zju.edu.cn)), and **Wentao Tong**([toldzera@zju.edu.cn](mailto:toldzera@zju.edu.cn)).
 
 Enjoy the code!
 
