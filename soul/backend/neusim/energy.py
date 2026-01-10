@@ -52,7 +52,7 @@ class NeuSimEnergyModel:
             self._sop_energy = loihi_sop_energy
         elif arch_name.lower() == "darwin3":
             self._sop_energy = 5.47 * 1e-12  # J
-        elif arch_name.lower() == "TrueNorth":
+        elif arch_name.lower() == "truenorth":
             self._sop_energy = 26 * 1e-12  # J
         elif arch_name.lower() == "spinnaker":
             self._sop_energy = 11.3 * 1e-9  # J
