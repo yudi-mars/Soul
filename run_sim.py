@@ -6,8 +6,8 @@ import networkx as nx
 import numpy as np
 import onnx  # required by compile() export
 import torch
-
-from soul.backend.neusim import NeuSimArch, compile, convert_spikes, sim
+from tqdm import tqdm
+from soul.backend.neusim import NeuSimArch, compile, convert_spikes
 from soul.utils.monitor import BaseMonitor
 
 # Keep the same import style as run_soul.py so model_map/neuron_map/surrogate_map are available.
@@ -60,7 +60,7 @@ def main():
     config['log_dir'], 
     config['dataset_name'].lower(), 
     config['model'].lower(), 
-    config['arch'].lower()
+    config['architecture'].lower()
     )
     ensure_dir(log_path)
     logger = setup_logger(os.path.join(log_path, f'record-{get_local_time()}.log'), default_level=config['state'])
@@ -104,8 +104,12 @@ def main():
     latency_sum_s = 0.0
     energy_sum_j = 0.0
     n_samples = 0
-    K = 10
+    latencies = []
+    K = 2
     num_classes = int(config["num_classes"])
+    total_target = K * num_classes
+    pbar = tqdm(total=total_target, desc=f"{config.get('dataset','dataset')} simulate", unit="sample")
+
     remaining = {c: K for c in range(num_classes)}
     logger.info("Sample partition: ", remaining)
     for bidx, (inputs, targets) in enumerate(loader):
@@ -115,12 +119,11 @@ def main():
                 break
             continue
         inputs = inputs.to(device=device, dtype=torch.float32).contiguous().transpose(0, 1)
-
         input_shape = tuple(inputs.shape[2:])
 
         if bidx == 0:
             logger.info("Start compilation...")
-            arch = NeuSimArch(config['arch'])
+            arch = NeuSimArch(config['architecture'])
             compile_res = compile(model, input_shape, arch)
             '''
             onnx_path = os.path.join(log_path, "model.onnx")
@@ -150,17 +153,25 @@ def main():
             latency_sum_s += float(res.latency)
             energy_sum_j += float(energy_res.total_energy)
             n_samples += 1
+
+            latencies.append(float(res.latency)) 
+            pbar.update(1)
         if n_samples == 0:
             raise RuntimeError("No samples were simulated (empty dataset?).")
         if done:
             break
+    pbar.close()
 
-    avg_latency_ms = (latency_sum_s / n_samples) * 1e3
-    avg_energy_j = (energy_sum_j / n_samples) * 1e3
-
+    lat_t = torch.tensor(latencies, dtype=torch.float64)
+    std_latency_ms = lat_t.std(unbiased=True).item() * 1e6
+    avg_latency_ms = (latency_sum_s / n_samples) * 1e6
+    avg_energy_j = (energy_sum_j / n_samples) * 1e6
+    
     logger.info(f"Per-class first {K} samples: total_samples={n_samples}")
-    logger.info(f"Average latency: {avg_latency_ms:.4f} ms")
-    logger.info(f"Average energy: {avg_energy_j:.4f} mJ")
+    
+    logger.info(f"Average latency: {avg_latency_ms:.4f} μs")
+    logger.info(f"Average energy: {avg_energy_j:.4f} μJ")
+    logger.info(f"Latency STD: {std_latency_ms:.4f} μs")
     #energy_res.print_energy_breakdown()
 
 if __name__ == "__main__":

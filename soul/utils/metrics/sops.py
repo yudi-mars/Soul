@@ -34,6 +34,7 @@ def ops_monitor(net, is_sop=False):
 
 def img2col(X, kernel_size, stride=1, pad=0):
     kh,kw = kernel_size if isinstance(kernel_size, tuple) else (kernel_size, kernel_size)
+    # kh = kw = kernel_size if isinstance(kernel_size, int) else kernel_size[0]
     sh = sw = stride if isinstance(stride, int) else stride[0]
 
     X_pad = F.pad(X, (pad, pad, pad, pad), mode='constant', value=0)
@@ -55,7 +56,6 @@ def conv_forward_with_sparsity(X, W, b, stride=1, pad=0):
     cols_nonzero_count = cols_nonzero.sum(dim=0).sum(1) 
     W_nonzero = (W_reshaped != 0)
     W_nonzero_count = W_nonzero.sum(dim=0) 
-    
     total_effective = torch.dot(cols_nonzero_count.float(), W_nonzero_count.float())
     total_multiplies = N * OH * OW * F_out * KH * KW * C
     
@@ -206,8 +206,8 @@ def ops_hook_conv(module_name, is_sop=True):
     def hook(m, inputs, outputs):
         inputs = inputs[0]
         max_v = torch.max(inputs)
-        is_mac = max_v.dtype == torch.int64 or not torch.floor(max_v) == max_v
-        ran = max_v.detach().cpu().numpy().astype(int)
+        is_float = not torch.floor(max_v) == max_v
+        # is_mac = not torch.floor(max_v) == max_v
         lsar = 0
         stride = m.stride[0]
         padding = m.padding[0]
@@ -217,10 +217,8 @@ def ops_hook_conv(module_name, is_sop=True):
         out_channels = m.out_channels
 
         B, C, H, W = inputs.shape
-        for i in range(1, ran + 1):
-            lsar += len(torch.where(inputs == float(i))[0]) / inputs.numel() * i
-        if lsar == 0:
-            lsar = inputs.count_nonzero() / inputs.numel()
+        # if lsar == 0:
+        #     lsar = inputs.count_nonzero() / inputs.numel()
         weight = m.weight
         # inputs = inputs.reshape(B,C,H,W)
         inputs = inputs.reshape(-1, C, H, W)
@@ -230,14 +228,14 @@ def ops_hook_conv(module_name, is_sop=True):
         else:
             lsar = grouped_conv_forward_with_sparsity(inputs,weight,0,stride,padding,groups=m.groups)
         pass
-        if module_name not in MODULE_SOP_DICT.keys():
-            if is_mac:
-                MODULE_FLOPS_DICT[module_name] = kn * kn * hn * wn *  in_channels * out_channels * B
+        if is_float:
+            if module_name not in MODULE_FLOPS_DICT.keys():
+                MODULE_FLOPS_DICT[module_name] = lsar * kn * kn * hn * wn *  in_channels * out_channels * B
             else:
-                MODULE_SOP_DICT[module_name] = lsar * kn * kn * hn * wn *  in_channels * out_channels * B
+                MODULE_FLOPS_DICT[module_name] += lsar * kn * kn * hn * wn *  in_channels * out_channels * B
         else:
-            if is_mac:
-                MODULE_FLOPS_DICT[module_name] += kn * kn * hn * wn *  in_channels * out_channels * B
+            if module_name not in MODULE_SOP_DICT.keys():
+                MODULE_SOP_DICT[module_name] = lsar * kn * kn * hn * wn *  in_channels * out_channels * B
             else:
                 MODULE_SOP_DICT[module_name] += lsar * kn * kn * hn * wn *  in_channels * out_channels * B
     return hook
@@ -247,26 +245,36 @@ def ops_hook_fc(module_name,is_sop=True):
     def hook(m,input,output):
         inputs = input[0]
         max_v = torch.max(inputs)
-        is_mac = max_v.dtype == torch.int64 or not torch.floor(max_v) == max_v
-        ran = max_v.detach().cpu().numpy().astype(int)
-        lsar = 0
-        for i in range(1, ran + 1):
-            lsar += len(torch.where(inputs == float(i))[0]) / inputs.numel() * i
-        if lsar == 0:
-            lsar = inputs.count_nonzero() / inputs.numel()
+        is_mac = not torch.floor(max_v) == max_v
+        # ran = max_v.detach().cpu().numpy().astype(int)
+        # lsar = 0
+        # for i in range(1, ran + 1):
+        #     lsar += len(torch.where(inputs == float(i))[0]) / inputs.numel() * i
+        # if lsar == 0:
+        #     lsar = inputs.count_nonzero() / inputs.numel()
         weight = m.weight.data
         weight = weight.detach()
         inputs = inputs.detach()
-        fc_forward_with_sparsity(inputs,weight)
+        lsar = fc_forward_with_sparsity(inputs,weight)
         pass
-        if module_name not in MODULE_SOP_DICT.keys():
-            if is_mac:
-                MODULE_FLOPS_DICT[module_name] = batch_matrix_mul(inputs.shape,weight.shape)
-            else:   
-                MODULE_SOP_DICT[module_name] = lsar * batch_matrix_mul(inputs.shape,weight.shape)
+        if is_mac:
+            if module_name not in MODULE_FLOPS_DICT.keys():
+                MODULE_FLOPS_DICT[module_name] = lsar * batch_matrix_mul(inputs.shape,weight.shape)
+            else:
+                MODULE_FLOPS_DICT[module_name] += lsar * batch_matrix_mul(inputs.shape,weight.shape)
         else:
-            if is_mac:
-                MODULE_FLOPS_DICT[module_name] += batch_matrix_mul(inputs.shape,weight.shape)
+            if module_name not in MODULE_SOP_DICT.keys():
+                MODULE_SOP_DICT[module_name] = lsar * batch_matrix_mul(inputs.shape,weight.shape)
             else:
                 MODULE_SOP_DICT[module_name] += lsar * batch_matrix_mul(inputs.shape,weight.shape)
+        # if module_name not in MODULE_SOP_DICT.keys():
+        #     if is_mac:
+        #         MODULE_FLOPS_DICT[module_name] = batch_matrix_mul(inputs.shape,weight.shape)
+        #     else:   
+        #         MODULE_SOP_DICT[module_name] = lsar * batch_matrix_mul(inputs.shape,weight.shape)
+        # else:
+        #     if is_mac:
+        #         MODULE_FLOPS_DICT[module_name] += batch_matrix_mul(inputs.shape,weight.shape)
+        #     else:
+        #         MODULE_SOP_DICT[module_name] += lsar * batch_matrix_mul(inputs.shape,weight.shape)
     return hook

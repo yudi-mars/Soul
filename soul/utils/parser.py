@@ -191,7 +191,14 @@ def parse_args():
         default=256, 
         help="number of queries per stream for latency evaluation"
     )
-    
+    parser.add_argument(
+        "--architecture", 
+        "-arch", 
+        type=str, 
+        default='loihi', 
+        help="simulator architecture name"
+    )
+
     args = parser.parse_args()
     return args
 
