@@ -644,7 +644,6 @@ def dump_pool2d(in_shape, op_attr):
 
 
 def dump_pool1d(in_shape, op_attr):
-    dummy_input = torch.randn((1, *in_shape))  # B, C, W
     padding = op_attr["pads"]
     assert padding[0] == padding[1]
     padding = padding[0]
@@ -660,7 +659,7 @@ def dump_pool1d(in_shape, op_attr):
     if ceil_mode:
         # TODO: handle ceil_mode
         raise NotImplementedError("ceil_mode is not supported yet")
-    dummy_input = torch.randn((1, *in_shape))  # B, C, 1, W
+    dummy_input = torch.randn((1, *in_shape))  # B, C, W
     dummpy_output = layer(dummy_input)
     out_shape = dummpy_output.shape[1:]  # C, W
 
@@ -672,10 +671,10 @@ def dump_pool1d(in_shape, op_attr):
     in_idx_unfold = (
         torch.nn.functional.unfold(
             in_idx,
-            kernel_size=op_attr["kernel_shape"],
-            padding=padding,
-            stride=op_attr["strides"],
-            dilation=op_attr["dilations"],
+            kernel_size=(1, op_attr["kernel_shape"][0]),
+            padding=(0, padding),
+            stride=(1, op_attr["strides"][0]),
+            dilation=(1, op_attr["dilations"][0]),
         )
         .long()
         .numpy()
