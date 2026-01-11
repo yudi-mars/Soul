@@ -40,27 +40,39 @@ If you want to dive deeper into all the available command-line options, configur
 
 ## Results
 
-### Performance of LeNet-structured SNNs with different LIF variants
+<details>
+  <summary><b>Performance of different LIF variants</b></summary>
 
 <p align="center">
     <img src="./assets/cmp-lif-sensing.png" width="100%">
 </p>
 
-### Performance of SNNs with different architectures
+</details>
 
-<p align="center">
+
+<details>
+  <summary><b>Performance of different SNNs</b></summary>
+
+  <p align="center">
     <img src="./assets/cmp-topology.png" width="100%">
-</p>
+  </p>
+
+</details>
 
 <!-- <p align="center">
     <img src="./assets/cmp-topology-performance-cd.png" width="75%">
 </p> -->
 
-### Performance of SNNs with different input encoding strategies
+<details>
+  <summary><b>Performance of different input encoding strategies</b></summary>
 
-<p align="center">
-    <img src="./assets/cmp-encoding-sensing.png" width="100%">
-</p>
+  <p align="center">
+      <img src="./assets/cmp-encoding-sensing.png" width="100%">
+  </p>
+
+</details>
+
+
 
 ## Dataset Support
 
