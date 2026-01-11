@@ -83,11 +83,11 @@ For each dataset, we provide both a **Research/Reference Link** (to a paper or d
     
 | Dataset | Description | Research Link | Download Link |
 |:---------:|:-------------:|:--------------:|:--------------:|
-| CIFAR-10 / CIFAR-100 | Standard small-image classification benchmarks | [Paper](https://www.cs.utoronto.ca/~kriz/learning-features-2009-TR.pdf) | [Download](https://www.cs.toronto.edu/~kriz/cifar.html) |
-| SVHN | Street View House Numbers dataset for digit recognition | [Paper](https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/37648.pdf) | [Download](http://ufldl.stanford.edu/housenumbers/) |
-| Tiny-ImageNet | Scaled-down version of ImageNet (200 classes, 64×64 images) | [Paper](https://ieeexplore.ieee.org/abstract/document/5206848/) | [Download](https://www.kaggle.com/c/tiny-imagenet) |
-| MNIST | Handwritten digit recognition benchmark | - | [Download](https://www.kaggle.com/datasets/hojjatk/mnist-dataset) |
-| Fashion-MNIST | Drop-in replacement for MNIST with fashion items | [Paper](https://arxiv.org/abs/1708.07747) | [Download](https://github.com/zalandoresearch/fashion-mnist) |
+| **CIFAR10/100** | Standard small-image classification benchmarks | [Paper](https://www.cs.utoronto.ca/~kriz/learning-features-2009-TR.pdf) | [Download](https://www.cs.toronto.edu/~kriz/cifar.html) |
+| **SVHN** | Street View House Numbers dataset for digit recognition | [Paper](https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/37648.pdf) | [Download](http://ufldl.stanford.edu/housenumbers/) |
+| **Tiny-ImageNet**| Scaled-down version of ImageNet (200 classes, 64×64 images) | [Paper](https://ieeexplore.ieee.org/abstract/document/5206848/) | [Download](https://www.kaggle.com/c/tiny-imagenet) |
+| **MNIST** | Handwritten digit recognition benchmark | - | [Download](https://www.kaggle.com/datasets/hojjatk/mnist-dataset) |
+| **Fashion-MNIST** | Drop-in replacement for MNIST with fashion items | [Paper](https://arxiv.org/abs/1708.07747) | [Download](https://github.com/zalandoresearch/fashion-mnist) |
 
 </details>
 
@@ -125,7 +125,7 @@ For each dataset, we provide both a **Research/Reference Link** (to a paper or d
 | **BullyDetect** | Wireless sensing dataset for bullying-incident detection | [Paper](https://ieeexplore.ieee.org/abstract/document/10734315) | [Download](http://www.sdp8.net/Dataset?id=5ab0f5fd-a678-400a-afb2-757b2d85bc68) |
 | **ARIL** | WiFi-reflection human-action recognition dataset | [Paper](https://arxiv.org/pdf/1904.04964) | [Download](http://www.sdp8.net/Dataset?id=9d263468-4869-4dbb-85aa-2c63ba0a1e0f) |
 | **NTU-HAR** | Wi-Fi CSI-based human activity recognition | [Paper](https://ieeexplore.ieee.org/document/9667414) | [Download](https://drive.google.com/drive/folders/1R0R8SlVbLI1iUFQCzh_mH90H_4CW2iwt) |
-| **Widar 3.0** | Wi-Fi-based gesture recognition using Body-coordinate Velocity Profile (BVP) and CSI/DFS | [Paper](https://ieeexplore.ieee.org/document/9516988) | [Download](https://tns.thss.tsinghua.edu.cn/widar3.0/) |
+| **Widar 3.0** | Wi-Fi-based gesture recognition using Body-coordinate Velocity Profile (BVP) and CSI/DFS | [Paper](https://ieeexplore.ieee.org/document/9516988) | [Download](https://drive.google.com/drive/folders/1R0R8SlVbLI1iUFQCzh_mH90H_4CW2iwt) |
 | **AOPHand** | A 3D mmWave radar point-cloud dataset for real-time gesture language recognition | - | [Download](https://www.kaggle.com/datasets/ahtshamzafar/tiawr6843aop-gesture-language-data) |
 | **MMactvity** | 3D mmWave radar point-cloud dataset | [Paper](https://dl.acm.org/doi/pdf/10.1145/3349624.3356768) | [Download](https://github.com/nesl/RadHAR) |
 
