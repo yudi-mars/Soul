@@ -1,6 +1,7 @@
 import os
 import datetime
 import matplotlib.pyplot as plt
+from rich.progress import *
 
 def ensure_dir(path):
     if not os.path.exists(path):
@@ -14,6 +15,47 @@ def get_local_time():
 
 def tensor2numpy(x):
     return x.cpu().data.numpy() if x.is_cuda else x.data.numpy()
+
+
+class SpeedColumn(ProgressColumn):
+    def render(self, task):
+        speed = task.speed
+        if speed is None:
+            return Text(" ? it/s", style="progress.data.speed")
+        return Text(f"{speed:5.2f} it/s", style="progress.data.speed")
+
+def progress_bar(iterable, desc="Progress", total=None):
+    """
+    Wrap any iterable with a Rich progress bar
+    showing elapsed time and remaining ETA.
+    """
+    # if no total, try to get __len__ from iterable 
+    if total is None:
+        try:
+            total = len(iterable)
+        except TypeError:
+            total = None  
+
+    columns = [
+        TextColumn("[bold cyan]{task.description}"),
+        BarColumn(),
+        TaskProgressColumn(show_speed=True),
+        TextColumn("{task.completed}/{task.total}" if total else "{task.completed}"),
+        TextColumn("["),
+        TimeElapsedColumn(),
+        TextColumn("<"),
+        TimeRemainingColumn(),
+        TextColumn("•"),
+        SpeedColumn(),
+        TextColumn("]"),
+    ]
+
+    with Progress(*columns) as progress:
+        task = progress.add_task(desc, total=total)
+        for item in iterable:
+            yield item
+            progress.update(task, advance=1)
+
 
 def set_figure_background(ax, xlabel=None, ylabel=None, title=None):
     '''
@@ -32,11 +74,11 @@ def set_figure_background(ax, xlabel=None, ylabel=None, title=None):
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
 
-    for label in axs.get_xticklabels() + axs.get_yticklabels():
+    for label in ax.get_xticklabels() + ax.get_yticklabels():
         label.set_fontsize(10)       
         label.set_fontweight('bold')
 
-    for spine in axs.spines.values():
+    for spine in ax.spines.values():
         spine.set_linewidth(1.5)
 
 
@@ -47,3 +89,9 @@ if __name__ == '__main__':
     fig.tight_layout()
     # plt.savefig('./assets/test_plot.pdf', dpi=300, bbox_inches="tight")
     plt.show()
+
+
+    # total_steps = 50
+    # import time
+    # for _ in progress_bar(range(total_steps), desc="Train: ", total=total_steps):
+    #     time.sleep(0.05)
