@@ -1,5 +1,4 @@
 import os
-from tqdm import tqdm
 
 import torch
 import torch.nn as nn
@@ -144,7 +143,7 @@ for epoch in range(1, config['epochs'] + 1):
     
     train_top1_meter, train_loss_meter = AverageMeter(), AverageMeter()
     # customize progress bar for train loader
-    loader = tqdm(train_loader, unit='batch', ncols=80, desc='Train: ') if global_rank == 0 else train_loader
+    loader = progress_bar(train_loader, desc='Train: ') if global_rank == 0 else train_loader
     for inputs, targets in loader:
         inputs, targets = inputs.to(device, non_blocking=True), targets.to(device, non_blocking=True)
         optimizer.zero_grad()
@@ -169,8 +168,9 @@ for epoch in range(1, config['epochs'] + 1):
         model.eval()
 
         test_top1_meter, test_loss_meter = AverageMeter(), AverageMeter()
+        loader = progress_bar(test_loader, desc='Test: ')
         with torch.no_grad():
-            for inputs, targets in test_loader:
+            for inputs, targets in loader:
                 inputs, targets = inputs.to(device, non_blocking=True), targets.to(device, non_blocking=True)
 
                 # default data shape (B, T, input_size) -> (T, B, input_size)

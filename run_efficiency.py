@@ -5,7 +5,6 @@ for SNNs, the OPs refer to SOPs (Synapse Operations) and FLOPs for the first lay
 '''
 
 import os
-from tqdm import tqdm
 
 import torch
 
@@ -75,7 +74,7 @@ model.eval()
 # calculate theoretical energy cost per sample inference
 logger.info('Counting FLOPs/SOPs for theoretical inference cost')
 ops_monitor(model, is_sop=config['sop'])
-for inputs, _ in tqdm(test_loader, unit='batch', ncols=80, desc='Count OPs: '):
+for inputs, _ in progress_bar(test_loader, desc='Count OPs: '):
     inputs = inputs.to(device, non_blocking=True)
     # default data shape (B, T, input_size) -> (T, B, input_size)
     inputs = inputs.transpose(0, 1)
