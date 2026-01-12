@@ -1,6 +1,7 @@
 import copy
 import io
 import math
+from pathlib import Path
 
 import networkx as nx
 import numpy as np
@@ -28,6 +29,32 @@ class CompileResult:
     mapping_l2p: np.ndarray
     phy_position: np.ndarray
     phy_core_conns: np.ndarray
+
+    def save(self, file):
+        file = Path(file)
+        np.savez(
+            file,
+            num_neurons=self.num_neurons,
+            num_synapses=self.num_synapses,
+            num_cores=self.num_cores,
+            num_params=self.num_params,
+            position=self.position,
+            mapping_l2p=self.mapping_l2p,
+            phy_position=self.phy_position,
+            phy_core_conns=self.phy_core_conns,
+        )
+    
+    def load(self, file):
+        file = Path(file)
+        data = np.load(file)
+        self.num_neurons = int(data["num_neurons"])
+        self.num_synapses = int(data["num_synapses"])
+        self.num_cores = int(data["num_cores"])
+        self.num_params = int(data["num_params"])
+        self.position = data["position"]
+        self.mapping_l2p = data["mapping_l2p"]
+        self.phy_position = data["phy_position"]
+        self.phy_core_conns = data["phy_core_conns"]
 
 
 def export_onnx(model, input_shape: tuple[int, ...]):

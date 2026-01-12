@@ -7,7 +7,7 @@ import numpy as np
 import onnx  # required by compile() export
 import torch
 from tqdm import tqdm
-from soul.backend.neusim import NeuSimArch, compile, convert_spikes
+from soul.backend.neusim import NeuSimArch, convert_spikes
 from soul.utils.monitor import BaseMonitor
 
 # Keep the same import style as run_soul.py so model_map/neuron_map/surrogate_map are available.
@@ -131,7 +131,7 @@ def main():
         if bidx == 0:
             logger.info("Start compilation...")
             arch = NeuSimArch(config['architecture'])
-            compile_res = compile(model, input_shape, arch)
+            compile_res = arch.compile(model, input_shape)
             '''
             onnx_path = os.path.join(log_path, "model.onnx")
             json_path = os.path.join(log_path, "neuron_graph.json")

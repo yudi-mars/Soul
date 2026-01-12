@@ -15,8 +15,7 @@
 namespace py = pybind11;
 using namespace std;
 
-struct SimResult
-{
+struct SimResult {
   int retcode;
   uint32_t num_timesteps;
   double duration;
@@ -29,32 +28,26 @@ struct SimResult
   uint64_t total_hops;
 };
 
-class Top : public TopBase<SyncCore>
-{
+class Top : public TopBase<SyncCore> {
 public:
   auto load_snn(
-      py::array_t<uint32_t> &position,
-      py::array_t<uint8_t, py::array::c_style> &core_conns,
-      py::array_t<uint8_t, py::array::c_style> &spikes)
-  {
-    for (int i = 0; i < topo.size(); ++i)
-    {
+    py::array_t<uint32_t> &position,
+    py::array_t<uint8_t, py::array::c_style> &core_conns,
+    py::array_t<uint8_t, py::array::c_style> &spikes
+  ) {
+    for (int i = 0; i < topo.size(); ++i) {
       auto &core = cores[i];
       auto [y, x] = topo.id2pos(i);
-      if (x > 0)
-      {
+      if (x > 0) {
         core.parents_id.emplace_back(cores[i - 1].id);
       }
-      if (x < topo.x - 1)
-      {
+      if (x < topo.x - 1) {
         core.children_id.emplace_back(cores[i + 1].id);
       }
-      if (y > 0)
-      {
+      if (y > 0) {
         core.parents_id.emplace_back(cores[i - topo.x].id);
       }
-      if (y < topo.y - 1)
-      {
+      if (y < topo.y - 1) {
         core.children_id.emplace_back(cores[i + topo.x].id);
       }
     }
@@ -66,24 +59,22 @@ public:
     auto num_cores = r1.shape(1);
     auto max_ts = r2.shape(1);
 
-    for (py::ssize_t i = 0; i < num_neurons; i++)
-    {
+    for (py::ssize_t i = 0; i < num_neurons; i++) {
       const uint8_t *axon_ptr = r1.data(i, 0);
       const uint8_t *spike_ptr = r2.data(i, 0);
       cores[rp(i)].add_neuron(
-          std::span<const uint8_t>(axon_ptr, num_cores),
-          std::span<const uint8_t>(spike_ptr, max_ts));
+        std::span<const uint8_t>(axon_ptr, num_cores),
+        std::span<const uint8_t>(spike_ptr, max_ts)
+      );
     }
 
-    for (int i = 0; i < topo.size(); ++i)
-    {
+    for (int i = 0; i < topo.size(); ++i) {
       cores[i].init(max_ts);
       cores[i].launch();
     }
   }
 
-  auto result_stats(double duration) -> SimResult
-  {
+  auto result_stats(double duration) -> SimResult {
     SimResult res;
     res.retcode = 0;
     res.num_timesteps = cores[0].max_ts();
@@ -92,32 +83,27 @@ public:
     res.total_recv_flits = routers[0].clk.stats.num_recv_flits.load();
 
     res.total_recv_spikes = 0;
-    for (auto &core : cores)
-    {
+    for (auto &core : cores) {
       res.total_recv_spikes += core.stats.total_recv_spikes;
     }
 
     res.total_sent_spikes = 0;
-    for (auto &core : cores)
-    {
+    for (auto &core : cores) {
       res.total_sent_spikes += core.stats.total_sent_spikes;
     }
 
     res.total_update_cnt = 0;
-    for (auto &core : cores)
-    {
+    for (auto &core : cores) {
       res.total_update_cnt += core.stats.update_cnt;
     }
 
     res.total_firing_cnt = 0;
-    for (auto &core : cores)
-    {
+    for (auto &core : cores) {
       res.total_firing_cnt += core.stats.firing_cnt;
     }
 
     res.total_hops = 0;
-    for (auto &router : routers)
-    {
+    for (auto &router : routers) {
       res.total_hops += router.stats.total_flits;
     }
 
@@ -126,34 +112,29 @@ public:
 };
 
 SimResult run_sim(
-    py::array_t<uint32_t> position,
-    py::array_t<uint8_t, py::array::c_style> core_conns,
-    py::array_t<uint8_t, py::array::c_style> spikes,
-    py::kwargs kwargs)
-{
-  if (kwargs.contains("num_threads"))
-  {
+  py::array_t<uint32_t> position,
+  py::array_t<uint8_t, py::array::c_style> core_conns,
+  py::array_t<uint8_t, py::array::c_style> spikes,
+  py::kwargs kwargs
+) {
+  if (kwargs.contains("num_threads")) {
     global_params.num_workers = kwargs["num_threads"].cast<uint32_t>();
   }
 
-  if (kwargs.contains("topology"))
-  {
+  if (kwargs.contains("topology")) {
     global_params.topology = kwargs["topology"].cast<std::string>();
   }
 
-  if (kwargs.contains("topology_size"))
-  {
+  if (kwargs.contains("topology_size")) {
     global_params.topo_size =
-        kwargs["topology_size"].cast<std::vector<uint32_t>>();
+      kwargs["topology_size"].cast<std::vector<uint32_t>>();
   }
 
-  if (kwargs.contains("routing"))
-  {
+  if (kwargs.contains("routing")) {
     global_params.routing = kwargs["routing"].cast<std::string>();
   }
 
-  if (kwargs.contains("packet_size"))
-  {
+  if (kwargs.contains("packet_size")) {
     global_params.packet_size = kwargs["packet_size"].cast<uint32_t>();
   }
 
@@ -164,59 +145,58 @@ SimResult run_sim(
   // }
 
   uint32_t max_tick = 0;
-  if (kwargs.contains("max_tick"))
-  {
+  if (kwargs.contains("max_tick")) {
     max_tick = kwargs["max_tick"].cast<uint32_t>();
   }
 
   auto r = core_conns.unchecked<2>();
   auto num_cores = r.shape(1);
   auto total_cores = 1;
-  for (auto dim : global_params.topo_size)
-  {
+  for (auto dim : global_params.topo_size) {
     total_cores *= dim;
   }
-  if (num_cores > total_cores)
-  {
+  if (num_cores > total_cores) {
     throw std::invalid_argument(
-        std::format(
-            "Number of cores ({}) exceeds topology size ({})",
-            num_cores,
-            total_cores));
+      std::format(
+        "Number of cores ({}) exceeds topology size ({})",
+        num_cores,
+        total_cores
+      )
+    );
   }
 
-  auto top = Top{};
+  auto top = Top {};
   top.load_snn(position, core_conns, spikes);
 
   auto duration = top.run(max_tick);
   return top.result_stats(duration);
 }
 
-PYBIND11_MODULE(sim, m)
-{
+PYBIND11_MODULE(sim, m) {
   m.doc() = "Wrapper for NeuSim simulator";
 
   py::class_<SimResult>(m, "SimResult", py::dynamic_attr())
-      .def(py::init<int, uint32_t, uint32_t>()) // 绑定构造函数
-      .def_readwrite("retcode", &SimResult::retcode)
-      .def_readwrite("num_timesteps", &SimResult::num_timesteps)
-      .def_readwrite("duration", &SimResult::duration)
-      .def_readwrite("total_cycles", &SimResult::total_cycles)
-      .def_readwrite("total_recv_flits", &SimResult::total_recv_flits)
-      .def_readwrite("total_recv_spikes", &SimResult::total_recv_spikes)
-      .def_readwrite("total_sent_spikes", &SimResult::total_sent_spikes)
-      .def_readwrite("total_update_cnt", &SimResult::total_update_cnt)
-      .def_readwrite("total_firing_cnt", &SimResult::total_firing_cnt)
-      .def_readwrite("total_hops", &SimResult::total_hops)
-      .def("__repr__", [](const SimResult &r) { // 可选：定义打印格式
-        return "<example.SimResult retcode=" + std::to_string(r.retcode) + ">";
-      });
+    .def(py::init<int, uint32_t, uint32_t>()) // 绑定构造函数
+    .def_readwrite("retcode", &SimResult::retcode)
+    .def_readwrite("num_timesteps", &SimResult::num_timesteps)
+    .def_readwrite("duration", &SimResult::duration)
+    .def_readwrite("total_cycles", &SimResult::total_cycles)
+    .def_readwrite("total_recv_flits", &SimResult::total_recv_flits)
+    .def_readwrite("total_recv_spikes", &SimResult::total_recv_spikes)
+    .def_readwrite("total_sent_spikes", &SimResult::total_sent_spikes)
+    .def_readwrite("total_update_cnt", &SimResult::total_update_cnt)
+    .def_readwrite("total_firing_cnt", &SimResult::total_firing_cnt)
+    .def_readwrite("total_hops", &SimResult::total_hops)
+    .def("__repr__", [](const SimResult &r) { // 可选：定义打印格式
+      return "<example.SimResult retcode=" + std::to_string(r.retcode) + ">";
+    });
 
   m.def(
-      "run",
-      &run_sim,
-      "NeuSim",
-      py::arg("position"),
-      py::arg("core_conns"),
-      py::arg("spikes"));
+    "run",
+    &run_sim,
+    "NeuSim",
+    py::arg("position"),
+    py::arg("core_conns"),
+    py::arg("spikes")
+  );
 }

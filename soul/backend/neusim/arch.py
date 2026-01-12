@@ -49,7 +49,12 @@ class NeuSimArch:
         packet_size: int = 1,
         num_threads: int = 1,
     ):
-        from . import sim
+        try:
+            from . import sim
+        except ImportError:
+            raise ImportError(
+                "NeuSim backend is not properly installed. Please follow the installation guide in soul/backend/neusim/README.md"
+            )
 
         meshy = int(np.sqrt(compile_res.num_cores))
         meshx = (compile_res.num_cores // meshy) + (
