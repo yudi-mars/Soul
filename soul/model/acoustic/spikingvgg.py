@@ -88,7 +88,10 @@ class ConvMLP(nn.Module):
         if H < self.input_kernel_size or W < self.input_kernel_size:
             # keeep the input size >= 7*7
             output_size = (max(self.input_kernel_size, H), max(self.input_kernel_size, W))
-            x = F.adaptive_avg_pool2d(x.flatten(0, 1), output_size) # -> (TB, C, output_size[0], output_size[1])
+            if torch.onnx.is_in_onnx_export():
+                x = F.interpolate(x.flatten(0, 1), size=output_size)
+            else:
+                x = F.adaptive_avg_pool2d(x.flatten(0, 1), output_size) # -> (TB, C, output_size[0], output_size[1])
             x = x.reshape(T, B, C, output_size[0], output_size[1])
 
         x = multi_time_forward(x, self.fc1)
