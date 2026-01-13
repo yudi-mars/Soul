@@ -1,9 +1,9 @@
 """
 Filename: spikingvgg.py
-Author: Di Yu <yudi2023@zju.edu.cn>
-Date Created: 2025-07-07
+Author: Helin Zheng <22551146@zju.edu.cn>
+Date Created: 2026-01-02
 Description:
-    implementation for VGG-structured spiking neural networks for image classification.
+    Adaption for VGG-structured spiking neural networks for wireless classification.
 
 References:
     - Di Yu et al., "EC-SNN: Splitting Deep Spiking Neural Networks for Edge Devices", IJCAI'2024.

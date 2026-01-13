@@ -1,9 +1,9 @@
 """
 Filename: qkformer.py
-Author: Di Yu <yudi2023@zju.edu.cn>
-Date Created: 2025-06-25
+Author: Helin Zheng <22551146@zju.edu.cn>
+Date Created: 2026-01-02
 Description:
-    implementation for a transformer-structured SNN model for image classification.
+    Adaption for a transformer-structured SNN model for wireless classification.
 
 References:
     - Chenlin Zhou et al., "QKFormer: Hierarchical Spiking Transformer using Q-K Attention", NeurIPS'2024.

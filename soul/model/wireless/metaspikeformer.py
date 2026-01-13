@@ -1,9 +1,9 @@
 """
 Filename: metaspikeformer.py
-Author: Di Yu <yudi2023@zju.edu.cn>
-Date Created: 2025-06-22
+Author: Helin Zheng <22551146@zju.edu.cn>
+Date Created: 2026-01-02
 Description:
-    implementation for a transformer-structured SNN model for image classification.
+    Adaption for a transformer-structured SNN model for wireless classification.
 
     Note that the original RepConv will cause the misconvergence of all models. 
     Besides, the two convolution layers are linked without any neurons, which is not
