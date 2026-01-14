@@ -373,7 +373,8 @@ def parse_neuron_graph(graph, neuron_graph, is_vgg=False):
                     "GlobalMaxPool",
                 ]:
                     this_src, tmp_shape = dump_globalpool(tmp_shape)
-                elif graph.nodes[node]["op_type"] in ["Resize"] and is_vgg:
+                elif graph.nodes[node]["op_type"] in ["Resize"]:
+                    assert is_vgg, "Only VGG model use Resize for avgpool"
                     this_src, tmp_shape = dump_avgpool(tmp_shape, (7, 7))
                 elif graph.nodes[node]["op_type"] == "Unsqueeze":
                     tmp_shape = op_attr["shape"]
@@ -779,6 +780,10 @@ def dump_avgpool(in_shape, out_shape):
 def dump_avgpool2d(in_shape, out_shape):
     iC, iH, iW = in_shape
     oC, oH, oW = out_shape
+    # in SpikingVGG, output_size = (max(7, H), max(7, W))
+    oH = max(oH, iH)
+    oW = max(oW, iW)
+    out_shape = (iC, oH, oW)
     assert iC == oC
     srcs = []
     iidx = np.arange(iH * iW, dtype=np.int32).reshape(iH, iW)
