@@ -150,7 +150,7 @@ For each dataset, we provide both a **Research/Reference Link** (to a paper or d
 
 ## Cite
 
-If you find RecBole useful for your research or development, please cite the following papers:
+If you find SOUL useful for your research or development, please cite the following papers:
 
 ```
 @article{deng2025edge,
@@ -180,7 +180,7 @@ Enjoy the code!
 - [x] 2026.1.4-2026.1.6 ~~收尾latency统计脚本，准备好OPs理论能耗脚本 @余帝~~
 - [ ] 2026.1.4-2026.2.1 收尾附录详情 @余帝
 - [x] 2026.1.4-2026.1.7 ~~定稿Fig 2 (SNN-bench)正文展示 @余帝~~ (差一个topology的结果，等待补全csv即可彻底完成) 
-- [ ] 2026.1.4-2026.1.17 补全Table 1 @余帝 @张炜松
+- [x] 2026.1.4-2026.1.17 补全Table 1 @余帝 @张炜松
 - [x] 2026.1.6-2026.1.9 熟悉使用NeuSim做推理，并成功运行结果 @张炜松 @郑赫霖 @陈卓
 - [ ] ~~2026.1.6-2026.1.9 熟悉使用Darwin片上推理操作，并成功运行结果 (杜老师说可能不需要) @张炜松 @郑赫霖 @童文韬~~
 - [ ] 2026.1.9-2026.1.20 完成三种延迟结果统计（真实+理论），理论推理能耗统计 @郑赫霖 @张炜松 @陈卓 @童文韬
