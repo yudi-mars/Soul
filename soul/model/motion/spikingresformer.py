@@ -48,8 +48,8 @@ class GWFFN(nn.Module):
         inner_channels = in_channels * ratio
         self.up_lif = deepcopy(lif)
         self.up = nn.Sequential(
-            nn.Conv2d(in_channels, inner_channels, kernel_size=1, stride=1),
-            nn.BatchNorm2d(inner_channels),
+            nn.Conv1d(in_channels, inner_channels, kernel_size=1, stride=1),
+            nn.BatchNorm1d(inner_channels),
         )
         # self.conv = nn.ModuleList()
         self.num_conv = num_conv
@@ -59,16 +59,16 @@ class GWFFN(nn.Module):
                 self,
                 f'conv{n}',
                 nn.Sequential(
-                    nn.Conv2d(inner_channels, inner_channels, kernel_size=3, stride=1, padding=1,
+                    nn.Conv1d(inner_channels, inner_channels, kernel_size=3, stride=1, padding=1,
                               groups=inner_channels // group_size, bias=False),
-                    nn.BatchNorm2d(inner_channels),
+                    nn.BatchNorm1d(inner_channels),
                 )
             )
 
         self.down_lif = deepcopy(lif)
         self.down = nn.Sequential(
-            nn.Conv2d(inner_channels, in_channels, kernel_size=1, stride=1),
-            nn.BatchNorm2d(in_channels),
+            nn.Conv1d(inner_channels, in_channels, kernel_size=1, stride=1),
+            nn.BatchNorm1d(in_channels),
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -96,8 +96,8 @@ class DownsampleLayer(nn.Module):
     def __init__(self, lif, in_channels, out_channels, stride=2):
         super().__init__()
         self.sn = deepcopy(lif)
-        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1)
-        self.norm = nn.BatchNorm2d(out_channels)
+        self.conv = nn.Conv1d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1)
+        self.norm = nn.BatchNorm1d(out_channels)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.sn(x)
@@ -126,27 +126,28 @@ class DSSA(nn.Module):
 
         self.activation_in = deepcopy(lif)
 
-        self.W = nn.Conv2d(dim, 2 * dim, patch_size, patch_size, bias=False)
-        self.norm = nn.BatchNorm2d(2 * dim)
+        self.W = nn.Conv1d(dim, 2 * dim, kernel_size=patch_size, stride=patch_size, bias=False)
+        self.norm = nn.BatchNorm1d(2 * dim)
         self.matmul1 = SpikingMatmul('r')
         self.matmul2 = SpikingMatmul('r')
 
         self.activation_attn = deepcopy(lif)
         self.activation_out = deepcopy(lif)
 
-        self.Wproj = nn.Conv2d(dim, dim, kernel_size=1, stride=1, bias=False)
-        self.norm_proj = nn.BatchNorm2d(dim)
+        self.Wproj = nn.Conv1d(dim, dim, kernel_size=1, stride=1, bias=False)
+        self.norm_proj = nn.BatchNorm1d(dim)
 
     def forward(self, x):
-        T, B, C, H, W = x.shape
+        T, B, C, L = x.shape
         x_feat = x.clone()
         x = self.activation_in(x)
-
+        #print(f"x shape in DSSA: {x.shape}")
         y = multi_time_forward(x, self.W)
         y = multi_time_forward(y, self.norm)
-        y = y.reshape(T, B, self.num_heads, 2 * C // self.num_heads, -1)
+        Lp = y.shape[-1]
+        y = y.reshape(T, B, self.num_heads, 2 * C // self.num_heads, Lp)
         y1, y2 = y[:, :, :, :C // self.num_heads, :], y[:, :, :, C // self.num_heads:, :]
-        x = x.reshape(T, B, self.num_heads, C // self.num_heads, -1)
+        x = x.reshape(T, B, self.num_heads, C // self.num_heads, L)
 
         if self.training:
             firing_rate_x = x.detach().mean((0, 1, 3, 4), keepdim=True)
@@ -170,7 +171,7 @@ class DSSA(nn.Module):
         scale2 = 1. / torch.sqrt(self.firing_rate_attn * self.lenth)
         out = self.matmul2(y2, attn)
         out = out * scale2
-        out = out.reshape(T, B, C, H, W)
+        out = out.reshape(T, B, C, L)
         out = self.activation_out(out)
 
         out = multi_time_forward(out, self.Wproj)
@@ -191,100 +192,83 @@ class SpikingResformer(nn.Module):
     ):
         super().__init__()
 
-        num_classes = config['num_classes']
-        self.T = config['time_step']
-        in_channels = 1
-        img_size_h = config['input_dim']
-        img_size_w = config['input_channels']
-        # assert img_size_w == img_size_h
+        self.T = int(config["time_step"])
+        num_classes = int(config["num_classes"])
 
-        self.interpolate_size = img_size_h if img_size_h>img_size_w else img_size_w
+        self.input_channels = int(config["input_channels"])
+        self.input_dim = int(config["input_dim"])
 
-        lif = config['neuron']
+        self.interpolate_len = int(config.get("interpolate_len", self.input_dim))
+        self.align_corners = bool(config.get("align_corners", True))
 
-        group_size = config['group_size']
-        mlp_ratio = config['mlp_ratio']
+        lif = config["neuron"]
+        group_size = int(config["group_size"])
+        mlp_ratio = int(config["mlp_ratio"])
 
         self.prologue = nn.Sequential(
-            nn.Conv2d(in_channels, planes[0], 7, 2, 3, bias=False),
-            nn.BatchNorm2d(planes[0]),
-            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
+            nn.Conv1d(self.input_channels, planes[0], kernel_size=7, stride=2, padding=3, bias=False),
+            nn.BatchNorm1d(planes[0]),
+            nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
         )
-        img_size = img_size_h // 4
-
-        # this is for cifar10, dvs data reproducible
-        # self.prologue = nn.Sequential(
-        #     nn.Conv2d(in_channels, planes[0], 3, 1, 1, bias=False),
-        #     nn.BatchNorm2d(planes[0]),
-        # )
-        # img_size = img_size_h
-
+        cur_len = self.interpolate_len // 4
         assert len(planes) == len(layers) == len(num_heads) == len(patch_sizes)
 
         self.layers = nn.Sequential()
         for idx in range(len(planes)):
             sub_layers = nn.Sequential()
             if idx != 0:
-                sub_layers.append(
-                    DownsampleLayer(lif, planes[idx - 1], planes[idx], stride=2)
-                )
-                img_size = img_size // 2
+                sub_layers.append(DownsampleLayer(lif, planes[idx - 1], planes[idx], stride=2))
+                cur_len = max(1, cur_len // 2)
+
             for name in layers[idx]:
-                if name == 'DSSA':
-                    sub_layers.append(
-                        DSSA(lif, planes[idx], num_heads[idx], (img_size // patch_sizes[idx]) ** 2, patch_sizes[idx])
-                    )
-                elif name == 'GWFFN':
-                    sub_layers.append(
-                        GWFFN(lif, planes[idx], group_size=group_size, ratio=mlp_ratio)
-                    )
+                if name == "DSSA":
+
+                    lenth = max(1, cur_len // patch_sizes[idx])
+                    sub_layers.append(DSSA(lif, planes[idx], num_heads[idx], lenth, patch_sizes[idx]))
+                elif name == "GWFFN":
+                    sub_layers.append(GWFFN(lif, planes[idx], group_size=group_size, ratio=mlp_ratio))
                 else:
                     raise ValueError(name)
             self.layers.append(sub_layers)
 
-        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.avgpool = nn.AdaptiveAvgPool1d(1)
         self.head = nn.Linear(planes[-1], num_classes, bias=False)
 
         self.init_weight()
 
-    def forward_features(self, x):
-        x = x.unsqueeze(2)
+    
+    def forward_features(self, x: torch.Tensor) -> torch.Tensor:
         functional.reset_net(self)
-
+        #print(f"x shape before prologue: {x.shape}")
         x = multi_time_forward(x, self.prologue)
+        #print(f"x shape after prologue: {x.shape}")
         x = self.layers(x)
+        #print(f"x shape before avgpool: {x.shape}")
         x = multi_time_forward(x, self.avgpool)
-
         return x
 
-    def forward_head(self, x):
-        x = torch.flatten(x, 2)
+    def forward_head(self, x: torch.Tensor) -> torch.Tensor:
+        x = torch.flatten(x, 2)          # [T,B,C]
         x = self.head(x).mean(0)
-
         return x
 
-    def forward(self, x):
-
-        x_interpolated = F.interpolate(
-            x,
-            size=(self.interpolate_size, self.interpolate_size),  # 目标尺寸：H=128，W=128（仅H从12插值到128，W保持128）
-            mode='bilinear',  # 2D场景下的线性插值（双线性插值，对应1D的linear）
-            align_corners=True,  # 保证端点值不变（按需设为False，不影响尺寸扩张）
-            recompute_scale_factor=False  # 避免尺度因子计算警告
-        )
-
-        x = self.forward_features(x_interpolated)  # [T, B, D]
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        #print(f"Input shape: {x.shape}")[4, 16, 9, 128]
+        #x = x.transpose(2, 3)
+        #print(f"shape after: {x.shape}")
+        
+        #x = x.transpose(-1, -2)
+        x = self.forward_features(x)
         x = self.forward_head(x)
-
         return x
 
     def init_weight(self):
         for m in self.modules():
-            if isinstance(m, (nn.Linear, nn.Conv2d)):
+            if isinstance(m, (nn.Linear, nn.Conv1d)):
                 nn.init.trunc_normal_(m.weight, std=0.02)
                 if m.bias is not None:
                     nn.init.constant_(m.bias, 0)
-            elif isinstance(m, nn.BatchNorm2d):
+            elif isinstance(m, nn.BatchNorm1d):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
 
