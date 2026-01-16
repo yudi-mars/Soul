@@ -51,7 +51,6 @@ class GWFFN(nn.Module):
             nn.Conv1d(in_channels, inner_channels, kernel_size=1, stride=1),
             nn.BatchNorm1d(inner_channels),
         )
-        # self.conv = nn.ModuleList()
         self.num_conv = num_conv
         for n in range(num_conv):
             setattr(self, f'conv_lif{n}', deepcopy(lif))
@@ -141,7 +140,6 @@ class DSSA(nn.Module):
         T, B, C, L = x.shape
         x_feat = x.clone()
         x = self.activation_in(x)
-        #print(f"x shape in DSSA: {x.shape}")
         y = multi_time_forward(x, self.W)
         y = multi_time_forward(y, self.norm)
         Lp = y.shape[-1]
@@ -239,11 +237,8 @@ class SpikingResformer(nn.Module):
     
     def forward_features(self, x: torch.Tensor) -> torch.Tensor:
         functional.reset_net(self)
-        #print(f"x shape before prologue: {x.shape}")
         x = multi_time_forward(x, self.prologue)
-        #print(f"x shape after prologue: {x.shape}")
         x = self.layers(x)
-        #print(f"x shape before avgpool: {x.shape}")
         x = multi_time_forward(x, self.avgpool)
         return x
 
@@ -253,11 +248,6 @@ class SpikingResformer(nn.Module):
         return x
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        #print(f"Input shape: {x.shape}")[4, 16, 9, 128]
-        #x = x.transpose(2, 3)
-        #print(f"shape after: {x.shape}")
-        
-        #x = x.transpose(-1, -2)
         x = self.forward_features(x)
         x = self.forward_head(x)
         return x
