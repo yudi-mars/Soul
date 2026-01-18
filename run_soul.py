@@ -168,7 +168,7 @@ for epoch in range(1, config['epochs'] + 1):
         model.eval()
 
         test_top1_meter, test_loss_meter = AverageMeter(), AverageMeter()
-        loader = progress_bar(test_loader, desc='Test: ')
+        loader = progress_bar(test_loader, desc='Test:  ')
         with torch.no_grad():
             for inputs, targets in loader:
                 inputs, targets = inputs.to(device, non_blocking=True), targets.to(device, non_blocking=True)
