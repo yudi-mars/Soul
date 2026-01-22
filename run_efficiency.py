@@ -24,7 +24,6 @@ log_path = os.path.join(
     config['log_dir'], 
     config['dataset_name'].lower(), 
     config['model'].lower(), 
-    config['arch'].lower()
     )
 ensure_dir(log_path)
 logger = setup_logger(os.path.join(log_path, f'record-{get_local_time()}.log'), default_level=config['state'])
@@ -60,9 +59,14 @@ save_model_path = os.path.join(
     config['neuron_type'].lower()
 )
 best_model_path = os.path.join(
-    save_model_path, 
+    config['model_dir'], 
     f'best_{config["model"].lower()}_{config["neuron_type"].lower()}_{config["dataset_name"].lower()}_T{config["time_step"]}_{config["seed"]}.pt'
 )
+if not os.path.exists(best_model_path):
+    best_model_path = os.path.join(
+        config['model_dir'], 
+        f'best_{config["model"].lower()}_{config["neuron_type"].lower()}_{config["dataset_name"].lower()}_{config["seed"]}.pt'
+    )
 best_params = torch.load(
     best_model_path, 
     map_location='cpu'
