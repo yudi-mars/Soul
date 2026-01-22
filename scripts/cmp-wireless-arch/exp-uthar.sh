@@ -3,8 +3,8 @@
 # 固定参数
 GPU_ID=0
 BATCH_SIZE=16
-DATA_DIR=./data/cifar100/
-DATASET=cifar100
+DATA_DIR=./data/uthar/
+DATASET=uthar
 T=4
 
 # 多个可选参数
