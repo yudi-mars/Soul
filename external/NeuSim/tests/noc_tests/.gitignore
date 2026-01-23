@@ -1,0 +1,4 @@
+configs/*
+!configs/
+!configs/power.toml
+!configs/template.yaml
