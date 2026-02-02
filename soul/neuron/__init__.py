@@ -10,6 +10,7 @@ from .LTMD import LTMD
 from .STBIF import STBIF
 from .ILIF import ILIFNeuron
 from .RPLIF import RPLIFNode
+from .Izhikevich import IzhikevichNode
 
 neuron_map = {
     "lif": LIFNode,
@@ -23,6 +24,7 @@ neuron_map = {
     'ltmd': LTMD,
     'stbif': STBIF,
     'ilif': ILIFNeuron,
-    'rplif': RPLIFNode
+    'rplif': RPLIFNode,
+    'izhikevich': IzhikevichNode
     # TODO
 }
