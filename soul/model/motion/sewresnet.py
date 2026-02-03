@@ -1,9 +1,9 @@
 """
 Filename: sewresnet.py
-Author: Di Yu <yudi2023@zju.edu.cn>
-Date Created: 2025-06-02
+Author: Helin Zheng <22551146@zju.edu.cn>
+Date Created: 2026-01-02
 Description:
-    implementation for ResNet-structured spiking neural networks for image classification.
+    Adaptation for ResNet-structured spiking neural networks for moition classification.
 
 References:
     - Wei Fang et al., "Deep residual learning in spiking neural networks", NeurIPS'2021.

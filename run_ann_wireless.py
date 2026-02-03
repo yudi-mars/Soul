@@ -289,8 +289,7 @@ class ResNet(nn.Module):
         self.fc = nn.Linear(512 * ResBlock.expansion, num_classes)
         
     def forward(self, x):
-        x = x.mean(0) # (T, B, C, H, W) -> (B, C, H, W)
-
+        x = x.mean(0)
         x = self.relu(self.batch_norm1(self.conv1(x)))
         x = self.max_pool(x)
         x = self.layer1(x)

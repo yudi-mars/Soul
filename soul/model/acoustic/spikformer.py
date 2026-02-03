@@ -1,9 +1,9 @@
 """
 Filename: spikformer.py
-Author: Di Yu <yudi2023@zju.edu.cn>
-Date Created: 2025-06-10
+Author: Weisong Zhang <22551070@zju.edu.cn>
+Date Created: 2026-01-02
 Description:
-    implementation for a transformer-structured SNN model for image classification.
+    Adaptation for a transformer-structured SNN model for audio classification.
 
 References:
     - Zhaokun Zhou et al., "Spikformer: when spiking neural network meets transformer", ICLR'2023.

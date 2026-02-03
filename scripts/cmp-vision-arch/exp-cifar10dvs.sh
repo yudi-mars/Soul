@@ -1,17 +1,16 @@
 #!/bin/bash
 
 # 固定参数
-GPU_ID=2
-BATCH_SIZE=4
-DATA_DIR=./data/CIFAR10DVS/
+GPU_ID=0
+BATCH_SIZE=16
+DATA_DIR=./data/cifar10dvs/
 DATASET=cifar10dvs
-T=10
+T=4
 
 # 多个可选参数
 seeds=(43)
 neurons=(lif)
-# models=(lenet spikingvgg9 spikingvgg16 sewresnet34 sewresnet50 msresnet34 msresnet50 spikformer256 spikformer384 metaspikeformer256 metaspikeformer384 qkformer256 qkformer384 spikingresformer256 spikingresformer384)
-models=(sewresnet34 sewresnet50 msresnet34 msresnet50 spikformer256 spikformer384 metaspikeformer256 metaspikeformer384 qkformer256 qkformer384 spikingresformer256 spikingresformer384)
+models=(mlp lenet spikingvgg9 spikingvgg16 sewresnet34 sewresnet50 msresnet34 msresnet50 spikformer256 spikformer384 metaspikeformer256 metaspikeformer384 qkformer256 qkformer384 spikingresformer256 spikingresformer384)
 
 # 循环执行所有组合
 for seed in "${seeds[@]}"; do

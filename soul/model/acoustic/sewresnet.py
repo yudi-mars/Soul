@@ -1,9 +1,9 @@
 """
 Filename: sewresnet.py
-Author: Di Yu <yudi2023@zju.edu.cn>
-Date Created: 2025-06-02
+Author: Weisong Zhang <22551070@zju.edu.cn>
+Date Created: 2026-01-02
 Description:
-    implementation for ResNet-structured spiking neural networks for image classification.
+    Adaptation for ResNet-structured spiking neural networks for audio classification.
 
 References:
     - Wei Fang et al., "Deep residual learning in spiking neural networks", NeurIPS'2021.
@@ -304,6 +304,9 @@ class SEWResNet(nn.Module):
     
 def SEWResNet18(config):
     return SEWResNet(config, BasicBlock, [2, 2, 2, 2])
+
+def SEWResNet34(config):
+    return SEWResNet(config, BasicBlock, [3, 4, 6, 3])
 
 def SEWResNet50(config):
     return SEWResNet(config, Bottleneck, [3, 4, 6, 3])

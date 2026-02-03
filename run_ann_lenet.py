@@ -1,5 +1,4 @@
 import os
-import time
 from tqdm import tqdm
 
 import torch
@@ -10,6 +9,8 @@ from soul.model import *
 from soul.neuron import *
 from soul.utils import *
 
+from copy import deepcopy
+from soul.neuron import functional
 class BinaryActivationFn(torch.autograd.Function):
     @staticmethod
     def forward(ctx, x):
@@ -108,6 +109,8 @@ class LeNet(nn.Module):
 
 # init all config settings
 config = init_config()
+config['surrogate_function'] = surrogate_map[config['surrogate']]
+config['neuron'] = neuron_map[config['neuron_type'].lower()](config) 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 log_path = os.path.join(
@@ -157,16 +160,47 @@ test_loader = torch.utils.data.DataLoader(
     pin_memory=True
 )
 
-logger.info(f'Load ANN model: LeNet...')
+logger.info(f'Load model: LeNet...')
 logger.info(f'#Training Samples: {len(train_dataset)}; #Test Samples: {len(test_dataset)}')
 
 model = LeNet(config)
 model.to(device)
 
+best_model_path = os.path.join(config['model_dir'], f'best_{config["model"].lower()}_ann_{config["dataset_name"].lower()}_{config["seed"]}.pt')
+best_params = torch.load(
+      best_model_path, 
+      map_location='cpu'
+  )
+model.load_state_dict(best_params)
+model.to(device)
+model.eval()
+
+#    TODO 验证下ann-lenet推理 calculate theoretical energy cost per sample inference
+print('Counting FLOPs/SOPs for theoretical inference cost')
+total_flops, num_samples = 0, 0
+for inputs, _ in tqdm(test_loader, unit='batch', ncols=80, desc='Count OPs: '):
+    inputs = inputs.to(device, non_blocking=True)
+    #default data shape (B, T, input_size) -> (T, B, input_size)
+    inputs = inputs.transpose(0, 1)
+
+    num_samples += inputs.size(1)
+
+    flops = count_flops(model, inputs)
+
+    total_flops += flops
+#print(num_samples)
+avg_flops = total_flops / num_samples
+avg_energy_per_sample = avg_flops * config['e_mac']
+logger.info(f"Average number of Operations (#OPs): {avg_flops /1e6:.2f} M,")
+logger.info(f"corresponding theoretical energy cost: {avg_energy_per_sample / 1e6:.2f} uJ")
+'''
 # calculate number of parameters
 n_parameters = count_parameters(model, trainable=True) 
 logger.info(f"Number of params for model {config['model']}: {n_parameters / 1e6:.2f} M")
 
+
+
+########################### training process ###########################
 criterion = nn.CrossEntropyLoss()
 # init optimzer
 if config['optimizer'].lower() == 'sgd':
@@ -262,3 +296,34 @@ for epoch in range(1, config['epochs'] + 1):
             )
 
     scheduler.step()
+'''
+########################### inference process ###########################
+# # calculate theoretical energy cost per sample inference
+# best_model_path = os.path.join(config['model_dir'], f'best_lenet_ann_{config["dataset_name"].lower()}_{config["seed"]}.pt')
+# best_params = torch.load(
+#     best_model_path, 
+#     map_location='cpu'
+# )
+# model.load_state_dict(best_params)
+# model.to(device)
+# model.eval()
+
+# # TODO 验证下ann-lenet推理 calculate theoretical energy cost per sample inference
+# print('Counting FLOPs/SOPs for theoretical inference cost')
+# total_flops, num_samples = 0, 0
+# for inputs, _ in tqdm(test_loader, unit='batch', ncols=80, desc='Count OPs: '):
+#     inputs = inputs.to(device, non_blocking=True)
+#     # default data shape (B, T, input_size) -> (T, B, input_size)
+#     inputs = inputs.transpose(0, 1)
+
+#     num_samples += inputs.size(1)
+
+#     flops = count_flops(model, inputs)
+
+#     total_flops += flops
+
+# avg_flops = total_flops / num_samples
+# avg_energy_per_sample = avg_flops * config['e_mac']
+# print(f"Average number of Operations (#OPs): {avg_flops /1e6:.2f} M, corresponding theoretical energy cost: {avg_energy_per_sample / 1e9:.2f} mJ")
+
+# TODO: calculate memory footprint @helin

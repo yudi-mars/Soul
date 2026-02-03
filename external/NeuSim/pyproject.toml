@@ -1,0 +1,13 @@
+[project]
+name = "neu-sim"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "numpy>=2.3.2",
+    "pre-commit>=4.3.0",
+    "pyyaml>=6.0.2",
+    "tomli>=2.2.1",
+    "tomli-w>=1.2.0",
+]

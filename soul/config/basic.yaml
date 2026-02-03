@@ -9,6 +9,7 @@ sop: false                        # (bool) Energy cost simulation for neuromorph
 e_ac: 0.9                         # (float) Energy cost/pJ for AC operation on assumed 45nm hardware
 e_mac: 4.6                        # (float) Energy cost/pJ for MAC operation on assumed 45nm hardware
 application: vision               # (str) Default application scenario for soul
+architecture: general             # (str) Default computing platform for architecture
 
 # Training Settings
 epochs: 150                       # (int) The number of training epochs.

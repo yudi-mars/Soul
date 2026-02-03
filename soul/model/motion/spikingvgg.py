@@ -1,9 +1,9 @@
 """
 Filename: spikingvgg.py
-Author: Di Yu <yudi2023@zju.edu.cn>
-Date Created: 2025-07-07
+Author: Helin Zheng <22551146@zju.edu.cn>
+Date Created: 2026-01-02
 Description:
-    implementation for VGG-structured spiking neural networks for image classification.
+    Adaptation for VGG-structured spiking neural networks for moition classification.
 
 References:
     - Di Yu et al., "EC-SNN: Splitting Deep Spiking Neural Networks for Edge Devices", IJCAI'2024.
@@ -90,7 +90,10 @@ class ConvMLP(nn.Module):
         if N < self.input_kernel_size:
             # keeep the input size >= 7*7
             output_size = max(self.input_kernel_size, N)
-            x = F.adaptive_avg_pool1d(x.flatten(0, 1), output_size) # -> (TB, C, output_size[0])
+            if torch.onnx.is_in_onnx_export():
+                x = F.interpolate(x.flatten(0, 1), size=output_size)
+            else:
+                x = F.adaptive_avg_pool1d(x.flatten(0, 1), output_size) # -> (TB, C, output_size[0])
             x = x.reshape(T, B, C, output_size)
 
         x = multi_time_forward(x, self.fc1)

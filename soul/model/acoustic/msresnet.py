@@ -3,7 +3,7 @@ Filename: sewmsresnetresnet.py
 Author: Di Yu <yudi2023@zju.edu.cn>
 Date Created: 2025-06-03
 Description:
-    implementation for ResNet-structured spiking neural networks for image classification.
+    Adaptation for ResNet-structured spiking neural networks for audio classification.
 
 References:
     - Yifan Hu et al., "Advancing spiking neural networks toward deep residual learning", TNNLS'2024.
@@ -180,5 +180,7 @@ class MSResNet(nn.Module):
 def MSResNet18(config):
     return MSResNet(config, BasicBlock, [2, 2, 2, 2])
 
+def MSResNet34(config):
+    return MSResNet(config, BasicBlock, [3, 4, 6, 3])
 def MSResNet50(config):
     return MSResNet(config, BottleBlock, [3, 4, 6, 3])

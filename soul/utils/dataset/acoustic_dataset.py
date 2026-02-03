@@ -688,7 +688,7 @@ class iSpikingSpeechCommands(AudioData):
 
                 # Data saving
                 print(f"The saving to path `{preprocessed_data_root}` start.")
-                with h5py.File(f"{preprocessed_data_root}/shd_preprocessed_data.h5", "w") as fp:
+                with h5py.File(f"{preprocessed_data_root}/ssc_preprocessed_data.h5", "w") as fp:
                     saved_inputs = fp.create_dataset("inputs", (len(getattr(self, f'{train_type}_data')), *getattr(self, f'{train_type}_data')[0].shape), dtype=np.float32)
                     saved_labels = fp.create_dataset("labels", (len(getattr(self, f'{train_type}_targets')), *getattr(self, f'{train_type}_targets')[0].shape), dtype=np.int64)
 

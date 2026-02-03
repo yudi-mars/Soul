@@ -1,0 +1,245 @@
+[energy]
+# All the basic elements of the NoC have been modelled in VHDL
+# and synthesized using Synopsys Design Compiler considering
+# a 65 nm CMOS standard cell library from UMC operating at
+# 1 GHz.
+
+# Buffer Energy
+# 对应 YAML: [Depth, ItemSize, Leakage, Push, Front, Pop]
+[[energy.buffer]]
+depth = 2
+width = 16
+leakage = 2.05e-4
+push = 3.13e-13
+front = 0.0
+pop = 1.86e-13
+[[energy.buffer]]
+depth = 2
+width = 32
+leakage = 1.35e-3
+push = 6.12e-13
+front = 0.0
+pop = 3.65e-13
+[[energy.buffer]]
+depth = 2
+width = 64
+leakage = 2.68e-3
+push = 1.21e-12
+front = 0.0
+pop = 7.23e-13
+[[energy.buffer]]
+depth = 2
+width = 128
+leakage = 5.0e-3
+push = 2.25e-12
+front = 0.0
+pop = 1.25e-12
+[[energy.buffer]]
+depth = 4
+width = 16
+leakage = 1.16e-3
+push = 3.93e-13
+front = 0.0
+pop = 2.82e-13
+[[energy.buffer]]
+depth = 4
+width = 32
+leakage = 2.27e-3
+push = 7.62e-13
+front = 0.0
+pop = 5.34e-13
+[[energy.buffer]]
+depth = 4
+width = 64
+leakage = 4.48e-3
+push = 1.50e-12
+front = 0.0
+pop = 1.03e-12
+[[energy.buffer]]
+depth = 4
+width = 128
+leakage = 8.2e-3
+push = 2.90e-12
+front = 0.0
+pop = 2.0e-12
+[[energy.buffer]]
+depth = 8
+width = 16
+leakage = 2.08e-3
+push = 5.36e-13
+front = 0.0
+pop = 4.47e-13
+[[energy.buffer]]
+depth = 8
+width = 32
+leakage = 2.30e-3
+push = 1.03e-12
+front = 0.0
+pop = 8.26e-13
+[[energy.buffer]]
+depth = 8
+width = 64
+leakage = 7.91e-3
+push = 2.08e-12
+front = 0.0
+pop = 1.58e-12
+[[energy.buffer]]
+depth = 8
+width = 128
+leakage = 1.5e-2
+push = 4.0e-12
+front = 0.0
+pop = 3.0e-12
+[[energy.buffer]]
+depth = 16
+width = 16
+leakage = 3.94e-3
+push = 8.25e-13
+front = 0.0
+pop = 7.64e-13
+[[energy.buffer]]
+depth = 16
+width = 32
+leakage = 4.36e-3
+push = 1.58e-12
+front = 0.0
+pop = 1.41e-12
+[[energy.buffer]]
+depth = 16
+width = 64
+leakage = 15.0e-3
+push = 3.20e-12
+front = 0.0
+pop = 2.70e-12
+[[energy.buffer]]
+depth = 16
+width = 128
+leakage = 2.84e-2
+push = 6.15e-12
+front = 0.0
+pop = 5.1e-12
+[[energy.buffer]]
+depth = 32
+width = 16
+leakage = 9.87e-3
+push = 1.70e-12
+front = 0.0
+pop = 1.66e-12
+[[energy.buffer]]
+depth = 32
+width = 32
+leakage = 1.09e-2
+push = 3.27e-12
+front = 0.0
+pop = 3.06e-12
+[[energy.buffer]]
+depth = 32
+width = 64
+leakage = 3.75e-2
+push = 6.60e-12
+front = 0.0
+pop = 5.85e-12
+[[energy.buffer]]
+depth = 32
+width = 128
+leakage = 5.84e-2
+push = 1.27e-11
+front = 0.0
+pop = 1.11e-11
+[[energy.buffer]]
+depth = 64
+width = 16
+leakage = 1.58e-2
+push = 2.58e-12
+front = 0.0
+pop = 2.55e-12
+[[energy.buffer]]
+depth = 64
+width = 32
+leakage = 1.74e-2
+push = 4.95e-12
+front = 0.0
+pop = 4.71e-12
+[[energy.buffer]]
+depth = 64
+width = 64
+leakage = 6.0e-2
+push = 1.0e-11
+front = 0.0
+pop = 0.9e-11
+[[energy.buffer]]
+depth = 64
+width = 128
+leakage = 1.14e-1
+push = 1.92e-11
+front = 0.0
+pop = 1.71e-11
+
+# Link BitLine Energy (Per single bitline)
+# 对应 YAML: [Length, Leakage, Dynamic]
+[[energy.link_bit_line]]
+length = 0.5
+leakage = 4.76e-7
+dynamic = 2.50e-14
+[[energy.link_bit_line]]
+length = 1.0
+leakage = 4.80e-7
+dynamic = 4.88e-14
+[[energy.link_bit_line]]
+length = 1.5
+leakage = 4.92e-7
+dynamic = 7.25e-14
+[[energy.link_bit_line]]
+length = 2.0
+leakage = 5.10e-7
+dynamic = 9.63e-14
+[[energy.link_bit_line]]
+length = 2.5
+leakage = 5.50e-7
+dynamic = 1.20e-13
+[[energy.link_bit_line]]
+length = 3.0
+leakage = 5.53e-7
+dynamic = 1.43e-13
+
+# Router Crossbar
+# 对应 YAML: [PortNum, FlitSize, Leakage, Dynamic]
+[[energy.router.crossbar]]
+ports = 5
+width = 16
+leakage = 3.78e-4
+dynamic = 1.20e-13
+[[energy.router.crossbar]]
+ports = 5
+width = 32
+leakage = 7.49e-4
+dynamic = 2.21e-13
+[[energy.router.crossbar]]
+ports = 5
+width = 64
+leakage = 1.49e-3
+dynamic = 4.00e-13
+[[energy.router.crossbar]]
+ports = 5
+width = 128
+leakage = 2.75e-3
+dynamic = 8.0e-13
+
+# Router Routing Logic
+# 对应 YAML: Dictionary { static, dynamic }
+[energy.router.routing]
+default        = { static = 1.20e-4, dynamic = 6.00e-14 }
+XY             = { static = 1.20e-4, dynamic = 6.00e-14 }
+DYAD           = { static = 1.35e-4, dynamic = 6.75e-14 }
+NEGATIVE_FIRST = { static = 1.28e-4, dynamic = 6.30e-14 }
+NORTH_LAST     = { static = 1.28e-4, dynamic = 6.30e-14 }
+DELTA          = { static = 1.28e-4, dynamic = 6.30e-14 }
+WEST_FIRST     = { static = 1.28e-4, dynamic = 6.30e-14 }
+ODD_EVEN       = { static = 1.32e-4, dynamic = 6.60e-14 }
+TABLE_BASED    = { static = 2.40e-4, dynamic = 12.00e-14 }
+
+# Router Selection (Arbitration)
+[energy.router.selection]
+default = { static = 1.10e-4, dynamic = 5.00e-14 }
+XY      = { static = 1.10e-4, dynamic = 5.00e-14 }
+DYAD    = { static = 1.23e-4, dynamic = 5.89e-14 }

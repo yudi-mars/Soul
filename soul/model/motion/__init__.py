@@ -4,6 +4,7 @@ from .msresnet import MSResNet34, MSResNet50
 from .qkformer import QKFormer256, QKFormer384
 from .sensehar import SenseHAR
 from .dcl import DCL
+from .spikformer import Spikformer256, Spikformer384
 from .ispikformer import ISpikformer, ISpikformer256, ISpikformer384, ISpikformer512
 from .general import SpikingMLP, SpikingLeNet, SpikingRNN, SpikingConvRNN
 from .sewresnet import SEWResNet34, SEWResNet50
@@ -18,6 +19,8 @@ motion_model_map = {
     'dcnn': DCNN,
     'sensehar': SenseHAR,
     'dcl': DCL,
+    'spikformer256': Spikformer256,
+    'spikformer384': Spikformer384,
     'ispikformer': ISpikformer,
     'ispikformer256': ISpikformer256,
     'ispikformer384': ISpikformer384,

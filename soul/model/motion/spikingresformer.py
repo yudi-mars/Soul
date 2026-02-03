@@ -1,9 +1,9 @@
 """
 Filename: spikingresformer.py
-Author: Di Yu <yudi2023@zju.edu.cn>
-Date Created: 2025-06-20
+Author: Helin Zheng <22551146@zju.edu.cn>
+Date Created: 2026-01-02
 Description:
-    implementation for a transformer-structured SNN model for image classification.
+    Adaptation for a transformer-structured SNN model for moition classification.
 
 References:
     - Xinyu Shi et al., "SpikingResformer: Bridging ResNet and Vision Transformer in Spiking Neural Networks", CVPR'2024.
@@ -13,13 +13,14 @@ import torch
 import torch.nn as nn
 from copy import deepcopy
 from typing import List
-
+import torch.nn.functional as F
 from soul.neuron import functional
 
 __all__ = ['SpikingResformer', 'SpikingResformer256', 'SpikingResformer384']
 
+
 def multi_time_forward(x_seq, stateless_module):
-    y_shape = [x_seq.shape[0], x_seq.shape[1]] # [T, B]
+    y_shape = [x_seq.shape[0], x_seq.shape[1]]  # [T, B]
     y = x_seq.flatten(0, 1)
     if isinstance(stateless_module, (list, tuple, nn.Sequential)):
         for m in stateless_module:
@@ -27,8 +28,9 @@ def multi_time_forward(x_seq, stateless_module):
     else:
         y = stateless_module(y)
 
-    y_shape.extend(y.shape[1:]) # [T, B] + [...] -> [T, B, ...]
+    y_shape.extend(y.shape[1:])  # [T, B] + [...] -> [T, B, ...]
     return y.view(y_shape)
+
 
 class SpikingMatmul(nn.Module):
     def __init__(self, spike: str) -> None:
@@ -49,7 +51,6 @@ class GWFFN(nn.Module):
             nn.Conv1d(in_channels, inner_channels, kernel_size=1, stride=1),
             nn.BatchNorm1d(inner_channels),
         )
-        # self.conv = nn.ModuleList()
         self.num_conv = num_conv
         for n in range(num_conv):
             setattr(self, f'conv_lif{n}', deepcopy(lif))
@@ -57,7 +58,8 @@ class GWFFN(nn.Module):
                 self,
                 f'conv{n}',
                 nn.Sequential(
-                    nn.Conv1d(inner_channels, inner_channels, kernel_size=3, stride=1, padding=1, groups=inner_channels // group_size, bias=False),
+                    nn.Conv1d(inner_channels, inner_channels, kernel_size=3, stride=1, padding=1,
+                              groups=inner_channels // group_size, bias=False),
                     nn.BatchNorm1d(inner_channels),
                 )
             )
@@ -89,6 +91,21 @@ class GWFFN(nn.Module):
         return x
 
 
+class DownsampleLayer(nn.Module):
+    def __init__(self, lif, in_channels, out_channels, stride=2):
+        super().__init__()
+        self.sn = deepcopy(lif)
+        self.conv = nn.Conv1d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1)
+        self.norm = nn.BatchNorm1d(out_channels)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.sn(x)
+        x = multi_time_forward(x, self.conv)
+        x = multi_time_forward(x, self.norm)
+
+        return x
+
+
 class DSSA(nn.Module):
     def __init__(self, lif, dim, num_heads, lenth, patch_size):
         super().__init__()
@@ -108,7 +125,7 @@ class DSSA(nn.Module):
 
         self.activation_in = deepcopy(lif)
 
-        self.W = nn.Conv1d(dim, 2 * dim, patch_size, patch_size, bias=False)
+        self.W = nn.Conv1d(dim, 2 * dim, kernel_size=patch_size, stride=patch_size, bias=False)
         self.norm = nn.BatchNorm1d(2 * dim)
         self.matmul1 = SpikingMatmul('r')
         self.matmul2 = SpikingMatmul('r')
@@ -120,15 +137,15 @@ class DSSA(nn.Module):
         self.norm_proj = nn.BatchNorm1d(dim)
 
     def forward(self, x):
-        T, B, C, N = x.shape
+        T, B, C, L = x.shape
         x_feat = x.clone()
         x = self.activation_in(x)
-
         y = multi_time_forward(x, self.W)
         y = multi_time_forward(y, self.norm)
-        y = y.reshape(T, B, self.num_heads, 2 * C // self.num_heads, -1)
+        Lp = y.shape[-1]
+        y = y.reshape(T, B, self.num_heads, 2 * C // self.num_heads, Lp)
         y1, y2 = y[:, :, :, :C // self.num_heads, :], y[:, :, :, C // self.num_heads:, :]
-        x = x.reshape(T, B, self.num_heads, C // self.num_heads, -1)
+        x = x.reshape(T, B, self.num_heads, C // self.num_heads, L)
 
         if self.training:
             firing_rate_x = x.detach().mean((0, 1, 3, 4), keepdim=True)
@@ -152,7 +169,7 @@ class DSSA(nn.Module):
         scale2 = 1. / torch.sqrt(self.firing_rate_attn * self.lenth)
         out = self.matmul2(y2, attn)
         out = out * scale2
-        out = out.reshape(T, B, C, N)
+        out = out.reshape(T, B, C, L)
         out = self.activation_out(out)
 
         out = multi_time_forward(out, self.Wproj)
@@ -161,74 +178,53 @@ class DSSA(nn.Module):
 
         return out
 
-class DownsampleLayer(nn.Module):
-    def __init__(self, lif, in_channels, out_channels, stride=2):
-        super().__init__()
-        self.sn = deepcopy(lif)
-        self.conv = nn.Conv1d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1)
-        self.norm = nn.BatchNorm1d(out_channels)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = self.sn(x)
-        x = multi_time_forward(x, self.conv)
-        x = multi_time_forward(x, self.norm)
-
-        return x
 
 class SpikingResformer(nn.Module):
     def __init__(
-        self,
-        config,
-        layers: List[List[str]],
-        planes: List[int],
-        num_heads: List[int],
-        patch_sizes: List[int],
+            self,
+            config,
+            layers: List[List[str]],
+            planes: List[int],
+            num_heads: List[int],
+            patch_sizes: List[int],
     ):
         super().__init__()
 
-        num_classes = config['num_classes']
-        self.T = config['time_step']
-        in_channels = config['input_dim']
-        input_dim = config['input_channels']
-        lif = config['neuron']
+        self.T = int(config["time_step"])
+        num_classes = int(config["num_classes"])
 
-        group_size = config['group_size']
-        mlp_ratio = config['mlp_ratio']
+        self.input_channels = int(config["input_channels"])
+        self.input_dim = int(config["input_dim"])
+
+        self.interpolate_len = int(config.get("interpolate_len", self.input_dim))
+        self.align_corners = bool(config.get("align_corners", True))
+
+        lif = config["neuron"]
+        group_size = int(config["group_size"])
+        mlp_ratio = int(config["mlp_ratio"])
 
         self.prologue = nn.Sequential(
-            nn.Conv1d(in_channels, planes[0], 7, 2, 3, bias=False),
+            nn.Conv1d(self.input_channels, planes[0], kernel_size=7, stride=2, padding=3, bias=False),
             nn.BatchNorm1d(planes[0]),
-            # nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
+            nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
         )
-        img_size = input_dim // 4
-
-        # this is for cifar10, dvs data reproducible
-        # self.prologue = nn.Sequential(
-        #     nn.Conv2d(in_channels, planes[0], 3, 1, 1, bias=False),
-        #     nn.BatchNorm2d(planes[0]),
-        # )
-        # img_size = img_size_h
-
+        cur_len = self.interpolate_len // 4
         assert len(planes) == len(layers) == len(num_heads) == len(patch_sizes)
 
         self.layers = nn.Sequential()
-
         for idx in range(len(planes)):
             sub_layers = nn.Sequential()
             if idx != 0:
-                sub_layers.append(
-                    DownsampleLayer(lif, planes[idx - 1], planes[idx], stride=1)
-                )
-                img_size = img_size
+                sub_layers.append(DownsampleLayer(lif, planes[idx - 1], planes[idx], stride=2))
+                cur_len = max(1, cur_len // 2)
+
             for name in layers[idx]:
-                if name == 'DSSA':
-                    sub_layers.append(
-                        DSSA(lif, planes[idx], num_heads[idx], (img_size // patch_sizes[idx]) ** 2, patch_sizes[idx])
-                    )
-                elif name == 'GWFFN':
-                    sub_layers.append(
-                        GWFFN(lif, planes[idx], group_size=group_size, ratio=mlp_ratio)
-                    )
+                if name == "DSSA":
+
+                    lenth = max(1, cur_len // patch_sizes[idx])
+                    sub_layers.append(DSSA(lif, planes[idx], num_heads[idx], lenth, patch_sizes[idx]))
+                elif name == "GWFFN":
+                    sub_layers.append(GWFFN(lif, planes[idx], group_size=group_size, ratio=mlp_ratio))
                 else:
                     raise ValueError(name)
             self.layers.append(sub_layers)
@@ -238,37 +234,48 @@ class SpikingResformer(nn.Module):
 
         self.init_weight()
 
-    def forward_features(self, x):
+    
+    def forward_features(self, x: torch.Tensor) -> torch.Tensor:
         functional.reset_net(self)
-
         x = multi_time_forward(x, self.prologue)
         x = self.layers(x)
         x = multi_time_forward(x, self.avgpool)
-
         return x
 
-    def forward_head(self, x):
-        x = torch.flatten(x, 2)
+    def forward_head(self, x: torch.Tensor) -> torch.Tensor:
+        x = torch.flatten(x, 2)          # [T,B,C]
         x = self.head(x).mean(0)
-
         return x
 
-    def forward(self, x):
-        x = x.transpose(-1,-2)
-        x = self.forward_features(x) # [T, B, D]
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.forward_features(x)
         x = self.forward_head(x)
-
         return x
 
     def init_weight(self):
         for m in self.modules():
-            if isinstance(m, (nn.Linear, nn.Conv2d)):
+            if isinstance(m, (nn.Linear, nn.Conv1d)):
                 nn.init.trunc_normal_(m.weight, std=0.02)
                 if m.bias is not None:
                     nn.init.constant_(m.bias, 0)
-            elif isinstance(m, nn.BatchNorm2d):
+            elif isinstance(m, nn.BatchNorm1d):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
+
+
+def SpikingResformer192(config):
+    return SpikingResformer(
+        config,
+        [
+            ['DSSA', 'GWFFN'] * 1,
+            ['DSSA', 'GWFFN'] * 2,
+            ['DSSA', 'GWFFN'] * 3,
+        ],
+        [64, 192, 384],
+        [1, 3, 6],
+        [4, 2, 1],
+    )
+
 
 def SpikingResformer256(config):
     return SpikingResformer(
@@ -282,6 +289,7 @@ def SpikingResformer256(config):
         [4, 2, 1]
     )
 
+
 def SpikingResformer384(config):
     return SpikingResformer(
         config,
@@ -291,5 +299,18 @@ def SpikingResformer384(config):
             ['DSSA', 'GWFFN'] * 3, ],
         [64, 384, 768],
         [1, 6, 12],
+        [4, 2, 1]
+    )
+
+
+def SpikingResformer512(config):
+    return SpikingResformer(
+        config,
+        [
+            ['DSSA', 'GWFFN'] * 1,
+            ['DSSA', 'GWFFN'] * 2,
+            ['DSSA', 'GWFFN'] * 3, ],
+        [64, 512, 1024],
+        [2, 8, 16],
         [4, 2, 1]
     )
