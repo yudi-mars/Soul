@@ -178,5 +178,5 @@ Enjoy the code!
 ## TODO List
 
 - [ ] 2026.1.26-2026.1.27 给一个输入图片输出热力图的代码接口，用作Fig3的补充 @童文韬
-- [ ] 2026.1.30-2027.2.14 新增2个神经元 [PMSN（nips'25）](https://github.com/PengXue0812/Multiplication-Free-Parallelizable-Spiking-Neurons-with-Efficient-Spatio-Temporal-Dynamics),[HetSynLIF (nips'25)](https://github.com/dzcgood/HetSyn)，然后把SJ的izhkevich和HH也给融进来，用来对标step @吕昌泽
-- [ ] 2026.1.30-2027.2.14 check下intlif和NI-LIF，我感觉我们实现的是aaai的NI-LIF,INTLIF应该是前面ECCV的文章 @吕昌泽
+- [ok] 2026.1.30-2027.2.14 新增2个神经元 [PMSN（nips'25）](https://github.com/PengXue0812/Multiplication-Free-Parallelizable-Spiking-Neurons-with-Efficient-Spatio-Temporal-Dynamics),[HetSynLIF (nips'25)](https://github.com/dzcgood/HetSyn)，然后把SJ的izhkevich和HH也给融进来，用来对标step @吕昌泽
+- [ok] 2026.1.30-2027.2.14 check下intlif和NI-LIF，我感觉我们实现的是aaai的NI-LIF,INTLIF应该是前面ECCV的文章 @吕昌泽

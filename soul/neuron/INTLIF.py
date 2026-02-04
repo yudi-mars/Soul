@@ -17,7 +17,7 @@ from soul.utils.surrogate import Quant
 
 class INTLIF_BaseNode(MemoryModule):
     def __init__(self, v_threshold: float = 1., v_reset: float = 0.,
-                 surrogate_function: Callable = Quant(), detach_reset: bool = False):
+                 surrogate_function: Callable = Quant(), detach_reset: bool = False, norm: int = 8):
         assert isinstance(v_reset, float) or v_reset is None
         assert isinstance(v_threshold, float)
         assert isinstance(detach_reset, bool)
@@ -33,6 +33,7 @@ class INTLIF_BaseNode(MemoryModule):
 
         self.detach_reset = detach_reset
         self.surrogate_function = surrogate_function
+        self.norm = norm
 
     @abstractmethod
     def neuronal_charge(self, x: torch.Tensor):
@@ -55,7 +56,7 @@ class INTLIF_BaseNode(MemoryModule):
         self.neuronal_charge(x)
         spike = self.neuronal_fire()
         self.neuronal_reset(spike)
-        return spike / 8
+        return spike / self.norm
 
 
 class INTLIFNode(INTLIF_BaseNode):
@@ -65,8 +66,9 @@ class INTLIFNode(INTLIF_BaseNode):
         v_reset = config['v_reset']
         surrogate_function = config['surrogate_function']
         detach_reset = config['detach_reset']
+        norm = config["norm"] 
 
-        super().__init__(v_threshold, v_reset, surrogate_function, detach_reset)
+        super().__init__(v_threshold, v_reset, surrogate_function, detach_reset, norm)
         
     @property
     def supported_backends(self):
