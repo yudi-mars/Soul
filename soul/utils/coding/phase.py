@@ -1,14 +1,21 @@
-'''
-Filename: phase.py
-Author: Weisong Zhang <zws1415@zju.edu.cn>
-Date Created: 2025-11-13
+"""
+Filename:
+    phase.py
+
+Author:
+    Weisong Zhang <zws1415@zju.edu.cn>
+
+Date Created:
+    2025-11-13
+
 Description:
     Binary phase coding (multi-spike) for inputs. It maps normalized values in [0,1]
     to a sequence of spikes across T phases via greedy binary fractional expansion.
+
  References:
     - Hwang & Kung, "One-Spike SNN: Single-Spike Phase Coding with Base Manipulation
     for ANN-to-SNN Conversion Loss Minimization", IEEE 2025.
-'''
+"""
 
 from __future__ import annotations
 import torch

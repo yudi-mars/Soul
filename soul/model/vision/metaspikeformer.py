@@ -1,7 +1,13 @@
 """
-Filename: metaspikeformer.py
-Author: Di Yu <yudi2023@zju.edu.cn>
-Date Created: 2025-06-22
+Filename:
+    metaspikeformer.py
+
+Author:
+    Di Yu <yudi2023@zju.edu.cn>
+
+Date Created:
+    2025-06-22
+
 Description:
     implementation for a transformer-structured SNN model for image classification.
 

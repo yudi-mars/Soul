@@ -1,7 +1,13 @@
 """
-Filename: accuracy.py
-Author: Di Yu <yudi2023@zju.edu.cn>
-Date Created: 2025-04-15
+Filename:
+    accuracy.py
+
+Author:
+    Di Yu <yudi2023@zju.edu.cn>
+
+Date Created:
+    2025-04-15
+
 Description:
     implementation of accuracy evaluation for recognition tasks.
     
@@ -14,12 +20,24 @@ class AverageMeter:
         self.reset()
 
     def reset(self):
+        """
+        重置状态
+
+        Returns:
+            None
+        """
         self.val = 0
         self.avg = 0
         self.sum = 0
         self.count = 0
 
     def update(self, val, n=1):
+        """
+        更新状态
+
+        Returns:
+            None
+        """
         self.val = val
         self.sum += val * n
         self.count += n

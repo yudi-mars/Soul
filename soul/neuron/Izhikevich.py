@@ -1,9 +1,16 @@
 """
-Filename: Izhikevich.py
-Author: Changze Lv <czlv24@m.fudan.edu.cn>
-Date Created: 2025-04-29
+Filename:
+    Izhikevich.py
+
+Author:
+    Changze Lv <czlv24@m.fudan.edu.cn>
+
+Date Created:
+    2025-04-29
+
 Description:
     implementation for Izhikevich Neuron for Spiking Neural Networks.
+
 References:
     - E. M. Izhikevich, "Simple model of spiking neurons," in IEEE Transactions on Neural Networks, vol. 14, no. 6, pp. 1569-1572, Nov. 2003, doi: 10.1109/TNN.2003.820440.
     - Wei Fang et al., "SpikingJelly: An open-source machine learning infrastructure platform for spike-based intelligence", Science Advances'2023.

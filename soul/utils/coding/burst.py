@@ -1,7 +1,13 @@
-'''
-Filename: burst.py
-Author: Weisong Zhang <zws1415@zju.edu.cn>
-Date Created: 2025-11-13
+"""
+Filename:
+    burst.py
+
+Author:
+    Weisong Zhang <zws1415@zju.edu.cn>
+
+Date Created:
+    2025-11-13
+
 Description:
     Burst coding encoder. Stronger inputs emit denser spike packets (bursts)
     within T time steps. Each element emits B spikes with an input-dependent
@@ -11,7 +17,7 @@ References:
     - Guo et al., "Neural Coding in Spiking Neural Networks: A Comparative Study
     for Robust Neuromorphic Systems",Frontiers in Neuroscience, 2021 (burst definition & properties)
     https://github.com/seongsikpark/SNN-neural-coding
-'''
+"""
 
 from __future__ import annotations
 import torch

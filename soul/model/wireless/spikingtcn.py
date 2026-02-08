@@ -4,18 +4,8 @@ import torch.nn as nn
 from copy import deepcopy
 
 from soul.neuron import functional
+from soul.utils import multi_time_forward
 
-def multi_time_forward(x_seq, stateless_module):
-    y_shape = [x_seq.shape[0], x_seq.shape[1]] # [T, B]
-    y = x_seq.flatten(0, 1)
-    if isinstance(stateless_module, (list, tuple, nn.Sequential)):
-        for m in stateless_module:
-            y = m(y)
-    else:
-        y = stateless_module(y)
-    
-    y_shape.extend(y.shape[1:]) # [T, B] + [...] -> [T, B, ...]
-    return y.view(y_shape)
 
 class Chomp1d(nn.Module):
     def __init__(self, chomp_size):

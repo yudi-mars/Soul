@@ -1,7 +1,13 @@
-'''
-Filename: rank_order.py
-Author: Weisong Zhang <zws1415@zju.edu.cn>
-Date Created: 2025-11-11
+"""
+Filename:
+    rank_order.py
+
+Author:
+    Weisong Zhang <zws1415@zju.edu.cn>
+
+Date Created:
+    2025-11-11
+
 Description:
     Rank-Order coding. For each sample, sort values along channel axis (or last axis),
     map ranks to discrete time steps, and emit a single spike at the mapped time.
@@ -9,7 +15,7 @@ Description:
 References:
     - Auge et al., "A Survey of Encoding Techniques for Signal Processing in Spiking Neural Networks", Neural Processing Letters, 2021
     https://github.com/codingrank
-'''
+"""
 from __future__ import annotations
 import torch
 
@@ -33,6 +39,7 @@ def _minmax01(x: torch.Tensor) -> torch.Tensor:
 def _rank_to_time(flat: torch.Tensor, T: int) -> torch.Tensor:
     """
     flat: [N] float32
+
     returns: t [N] int64 in [0, T-1]
     """
     N = flat.numel()

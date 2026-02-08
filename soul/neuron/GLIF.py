@@ -1,7 +1,13 @@
 """
-Filename: GLIF.py
-Author: Changze Lv <czlv24@m.fudan.edu.cn>
-Date Created: 2025-05-03
+Filename:
+    GLIF.py
+
+Author:
+    Changze Lv <czlv24@m.fudan.edu.cn>
+
+Date Created:
+    2025-05-03
+
 Description:
     implementation for LIF variants for Spiking Neural Networks.
 

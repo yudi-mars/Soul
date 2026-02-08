@@ -1,7 +1,13 @@
-'''
-Filename: tsc.py
-Author: Weisong Zhang <zws1415@zju.edu.cn>
-Date Created: 2025-11-24
+"""
+Filename:
+    tsc.py
+
+Author:
+    Weisong Zhang <zws1415@zju.edu.cn>
+
+Date Created:
+    2025-11-24
+
 Description:
     Temporal-Switch-Coding (TSC) encoder. Each input element is represented by
     at most two bipolar spikes within T time steps. The inter-spike interval
@@ -17,7 +23,7 @@ Description:
 References:
     - Han et al., "Deep Spiking Neural Network: Energy Efficiency
       Through Time-Based Coding", ECCV, 2020. (TSC definition & properties)
-'''
+"""
 
 from __future__ import annotations
 import torch

@@ -1,7 +1,13 @@
 """
-Filename: spikingvgg.py
-Author: Helin Zheng <22551146@zju.edu.cn>
-Date Created: 2026-01-02
+Filename:
+    spikingvgg.py
+
+Author:
+    Helin Zheng <22551146@zju.edu.cn>
+
+Date Created:
+    2026-01-02
+
 Description:
     Adaptation for VGG-structured spiking neural networks for moition classification.
 
@@ -15,7 +21,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from copy import deepcopy
-
+from soul.utils import multi_time_forward
 from soul.neuron import functional
 
 __all__ = ['VGG', 'SpikingVGG9',  'SpikingVGG16']
@@ -26,18 +32,6 @@ cfgs = {
     # 'vgg16': [1, 1, 'M', 2, 2, 'M', 4, 4, 4, 'M', 8, 8, 8, 'M', 8, 8, 8, 'M'],
     'vgg16': [1, 1, 2, 2, 4, 4, 4, 8, 8, 8, 8, 8, 8],
 }
-
-def multi_time_forward(x_seq, stateless_module):
-    y_shape = [x_seq.shape[0], x_seq.shape[1]] # [T, B]
-    y = x_seq.flatten(0, 1)
-    if isinstance(stateless_module, (list, tuple, nn.Sequential)):
-        for m in stateless_module:
-            y = m(y)
-    else:
-        y = stateless_module(y)
-    
-    y_shape.extend(y.shape[1:]) # [T, B] + [...] -> [T, B, ...]
-    return y.view(y_shape)
 
 class MaxPool1d(nn.MaxPool1d):
     def __init__(self, kernel_size, stride=None, padding=0, dilation=1, return_indices=False, ceil_mode=False):

@@ -166,8 +166,7 @@ def parse_args():
         "--mode",
         "-mode",
         type=str,
-        default='search',
-        help="" #TODO
+        default='search'
     )
 
     parser.add_argument('--not_prune_weight', action='store_true', help='not use weight prune mask')
@@ -374,7 +373,17 @@ class RecordDict:
         self.__inner_dict[key] = Record(self.test)
 
 class CriterionWarpper(nn.Module):
+    """损失函数"""
     def __init__(self, criterion, TET=False, TET_phi=1.0, TET_lambda=0.0) -> None:
+        """
+        初始化损失函数
+
+        Args:
+            criterion: 使用损失函数
+            TET: 是否使用TET
+            TET_phi: TET_phi值
+            TET_lambda:  TET_lambda值
+        """
         super().__init__()
         self.criterion = criterion
         self.TET = TET
@@ -383,6 +392,16 @@ class CriterionWarpper(nn.Module):
         self.mse = nn.MSELoss()
 
     def forward(self, output: torch.Tensor, target: torch.Tensor):
+        """
+        计算损失
+
+        Args:
+            output: 模型输出
+            target: 目标输出
+
+        Returns:
+            None
+        """
         if self.TET:
             loss = 0
             for t in range(output.shape[0]):
@@ -398,7 +417,16 @@ class CriterionWarpper(nn.Module):
 
 
 class UnstructuredPruningManager:
+    """非结构化剪枝"""
     def __init__(self, model,cfg, sample):
+        """
+        初始化非结构化剪枝
+
+        Args:
+            model: 模型对象
+            cfg: 配置对象
+            sample: 输入样本
+        """
         self.model = model
         self.config = cfg
         self._mask_init_factor = cfg['mask_init_factor']
@@ -434,6 +462,12 @@ class UnstructuredPruningManager:
                 nn.init.constant_(m.bias, 0)
 
     def init_masks(self):
+        """
+        初始化剪枝掩码
+
+        Returns:
+            None
+        """
         conv_count,if_count = 0,0
 
         sample = self.sample.transpose(0, 1)
@@ -474,6 +508,16 @@ class UnstructuredPruningManager:
                 if_count += 1
 
     def _register_weight_hook(self, layer, mask_idx):
+        """
+        注册权重钩子函数
+
+        Args:
+            layer: 当前层
+            mask_idx:  当前层下标
+
+        Returns:
+            None
+        """
         def weight_function_hook(module, input, output):
             mask = self.weight_masks[mask_idx]
             temp = self.weight_temps[mask_idx]
@@ -494,12 +538,24 @@ class UnstructuredPruningManager:
         return hook
 
     def remove_hook(self):
+        """
+        移除钩子函数
+
+        Returns:
+            None
+        """
         for hook in self.weight_hooks:
             hook.remove()
         for hook in self.neuron_hooks:
             hook.remove()
 
     def re_register_hook(self):
+        """
+        重新注册钩子函数
+
+        Returns:
+            None
+        """
         self.weight_hooks.clear()
         self.neuron_hooks.clear()
 
@@ -522,6 +578,16 @@ class UnstructuredPruningManager:
                 if_count += 1
 
     def _register_neuron_hook(self, layer, mask_idx):
+        """
+        注册神经元钩子函数
+
+        Args:
+            layer: 当前神经元
+            mask_idx: 当前神经元下标
+
+        Returns:
+            None
+        """
         def neuron_function_hook(module, input, output):
             mask = self.neuron_masks[mask_idx]
             temp = self.neuron_temps[mask_idx]
@@ -538,12 +604,28 @@ class UnstructuredPruningManager:
         return hook
 
     def _weight_left(self,idx,mask):
+        """
+        统计遗留权重
+
+        Args:
+            idx:  当前层下标
+            mask:  当前层掩码
+
+        Returns:
+            None
+        """
         if self.pruning:
             return  torch.sigmoid(self.weight_temps[idx] * mask.detach()).sum().item(),mask.numel()
         else:
             return torch.where(mask > 0, 1, 0).float().sum().item(), mask.numel()
 
     def left_weights(self):
+        """
+        统计遗留连接量
+
+        Returns:
+            None
+        """
         conn = 0
         total = 0
         for i, m in enumerate(self.weight_masks):
@@ -553,12 +635,27 @@ class UnstructuredPruningManager:
         return conn, total
 
     def _neuron_left(self,idx,mask):
+        """
+        统计遗留神经元量
+
+        Args:
+            idx: 神经元下标
+            mask: 神经元掩码
+        Returns:
+            None
+        """
         if self.pruning:
             return  torch.sigmoid(self.neuron_temps[idx] * mask.detach()).sum().item(),mask.numel()
         else:
             return torch.where(mask > 0, 1, 0).float().sum().item(), mask.numel()
 
     def left_neurons(self):
+        """
+        统计遗留神经元
+
+        Returns:
+            None
+        """
         conn = 0
         total = 0
         for i, m in enumerate(self.neuron_masks):
@@ -569,7 +666,17 @@ class UnstructuredPruningManager:
 
 
 class PenaltyTerm(nn.Module):
+    """损失惩罚项"""
     def __init__(self, model: nn.Module, lmbda: float, manager: UnstructuredPruningManager,device) -> None:
+        """
+        初始化损失惩罚项
+
+        Args:
+            model: 模型对象
+            lmbda: lamda值
+            manager: 非结构化剪枝对象
+            device: 设备
+        """
         super(PenaltyTerm, self).__init__()
         self.model = model
         self.lmbda = lmbda
@@ -579,6 +686,12 @@ class PenaltyTerm(nn.Module):
 
 
     def forward(self) -> Tensor:
+        """
+        计算惩罚项
+
+        Returns:
+            None
+        """
         loss = 0
 
         for i, mask in enumerate(self.manager.weight_masks,start=0):
@@ -590,6 +703,12 @@ class PenaltyTerm(nn.Module):
         return loss
 
     def calc_c(self):
+        """
+        初始化非结构化剪枝对象需要使用的模型结构数据
+
+        Returns:
+            None
+        """
         conv_count, if_count= 0, 0
         self.manager.remove_hook()
         sample = self.manager.sample
@@ -724,6 +843,25 @@ class SplitTemperatureScheduler:
 
 def train_one_epoch(model, criterion, penalty_term, optimizer_train, optimizer_prune,
                     data_loader_train, temp_scheduler,accumulate_step=1, prune=False, one_hot=None,manager=None):
+    """
+    单迭代训练
+
+    Args:
+        model: 模型对象
+        criterion:  损失函数
+        penalty_term:  损失惩罚项
+        optimizer_train:  训练时优化器
+        optimizer_prune:  剪枝时优化器
+        data_loader_train:  训练时数据加载器
+        temp_scheduler:  温度调度器
+        accumulate_step:  优化器更新步长
+        prune:  是否剪枝
+        one_hot:  目标分类数目
+        manager:  非结构化剪枝对象
+
+    Returns:
+        None
+    """
     model.train()
     metric_dict = RecordDict({'loss': None, 'acc@1': None, 'acc@5': None})
     timer_container = [0.0]
@@ -771,6 +909,20 @@ def train_one_epoch(model, criterion, penalty_term, optimizer_train, optimizer_p
     return metric_dict['loss'].ave, metric_dict['acc@1'].ave, metric_dict['acc@5'].ave
 
 def evaluate(model, criterion, data_loader, prune, one_hot,manager):
+    """
+    剪枝验证
+
+    Args:
+        model: 模型对象
+        criterion:  损失函数
+        data_loader:  数据加载器
+        prune:  是否剪枝
+        one_hot:  目标分类数
+        manager:  非结构化剪枝对象
+
+    Returns:
+        None
+    """
     model.eval()
     manager.set_pruning(prune)
     metric_dict = RecordDict({'loss': None, 'acc@1': None, 'acc@5': None})

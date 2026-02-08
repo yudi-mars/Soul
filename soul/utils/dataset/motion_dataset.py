@@ -1,7 +1,13 @@
 '''
-Filename: motion_dataset.py
-Author: Di Yu <yudi2023@zju.edu.cn>
-Date Created: 2025-07-10
+Filename:
+    motion_dataset.py
+
+Author:
+    Di Yu <yudi2023@zju.edu.cn>
+
+Date Created:
+    2025-07-10
+
 Description:
     Load data from motion sensor. For those data without preprocessing, 
     we refer to the processing method of UCI HAR and samling in fixed-width 
@@ -111,12 +117,33 @@ class MotionData(object):
         self.step_size = step_size
 
     def _load_segments(self):
+        """
+        加载特定部分数据
+
+        Returns:
+            数据数组，目标数组
+        """
         raise NotImplementedError
 
     def download_data(self):
+        """
+        下载/加载数据集
+
+        Returns:
+            None
+        """
         raise NotImplementedError
     
     def get_dataset(self, train=True):
+        """
+        获取Dataset对象
+
+        Args:
+            train: 是否是训练集
+
+        Returns:
+            Dataset对象
+        """
         class DummyDataset(Dataset):
             def __init__(self, data, targets, trsf, encode, time_steps):
                 self.data = data

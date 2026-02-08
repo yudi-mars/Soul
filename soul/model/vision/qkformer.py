@@ -1,7 +1,13 @@
 """
-Filename: qkformer.py
-Author: Di Yu <yudi2023@zju.edu.cn>
-Date Created: 2025-06-25
+Filename:
+    qkformer.py
+
+Author:
+    Di Yu <yudi2023@zju.edu.cn>
+
+Date Created:
+    2025-06-25
+
 Description:
     implementation for a transformer-structured SNN model for image classification.
 

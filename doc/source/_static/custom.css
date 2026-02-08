@@ -1,0 +1,7 @@
+.wy-side-nav-search {
+    /* 使用 !important 覆盖默认主题样式 */
+    background-color: #b3b3b3 !important; 
+    
+    /* 如果你想用渐变色 */
+    /* background: linear-gradient(to bottom, #333, #000) !important; */
+}

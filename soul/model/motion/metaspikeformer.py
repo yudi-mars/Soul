@@ -1,7 +1,13 @@
 """
-Filename: metaspikeformer.py
-Author: Helin Zheng <22551146@zju.edu.cn>
-Date Created: 2026-01-02
+Filename:
+    metaspikeformer.py
+
+Author:
+    Helin Zheng <22551146@zju.edu.cn>
+
+Date Created:
+    2026-01-02
+
 Description:
     Adaptation for a transformer-structured SNN model for moition classification.
 

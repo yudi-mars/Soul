@@ -1,7 +1,13 @@
 """
-Filename: spikformer.py
-Author: Di Yu <yudi2023@zju.edu.cn>
-Date Created: 2025-06-10
+Filename:
+    spikformer.py
+
+Author:
+    Di Yu <yudi2023@zju.edu.cn>
+
+Date Created:
+    2025-06-10
+
 Description:
     implementation for a transformer-structured SNN model for image classification.
 

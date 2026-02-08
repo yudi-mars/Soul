@@ -1,7 +1,13 @@
 """
-Filename: general.py
-Author: Di Yu <yudi2023@zju.edu.cn>
-Date Created: 2025-08-09
+Filename:
+    general.py
+
+Author:
+    Di Yu <yudi2023@zju.edu.cn>
+
+Date Created:
+    2025-08-09
+
 Description:
     implementation for commonly-used network architectures in edge scenarios.
     These models are customized for motion sensing tasks.
@@ -13,22 +19,12 @@ References:
 import torch.nn as nn
 
 from copy import deepcopy
-
+from soul.utils import multi_time_forward
 from soul.neuron import functional
 
 __all__ = ['SpikingMLP', 'SpikingLeNet', 'SpikingRNN', 'SpikingConvRNN']
 
-def multi_time_forward(x_seq, stateless_module):
-    y_shape = [x_seq.shape[0], x_seq.shape[1]] # [T, B]
-    y = x_seq.flatten(0, 1)
-    if isinstance(stateless_module, (list, tuple, nn.Sequential)):
-        for m in stateless_module:
-            y = m(y)
-    else:
-        y = stateless_module(y)
-    
-    y_shape.extend(y.shape[1:]) # [T, B] + [...] -> [T, B, ...]
-    return y.view(y_shape)
+
 
 class SpikeRNNCell(nn.Module):
     '''

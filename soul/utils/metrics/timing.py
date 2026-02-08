@@ -1,7 +1,13 @@
 '''
-Filename: run_stream_latency.py
-Author: Di Yu <yudi2023@zju.edu.cn>
-Date Created: 2026-01-05
+Filename:
+    run_stream_latency.py
+
+Author:
+    Di Yu <yudi2023@zju.edu.cn>
+
+Date Created:
+    2026-01-05
+
 Description:
     MLPerf Single-Stream Latency Benchmark for Edge Devices.
     Uses Soul framework APIs for model creation and dataset loading.

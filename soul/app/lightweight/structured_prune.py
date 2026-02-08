@@ -205,7 +205,15 @@ def init_config():
     return config
 
 class PruningManager:
+    """结构化剪枝"""
     def __init__(self,model:nn.Module,nodes_arr:list[int]):
+        """
+        初始化结构化剪枝类
+
+        Args:
+            model: 模型对象
+            nodes_arr: 可剪枝节点下标
+        """
         self.masks = []
         self.activations = []
         self.all_num = 0.0
@@ -231,10 +239,21 @@ class PruningManager:
         self.training = False
 
     def remove_hooks(self):
+        """移除钩子函数"""
         for hook in self.hooks:
             hook.remove()
 
     def check_ifnode(self, node,i):
+        """
+        查看神经元是否可以被剪枝
+
+        Args:
+            node : 当前神经元对象
+            i: 神经元下标
+
+        Returns:
+            bool: 是否可以被剪枝
+        """
         if i not in self._nodes_arr:
             return False
         if hasattr(node, 'store_v_seq') and node.store_v_seq:
@@ -246,6 +265,12 @@ class PruningManager:
 
 
     def scan_model(self):
+        """
+        扫描整个模型，记录可剪枝节点结构信息并注册钩子函数
+
+        Returns:
+            None
+        """
         i = 0
         pre_ifnode_idx = -1
         _pre_nodes = []
@@ -286,6 +311,16 @@ class PruningManager:
                 i += 1
 
     def register_pruning_hook(self, layer, idx):
+        """
+        注册钩子函数以记录用于剪枝的信息
+
+        Args:
+            layer: 当前层对象
+            idx: 当前层下标
+
+        Returns:
+            None
+        """
         def default_hook_function(model, input, output):
             if model.training:
                 spikes = output.detach()
@@ -303,6 +338,17 @@ class PruningManager:
             self.hooks[idx] = handle
 
     def calculate_masks(self, model, remove_threshold = 0.8, grow_threshold = 0.1):
+        """
+        统计结构化剪枝掩码
+
+        Args:
+            model:  模型对象
+            remove_threshold:  剪枝激发率阈值
+            grow_threshold:  保留节点比例
+
+        Returns:
+            None
+        """
         sorted_indices = torch.argsort(torch.cat(self.activations), descending=True)
         num_elements = int(len(sorted_indices) * remove_threshold)
         threshold_indices = sorted_indices[num_elements]
@@ -335,6 +381,12 @@ class PruningManager:
             self.masks[i][channel_gradients_grows[i] > threshold_grow] = 1
 
     def dummy_pruning(self):
+        """
+        非结构化剪枝
+
+        Returns:
+            None
+        """
         i = 0
         for layers in self.pre_layers:
             prune_indices = (self.masks[i] == 0).nonzero().view(-1)
@@ -352,6 +404,12 @@ class PruningManager:
             i += 1
 
     def structured_pruning(self):
+        """
+        结构化剪枝
+
+        Returns:
+            None
+        """
         i = 0
         for _ in self.ifnodes:
             layers = self.pre_layers[i]
@@ -438,6 +496,12 @@ class PruningManager:
 
 
     def compute_prune(self):
+        """
+        剪枝数据统计
+
+        Returns:
+            None
+        """
         self.prune_num = 0
 
         for i in range(len(self.masks)):

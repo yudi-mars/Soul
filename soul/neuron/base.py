@@ -1,7 +1,13 @@
 """
-Filename: base.py
-Author: Changze Lv <czlv24@m.fudan.edu.cn>
-Date Created: 2025-04-20
+Filename:
+    base.py
+
+Author:
+    Changze Lv <czlv24@m.fudan.edu.cn>
+
+Date Created:
+    2025-04-20
+
 Description:
     implementation of the basic fundation of spiking neurons.
 
@@ -18,15 +24,37 @@ import torch.nn as nn
 
 
 class StepModule:
+    """时间步模块"""
     def supported_step_mode(self):
+        """
+        支持推理模式
+
+        Returns:
+            支持模式元组("s","m" or both)
+        """
         return ("s", "m")
 
     @property
     def step_mode(self):
+        """
+        当前推理模式
+
+        Returns:
+            当前推理模式
+        """
         return self._step_mode
 
     @step_mode.setter
     def step_mode(self, value: str):
+        """
+        设置推理模式
+
+        Args:
+            value: 推理模式
+
+        Returns:
+            None
+        """
         if value not in self.supported_step_mode():
             raise ValueError(
                 f'step_mode can only be {self.supported_step_mode()}, but got "{value}"!'
@@ -35,6 +63,7 @@ class StepModule:
 
 
 class MemoryModule(nn.Module, StepModule):
+    """信息存储模块"""
     def __init__(self):
         super().__init__()
         self._memories = {}
@@ -44,14 +73,35 @@ class MemoryModule(nn.Module, StepModule):
 
     @property
     def supported_backends(self):
+        """
+        支持后端
+
+        Returns:
+            后端类型
+        """
         return ("torch",)
 
     @property
     def backend(self):
+        """
+        获取后端类型
+
+        Returns:
+            后端类型
+        """
         return self._backend
 
     @backend.setter
     def backend(self, value: str):
+        """
+        设置后端类型
+
+        Args:
+            value: 后端类型
+
+        Returns:
+            None
+        """
         if value not in self.supported_backends:
             raise NotImplementedError(
                 f"{value} is not a supported backend of {self._get_name()}!"
@@ -63,6 +113,17 @@ class MemoryModule(nn.Module, StepModule):
         pass
 
     def multi_step_forward(self, x_seq: torch.Tensor, *args, **kwargs):
+        """
+        多时间步推理
+
+        Args:
+            x_seq: 输入序列
+            *args:  参数列表
+            **kwargs: 参数字典
+
+        Returns:
+            输出序列
+        """
         T = x_seq.shape[0]
         y_seq = []
         for t in range(T):
@@ -71,6 +132,16 @@ class MemoryModule(nn.Module, StepModule):
         return torch.cat(y_seq, 0)
 
     def forward(self, *args, **kwargs):
+        """
+        正向推理
+
+        Args:
+            *args:  参数列表
+            **kwargs: 参数字典
+
+        Returns:
+            输出序列
+        """
         if torch.onnx.is_in_onnx_export():
 
             class MemoryModuleFunction(torch.autograd.Function):
@@ -111,15 +182,41 @@ class MemoryModule(nn.Module, StepModule):
         return f"step_mode={self.step_mode}, backend={self.backend}"
 
     def register_memory(self, name: str, value):
+        """
+        注册存储属性
+
+        Args:
+            name: 属性名称
+            value: 属性初始值
+
+        Returns:
+            None
+        """
         assert not hasattr(self, name), f"{name} has been set as a member variable!"
         self._memories[name] = value
         self.set_reset_value(name, value)
 
     def reset(self):
+        """
+        重置存储属性
+
+        Returns:
+            None
+        """
         for key in self._memories.keys():
             self._memories[key] = copy.deepcopy(self._memories_rv[key])
 
     def set_reset_value(self, name: str, value):
+        """
+        设置存储属性重置值
+
+        Args:
+            name: 属性名称
+            value: 重置值
+
+        Returns:
+            None
+        """
         self._memories_rv[name] = copy.deepcopy(value)
 
     def __getattr__(self, name: str):
@@ -157,14 +254,32 @@ class MemoryModule(nn.Module, StepModule):
         return sorted(keys)
 
     def memories(self):
+        """
+        获取存储属性值
+
+        Returns:
+            存储属性值迭代器
+        """
         for name, value in self._memories.items():
             yield value
 
     def named_memories(self):
+        """
+        获取存储属性名称及值
+
+        Returns:
+            （存储属性,值）迭代器
+        """
         for name, value in self._memories.items():
             yield name, value
 
     def detach(self):
+        """
+        分离存储属性张量
+
+        Returns:
+            None
+        """
         for key in self._memories.keys():
             if isinstance(self._memories[key], torch.Tensor):
                 self._memories[key].detach_()

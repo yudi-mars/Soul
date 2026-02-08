@@ -1,7 +1,13 @@
 """
-Filename: LIF.py
-Author: Changze Lv <czlv24@m.fudan.edu.cn>
-Date Created: 2025-04-29
+Filename:
+    LIF.py
+
+Author:
+    Changze Lv <czlv24@m.fudan.edu.cn>
+
+Date Created:
+    2025-04-29
+
 Description:
     implementation for LIF for Spiking Neural Networks.
 

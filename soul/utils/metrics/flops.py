@@ -1,7 +1,13 @@
 """
-Filename: flops.py
-Author: Soul Framework
-Date Created: 2025-01-04
+Filename:
+    flops.py
+
+Author:
+    Soul Framework
+
+Date Created:
+    2025-01-04
+
 Description:
     Implementation of counting FLOPs (Floating Point Operations) for neural networks
     using the thop library.

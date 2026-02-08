@@ -1,7 +1,13 @@
 """
-Filename: sewresnet.py
-Author: Helin Zheng <22551146@zju.edu.cn>
-Date Created: 2026-01-02
+Filename:
+    sewresnet.py
+
+Author:
+    Helin Zheng <22551146@zju.edu.cn>
+
+Date Created:
+    2026-01-02
+
 Description:
     Adaption for ResNet-structured spiking neural networks for wireless classification.
 
@@ -13,40 +19,12 @@ import torch
 import torch.nn as nn
 
 from copy import deepcopy
-
+from soul.utils import conv3x3, multi_time_forward, sew_function, conv1x1
 from soul.neuron import functional
 
 __all__ = ['SEWResNet', 'SEWResNet18', 'SEWResNet34', 'SEWResNet50']
 
-def multi_time_forward(x_seq, stateless_module):
-    y_shape = [x_seq.shape[0], x_seq.shape[1]] # [T, B]
-    y = x_seq.flatten(0, 1)
-    if isinstance(stateless_module, (list, tuple, nn.Sequential)):
-        for m in stateless_module:
-            y = m(y)
-    else:
-        y = stateless_module(y)
-    
-    y_shape.extend(y.shape[1:]) # [T, B] + [...] -> [T, B, ...]
-    return y.view(y_shape)
 
-def conv3x3(in_planes, out_planes, stride=1, groups=1, dilation=1):
-    """3x3 convolution with padding"""
-    return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride, padding=dilation, groups=groups, bias=False, dilation=dilation)
-
-def conv1x1(in_planes, out_planes, stride=1):
-    """1x1 convolution"""
-    return nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False)
-
-def sew_function(identity: torch.Tensor, out: torch.Tensor, cnf:str):
-    if cnf == 'ADD':
-        return identity + out
-    elif cnf == 'AND':
-        return identity * out
-    elif cnf == 'IAND':
-        return identity * (1. - out)
-    else:
-        raise NotImplementedError(cnf)
 
 class BasicBlock(nn.Module):
     expansion = 1

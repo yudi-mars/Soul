@@ -1,7 +1,13 @@
 '''
-Filename: acoustic_dataset.py
-Author: Di Yu <yudi2023@zju.edu.cn>
-Date Created: 2025-07-30
+Filename:
+    acoustic_dataset.py
+
+Author:
+    Di Yu <yudi2023@zju.edu.cn>
+
+Date Created:
+    2025-07-30
+
 Description:
     Load data from acoustic sensor. For those audio file without preprocessing, 
     we choose mel-frequency spectrogram to convert, shape as [window size, num channels].
@@ -48,9 +54,24 @@ class AudioData:
         self.input_shape = (self.reduce_size, self.reduce_size) # (window_size, channel_num)
 
     def download_data(self):
+        """
+        下载/加载数据集
+
+        Returns:
+            None
+        """
         raise NotImplementedError
     
     def get_dataset(self, train=True):
+        """
+        获取Dataset对象
+
+        Args:
+            train: 是否是训练集
+
+        Returns:
+            Dataset对象
+        """
         raise NotImplementedError
     
 @register_dataset('esc')

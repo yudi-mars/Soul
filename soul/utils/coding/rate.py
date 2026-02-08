@@ -1,7 +1,13 @@
 """
-Filename: rate.py
-Author: Di Yu <yudi2023@zju.edu.cn>
-Date Created: 2025-04-10
+Filename:
+    rate.py
+
+Author:
+    Di Yu <yudi2023@zju.edu.cn>
+
+Date Created:
+    2025-04-10
+
 Description:
     implementation of rate coding mechanism for SNN inputs.
 
@@ -23,7 +29,7 @@ def _minmax01(x: torch.Tensor, eps: float = 1e-8) -> torch.Tensor:
     return (x - x_min) / rng
 
 def rate_conv(data):
-    '''
+    """
     Convert tensor into Poisson spike trains using the features as
     the mean of a binomial distribution. Values outside the range of 
     [0, 1] are clipped so they can be treated as probabilities.
@@ -54,7 +60,7 @@ def rate_conv(data):
     -------
     torch.Tensor
         rate encoding spike train of input features of shape [num_steps x batch x input_size]
-    '''
+    """
 
     # Clip all features between 0 and 1 so they can be used as probabilities.
     clipped_data = torch.clamp(data, min=0, max=1)
@@ -64,9 +70,9 @@ def rate_conv(data):
 
 
 def encode(data, num_steps=False, gain=1, offset=0, first_spike_time=0, time_var_input=False):
-    '''
-    Spike rate encoding of input data. Convert tensor into Poisson spike trains using the 
-    features as the mean of a binomial distribution. If `num_steps` is specified, then the 
+    """
+    Spike rate encoding of input data. Convert tensor into Poisson spike trains using the
+    features as the mean of a binomial distribution. If `num_steps` is specified, then the
     data will be first repeated in the first dimension before rate encoding.
 
     If data is time-varying, tensor dimensions use time first.
@@ -97,26 +103,24 @@ def encode(data, num_steps=False, gain=1, offset=0, first_spike_time=0, time_var
         print(d.size())
         >>> torch.Size([2, 4])
 
-    Parameters
-    ----------
-    data : torch.Tensor
-        Data tensor for a single batch of shape [batch x input_size]
-    num_steps : int, optional
-        Number of time steps. Only specify if input data does not already have time dimension, by default False
-    gain : float, optional
-        Scale input features by the gain, by default 1
-    offset : torch.optim, optional
-        Shift input features by the offset, by default 0
-    first_spike_time : int, optional
-        Time to first spike, by default 0
-    time_var_input : bool, optional
-        Set to ``True`` if input tensor is time-varying. Otherwise, `first_spike_time!=0` will modify the wrong dimension., by default False
+    Args:
+        data : torch.Tensor
+            Data tensor for a single batch of shape [batch x input_size]
+        num_steps : int, optional
+            Number of time steps. Only specify if input data does not already have time dimension, by default False
+        gain : float, optional
+            Scale input features by the gain, by default 1
+        offset : torch.optim, optional
+            Shift input features by the offset, by default 0
+        first_spike_time : int, optional
+            Time to first spike, by default 0
+        time_var_input : bool, optional
+            Set to ``True`` if input tensor is time-varying. Otherwise, `first_spike_time!=0` will modify the wrong dimension., by default False
 
-    Returns
-    -------
-    torch.Tensor
-        rate encoding spike train of input features of shape [num_steps x batch x input_size]
-    '''
+    Returns:
+        torch.Tensor
+            rate encoding spike train of input features of shape [num_steps x batch x input_size]
+    """
     if first_spike_time < 0 or num_steps < 0:
         raise ValueError("``first_spike_time`` and ``num_steps`` cannot be negative.")
     

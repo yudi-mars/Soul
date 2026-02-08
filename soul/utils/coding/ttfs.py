@@ -1,7 +1,13 @@
 """
-Filename: temporal.py
-Author: Di Yu <yudi2023@zju.edu.cn>
-Date Created: 2025-04-11
+Filename:
+    temporal.py
+
+Author:
+    Di Yu <yudi2023@zju.edu.cn>
+
+Date Created:
+    2025-04-11
+
 Description:
     implementation of temporal/latency coding mechanism for SNN inputs.
 
@@ -23,7 +29,7 @@ def latency_code(
     linear=False,
     epsilon=1e-7,
 ):
-    '''
+    """
     Latency encoding of input data. Convert input features or
     target labels to spike times. Assumes a LIF neuron model
     that charges up with time constant tau by default.
@@ -34,30 +40,28 @@ def latency_code(
         spikegen.latency_code(a, num_steps=5, normalize=True, linear=True)
         >>> (tensor([3.9200, 2.0000, 0.0000]), tensor([False, False, False]))
 
-    Parameters
-    ----------
-    data : torch.Tensor
-        Data tensor for a single batch of shape [batch x input_size]
-    num_steps : int, optional
-        Number of time steps. Explicitly needed if ``normalize=True``, by default False (then changed to ``1`` if ``normalize=False``)
-    threshold : float, optional
-        Input features below the threhold will fire at the final time step unless ``clip=True`` in which case they will not fire at all, by default 0.01
-    tau : float, optional
-        RC Time constant for LIF model used to calculate firing time, by default 1
-    first_spike_time : int, optional
-        first_spike_time: Time to first spike, by default 0
-    normalize : bool, optional
-        Option to normalize the latency code such that the final spike(s) occur within num_steps, by default False
-    linear : bool, optional
-        Apply a linear latency code rather than the default logarithmic code, by default False
-    epsilon : float, optional
-        A tiny positive value to avoid rounding errors when using torch.arange, by default 1e-7
+    Args:
+        data : torch.Tensor
+            Data tensor for a single batch of shape [batch x input_size]
+        num_steps : int, optional
+            Number of time steps. Explicitly needed if ``normalize=True``, by default False (then changed to ``1`` if ``normalize=False``)
+        threshold : float, optional
+            Input features below the threhold will fire at the final time step unless ``clip=True`` in which case they will not fire at all, by default 0.01
+        tau : float, optional
+            RC Time constant for LIF model used to calculate firing time, by default 1
+        first_spike_time : int, optional
+            first_spike_time: Time to first spike, by default 0
+        normalize : bool, optional
+            Option to normalize the latency code such that the final spike(s) occur within num_steps, by default False
+        linear : bool, optional
+            Apply a linear latency code rather than the default logarithmic code, by default False
+        epsilon : float, optional
+            A tiny positive value to avoid rounding errors when using torch.arange, by default 1e-7
 
-    Returns
-    -------
-    torch.Tensor
-        latency encoding spike times of features
-    '''
+    Returns:
+        torch.Tensor
+            latency encoding spike times of features
+    """
     idx = data < threshold
 
     if not linear:
@@ -86,9 +90,9 @@ def latency_code(
 def _latency_errors(
     data, num_steps, threshold, tau, first_spike_time, normalize
 ):
-    '''  
+    """
     Catch errors for spike time encoding latency functions ``latency_code_linear`` and ``latency_code_log``
-    '''
+    """
 
     if (
         threshold <= 0 or threshold >= 1
@@ -133,7 +137,7 @@ def latency_code_linear(
     first_spike_time=0,
     normalize=False,
 ):
-    '''
+    """
     Linear latency encoding of input data. Convert input features
     or target labels to spike times.
 
@@ -143,26 +147,24 @@ def latency_code_linear(
         spikegen.latency_code(a, num_steps=5, normalize=True, linear=True)
         >>> (tensor([3.9200, 2.0000, 0.0000]), tensor([False, False, False]))
 
-    Parameters
-    ----------
-    data : torch.Tensor
-        Data tensor for a single batch of shape [batch x input_size]
-    num_steps : int, optional
-        Number of time steps. Explicitly needed if ``normalize=True``, by default False
-    threshold : float,  optional
-        Input features below the threhold will fire at the final time step, by default 0.01
-    tau : float, optional
-        Linear time constant used to calculate firing time, by default 1
-    first_spike_time : int, optional
-        Time to first spike, by default 0
-    normalize : bool, optional
-        Option to normalize the latency code such that the final spike(s) occur within num_steps, by default False
+    Args:
+        data : torch.Tensor
+            Data tensor for a single batch of shape [batch x input_size]
+        num_steps : int, optional
+            Number of time steps. Explicitly needed if ``normalize=True``, by default False
+        threshold : float,  optional
+            Input features below the threhold will fire at the final time step, by default 0.01
+        tau : float, optional
+            Linear time constant used to calculate firing time, by default 1
+        first_spike_time : int, optional
+            Time to first spike, by default 0
+        normalize : bool, optional
+            Option to normalize the latency code such that the final spike(s) occur within num_steps, by default False
 
-    Returns
-    -------
-    torch.Tensor
-        linear latency encoding spike times of features
-    '''
+    Returns:
+        torch.Tensor
+            linear latency encoding spike times of features
+    """
 
     _latency_errors(
         data, num_steps, threshold, tau, first_spike_time, normalize
@@ -196,7 +198,7 @@ def latency_code_log(
     normalize=False,
     epsilon=1e-7,
 ):
-    '''
+    """
     Logarithmic latency encoding of input data. Convert input features
     or target labels to spike times.
 
@@ -206,28 +208,26 @@ def latency_code_log(
         spikegen.latency_code(a, num_steps=5, normalize=True)
         >>> (tensor([4.0000, 0.1166, 0.0580]), tensor([False, False, False]))
 
-    Parameters
-    ----------
-    data : torch.Tensor
-        Data tensor for a single batch of shape [batch x input_size]
-    num_steps : int, optional
-        Number of time steps. Explicitly needed if ``normalize=True``, by default False (then changed to ``1`` if ``normalize=False``)
-    threshold : float, optional
-        Input features below the threhold will fire at the final time step, by default 0.01
-    tau : float, optional
-        Logarithmic time constant used to calculate firing time, by default 1
-    first_spike_time : int, optional
-        Time to first spike, defaults to ``0``, by default 0
-    normalize : bool, optional
-        Option to normalize the latency code such that the final spike(s) occur within num_steps, by default False
-    epsilon : float, optional
-        A tiny positive value to avoid rounding errors when using torch.arange, by default 1e-7
+    Args:
+        data : torch.Tensor
+            Data tensor for a single batch of shape [batch x input_size]
+        num_steps : int, optional
+            Number of time steps. Explicitly needed if ``normalize=True``, by default False (then changed to ``1`` if ``normalize=False``)
+        threshold : float, optional
+            Input features below the threhold will fire at the final time step, by default 0.01
+        tau : float, optional
+            Logarithmic time constant used to calculate firing time, by default 1
+        first_spike_time : int, optional
+            Time to first spike, defaults to ``0``, by default 0
+        normalize : bool, optional
+            Option to normalize the latency code such that the final spike(s) occur within num_steps, by default False
+        epsilon : float, optional
+            A tiny positive value to avoid rounding errors when using torch.arange, by default 1e-7
 
-    Returns
-    -------
-    torch.Tensor
-        logarithmic latency encoding spike times of features
-    '''
+    Returns:
+        torch.Tensor
+            logarithmic latency encoding spike times of features
+    """
 
     _latency_errors(
         data, num_steps, threshold, tau, first_spike_time, normalize
@@ -250,11 +250,10 @@ def latency_code_log(
     return spike_time
 
 def latency_interpolate(spike_time, num_steps, on_target=1, off_target=0):
-    '''
+    """
     Apply linear interpolation to a tensor of target spike times to
-    enable gradual increasing membrane. Each spike is assumed to occur 
+    enable gradual increasing membrane. Each spike is assumed to occur
     from a separate neuron.
-
     Example::
 
         a = torch.Tensor([0, 4])
@@ -273,22 +272,20 @@ def latency_interpolate(spike_time, num_steps, on_target=1, off_target=0):
                     [0.2500, 1.0000],
                     [0.2500, 1.2500]])
 
-    Parameters
-    ----------
-    spike_time : torch.Tensor
-        spike time targets in terms of steps
-    num_steps : int
-        Number of time steps
-    on_target : float, optional
-        Target at spike times, by default 1
-    off_target : float, optional
-        Target during refractory period, by default 0
+    Args:
+        spike_time : torch.Tensor
+            spike time targets in terms of steps
+        num_steps : int
+            Number of time steps
+        on_target : float, optional
+            Target at spike times, by default 1
+        off_target : float, optional
+            Target during refractory period, by default 0
 
-    Returns
-    -------
-    torch.Tensor
-        interpolated target of output neurons. Output tensor will use time-first dimensions.
-    '''
+    Returns:
+        torch.Tensor
+            interpolated target of output neurons. Output tensor will use time-first dimensions.
+    """
     if on_target < off_target:
         raise Exception(
             f"``on_target`` [{on_target}] must be greater than "
@@ -361,7 +358,7 @@ def encode(
     bypass=False,
     epsilon=1e-7,
 ):
-    '''
+    """
     Temporal (Latency) encoding of input or target label data. Use input features
     to determine time-to-first spike. Expected inputs should be between 0 and 1.
 
@@ -378,47 +375,45 @@ def encode(
                     [0., 0., 0.],
                     [1., 0., 0.]])
 
-    Parameters
-    ----------
-    data : torch.Tensor
-        Data tensor for a single batch of shape [batch x input_size]
-    num_steps : int, optional
-        Number of time steps. Explicitly needed if ``normalize=True``, 
-        by default ``False`` (then changed to ``1`` if ``normalize=False``)
-    threshold : float, optional
-        Input features below the threhold will fire at the final time step 
-        unless ``clip=True`` in which case they will not fire at all, by default 0.01
-    tau : float, optional
-        RC Time constant for LIF model used to calculate firing time, by default 1
-    first_spike_time : int, optional
-        Time to first spike, by default 0
-    on_target : float, optional
-        Target at spike times, by default 1
-    off_target : float, optional
-        Target during refractory period, by default 0
-    clip : bool, optional
-        Option to remove spikes from features that fall
-        below the threshold, by default False
-    normalize : bool, optional
-        Option to normalize the latency code such that the final spike(s) occur 
-        within num_steps, by default True
-    linear : bool, optional
-        Apply a linear latency code rather than the default logarithmic code, by default False
-    interpolate : bool, optional
-        Applies linear interpolation such that there is a gradually increasing 
-        target up to each spike, by default False
-    bypass : bool, optional
-        Used to block error messages that occur from either: i) spike times exceeding 
-        the bounds of ``num_steps``, or ii) if ``num_steps`` is not specified, setting
-        ``bypass=True`` allows the largest spike time to set ``num_steps``, by default False
-    epsilon : float, optional
-        A tiny positive value to avoid rounding errors when using torch.arange, by default 1e-7
+    Args:
+        data : torch.Tensor
+            Data tensor for a single batch of shape [batch x input_size]
+        num_steps : int, optional
+            Number of time steps. Explicitly needed if ``normalize=True``,
+            by default ``False`` (then changed to ``1`` if ``normalize=False``)
+        threshold : float, optional
+            Input features below the threhold will fire at the final time step
+            unless ``clip=True`` in which case they will not fire at all, by default 0.01
+        tau : float, optional
+            RC Time constant for LIF model used to calculate firing time, by default 1
+        first_spike_time : int, optional
+            Time to first spike, by default 0
+        on_target : float, optional
+            Target at spike times, by default 1
+        off_target : float, optional
+            Target during refractory period, by default 0
+        clip : bool, optional
+            Option to remove spikes from features that fall
+            below the threshold, by default False
+        normalize : bool, optional
+            Option to normalize the latency code such that the final spike(s) occur
+            within num_steps, by default True
+        linear : bool, optional
+            Apply a linear latency code rather than the default logarithmic code, by default False
+        interpolate : bool, optional
+            Applies linear interpolation such that there is a gradually increasing
+            target up to each spike, by default False
+        bypass : bool, optional
+            Used to block error messages that occur from either: i) spike times exceeding
+            the bounds of ``num_steps``, or ii) if ``num_steps`` is not specified, setting
+            ``bypass=True`` allows the largest spike time to set ``num_steps``, by default False
+        epsilon : float, optional
+            A tiny positive value to avoid rounding errors when using torch.arange, by default 1e-7
 
-    Returns
-    -------
-    torch.Tensor
-        latency encoding spike train of features or labels
-    '''
+    Returns:
+        torch.Tensor
+            latency encoding spike train of features or labels
+    """
 
     data = data if torch.is_tensor(data) else torch.as_tensor(data, dtype=torch.float32)
     data = data.to(torch.float32).contiguous()

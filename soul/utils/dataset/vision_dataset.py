@@ -1,7 +1,13 @@
 '''
-Filename: vision_dataset.py
-Author: Di Yu <yudi2023@zju.edu.cn>
-Date Created: 2025-07-10
+Filename:
+    vision_dataset.py
+
+Author:
+    Di Yu <yudi2023@zju.edu.cn>
+
+Date Created:
+    2025-07-10
+
 Description:
     Load data from vision sensor with some data augmentation operations
     neuromorphic sensors like DVS, ATIS, DAVIS, etc. are considered in this module and the data loading and processing code are mainly referred to SpikingJelly.
@@ -75,9 +81,24 @@ class VisionData(object):
         self.receptor_size =receptor_size
 
     def download_data(self):
+        """
+        下载/加载数据集
+
+        Returns:
+            None
+        """
         raise NotImplementedError
     
     def get_dataset(self):
+        """
+        获取Dataset对象
+
+        Args:
+            train: 是否是训练集
+
+        Returns:
+            Dataset对象
+        """
         raise NotImplementedError
     
 @register_dataset('mnist')

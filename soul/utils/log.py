@@ -2,6 +2,16 @@ import logging
 import colorlog
 
 def setup_logger(log_path='', default_level='INFO'):
+    """
+    设置日志
+
+    Args:
+        log_path: 日志保存路径
+        default_level: 日志级别
+
+    Returns:
+        日志对象
+    """
     if default_level.upper() == 'INFO':
         state = logging.INFO
     elif default_level.upper() == 'WARNING':

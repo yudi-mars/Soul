@@ -1,7 +1,13 @@
 """
-Filename: spikingvgg.py
-Author: Di Yu <yudi2023@zju.edu.cn>
-Date Created: 2025-07-07
+Filename:
+    spikingvgg.py
+
+Author:
+    Di Yu <yudi2023@zju.edu.cn>
+
+Date Created:
+    2025-07-07
+
 Description:
     implementation for VGG-structured spiking neural networks for image classification.
 
@@ -13,7 +19,7 @@ References:
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+from soul.utils import multi_time_forward
 from copy import deepcopy
 
 from soul.neuron import functional
@@ -28,18 +34,6 @@ cfgs = {
     'vgg16': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M'],
     'vgg19': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M', 512, 512, 512, 512, 'M'],
 }
-
-def multi_time_forward(x_seq, stateless_module):
-    y_shape = [x_seq.shape[0], x_seq.shape[1]] # [T, B]
-    y = x_seq.flatten(0, 1)
-    if isinstance(stateless_module, (list, tuple, nn.Sequential)):
-        for m in stateless_module:
-            y = m(y)
-    else:
-        y = stateless_module(y)
-    
-    y_shape.extend(y.shape[1:]) # [T, B] + [...] -> [T, B, ...]
-    return y.view(y_shape)
 
 class MaxPool2d(nn.MaxPool2d):
     def __init__(self, kernel_size, stride=None, padding=0, dilation=1, return_indices=False, ceil_mode=False):

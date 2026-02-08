@@ -1,7 +1,13 @@
 """
-Filename: TLIF.py
-Author: Changze Lv <czlv24@m.fudan.edu.cn>
-Date Created: 2025-05-17
+Filename:
+    TLIF.py
+
+Author:
+    Changze Lv <czlv24@m.fudan.edu.cn>
+
+Date Created:
+    2025-05-17
+
 Description:
     implementation for LIF variants for Spiking Neural Networks.
 

@@ -2,12 +2,22 @@ import torch
 import torch.nn as nn
 
 class SurrogateFunctionBase(nn.Module):
+    """梯度代理函数基类"""
     def __init__(self, alpha, spiking=True):
         super().__init__()
         self.spiking = spiking
         self.alpha = alpha
 
     def set_spiking_mode(self, spiking: bool):
+        """
+        设置是否用于脉冲网络
+
+        Args:
+            spiking:  是否用于脉冲网络
+
+        Returns:
+            None
+        """
         self.spiking = spiking
 
     def extra_repr(self):
@@ -15,10 +25,30 @@ class SurrogateFunctionBase(nn.Module):
 
     @staticmethod
     def spiking_function(x, alpha):
+        """
+        代理函数的脉冲网络实现
+
+        Args:
+            x: 输入
+            alpha: alpha值
+
+        Returns:
+            输出
+        """
         raise NotImplementedError
 
     @staticmethod
     def primitive_function(x, alpha):
+        """
+        代理函数的原始实现
+
+        Args:
+            x: 输入
+            alpha: alpha值
+
+        Returns:
+            输出
+        """
         raise NotImplementedError
 
     def forward(self, x: torch.Tensor):

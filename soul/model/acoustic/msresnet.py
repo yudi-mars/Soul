@@ -1,7 +1,13 @@
 """
-Filename: sewmsresnetresnet.py
-Author: Di Yu <yudi2023@zju.edu.cn>
-Date Created: 2025-06-03
+Filename:
+    sewmsresnetresnet.py
+
+Author:
+    Di Yu <yudi2023@zju.edu.cn>
+
+Date Created:
+    2025-06-03
+
 Description:
     Adaptation for ResNet-structured spiking neural networks for audio classification.
 
@@ -13,20 +19,9 @@ import torch
 import torch.nn as nn
 from copy import deepcopy
 from soul.neuron import functional
+from soul.utils import multi_time_forward
 
 __all__ = ['MSResNet', 'MSResNet18', 'MSResNet34', 'MSResNet50']
-
-def multi_time_forward(x_seq, stateless_module):
-    y_shape = [x_seq.shape[0], x_seq.shape[1]] # [T, B]
-    y = x_seq.flatten(0, 1)
-    if isinstance(stateless_module, (list, tuple, nn.Sequential)):
-        for m in stateless_module:
-            y = m(y)
-    else:
-        y = stateless_module(y)
-    
-    y_shape.extend(y.shape[1:]) # [T, B] + [...] -> [T, B, ...]
-    return y.view(y_shape)
 
 class BottleBlock(nn.Module):
     expansion = 4

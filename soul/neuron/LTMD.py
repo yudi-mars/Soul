@@ -1,7 +1,12 @@
 """
-Filename: LTMD.py
-Author: Changze Lv <czlv24@m.fudan.edu.cn>
+Filename:
+    LTMD.py
+
+Author:
+    Changze Lv <czlv24@m.fudan.edu.cn>
+
 Date Created: 2025-05-09
+
 Description:
     implementation for LIF variants for Spiking Neural Networks.
 

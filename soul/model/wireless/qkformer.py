@@ -1,7 +1,13 @@
 """
-Filename: qkformer.py
-Author: Helin Zheng <22551146@zju.edu.cn>
-Date Created: 2026-01-02
+Filename:
+    qkformer.py
+
+Author:
+    Helin Zheng <22551146@zju.edu.cn>
+
+Date Created:
+    2026-01-02
+
 Description:
     Adaption for a transformer-structured SNN model for wireless classification.
 
@@ -13,18 +19,10 @@ import torch
 import torch.nn as nn
 from copy import deepcopy
 from functools import partial
-
+from soul.utils import set_v_threshold
 from soul.neuron import functional
 
 __all__ = ['QKFormer', 'QKFormer256', 'QKFormer384', 'QKFormer512', 'QKFormerPrototype']
-
-def set_v_threshold(neuron, value: float):
-    vt = getattr(neuron, "v_threshold", None)
-    if isinstance(vt, torch.nn.Parameter) or torch.is_tensor(vt):
-        with torch.no_grad():
-            vt.fill_(float(value))
-    else:
-        neuron.v_threshold = float(value)
 
 
 class PatchEmbedInit(nn.Module):

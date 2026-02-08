@@ -1,7 +1,13 @@
 """
-Filename: dcl.py
-Author: Di Yu <yudi2023@zju.edu.cn>
-Date Created: 2025-07-22
+Filename:
+    dcl.py
+
+Author:
+    Di Yu <yudi2023@zju.edu.cn>
+
+Date Created:
+    2025-07-22
+
 Description:
     spike-wise deep convolutional and LSTM network for HAR
 
@@ -20,22 +26,21 @@ import math
 from copy import deepcopy
 
 from soul.neuron import functional
+from soul.utils import multi_time_forward
 from soul.utils.surrogate import Erf, ATan
-
-def multi_time_forward(x_seq, stateless_module):
-    y_shape = [x_seq.shape[0], x_seq.shape[1]] # [T, B]
-    y = x_seq.flatten(0, 1)
-    if isinstance(stateless_module, (list, tuple, nn.Sequential)):
-        for m in stateless_module:
-            y = m(y)
-    else:
-        y = stateless_module(y)
-    
-    y_shape.extend(y.shape[1:]) # [T, B] + [...] -> [T, B, ...]
-    return y.view(y_shape)
 
 def directional_rnn_cell_forward(cell: nn.Module, x: torch.Tensor,
                                    states: torch.Tensor):
+    """
+
+    Args:
+        cell:
+        x:
+        states:
+
+    Returns:
+        None
+    """
 
     T = x.shape[0]
     ss = states
@@ -52,6 +57,18 @@ def directional_rnn_cell_forward(cell: nn.Module, x: torch.Tensor,
 
 def bidirectional_rnn_cell_forward(cell: nn.Module, cell_reverse: nn.Module, x: torch.Tensor,
                                    states: torch.Tensor, states_reverse: torch.Tensor):
+    """
+
+    Args:
+        cell:
+        cell_reverse:
+        x:
+        states:
+        states_reverse:
+
+    Returns:
+        None
+    """
     T = x.shape[0]
     ss = states
     ss_r = states_reverse

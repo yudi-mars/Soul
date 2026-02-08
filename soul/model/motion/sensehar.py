@@ -1,7 +1,13 @@
 """
-Filename: sensehar.py
-Author: Di Yu <yudi2023@zju.edu.cn>
-Date Created: 2025-07-16
+Filename:
+    sensehar.py
+
+Author:
+    Di Yu <yudi2023@zju.edu.cn>
+
+Date Created:
+    2025-07-16
+
 Description:
     implementation for spike-wise SenseHAR for HAR.
 
@@ -15,18 +21,8 @@ import torch.nn as nn
 from copy import deepcopy
 
 from soul.neuron import functional
+from soul.utils import multi_time_forward
 
-def multi_time_forward(x_seq, stateless_module):
-    y_shape = [x_seq.shape[0], x_seq.shape[1]] # [T, B]
-    y = x_seq.flatten(0, 1)
-    if isinstance(stateless_module, (list, tuple, nn.Sequential)):
-        for m in stateless_module:
-            y = m(y)
-    else:
-        y = stateless_module(y)
-    
-    y_shape.extend(y.shape[1:]) # [T, B] + [...] -> [T, B, ...]
-    return y.view(y_shape)
 
 class DeviceEncoder(nn.Module):
     '''

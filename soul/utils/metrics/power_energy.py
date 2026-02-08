@@ -1,7 +1,13 @@
 """
-Filename: power_energy.py
-Author: Di Yu and Yubing Bao <yudi2023@zju.edu.cn; ybbao23@m.fudan.edu.cn>
-Date Created: 2025-04-23
+Filename:
+    power_energy.py
+
+Author:
+    Di Yu and Yubing Bao <yudi2023@zju.edu.cn; ybbao23@m.fudan.edu.cn>
+
+Date Created:
+    2025-04-23
+
 Description:
     implementation of monitoring energy cost for running SNNs on Jetson serial edge devices.
     

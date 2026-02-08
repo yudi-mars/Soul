@@ -1,7 +1,13 @@
 """
-Filename: ILIF.py
-Author: Changze Lv <czlv24@m.fudan.edu.cn>
-Date Created: TBD
+Filename:
+    ILIF.py
+
+Author:
+    Changze Lv <czlv24@m.fudan.edu.cn>
+
+Date Created:
+    TBD
+
 Description:
     implementation for LIF variants for Spiking Neural Networks.
 

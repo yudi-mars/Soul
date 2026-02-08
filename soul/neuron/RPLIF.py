@@ -1,7 +1,13 @@
 """
-Filename: RPLIF.py
-Author: Changze Lv <czlv24@m.fudan.edu.cn>
-Date Created: 2025-11-10
+Filename:
+    RPLIF.py
+
+Author:
+    Changze Lv <czlv24@m.fudan.edu.cn>
+
+Date Created:
+    2025-11-10
+
 Description:
     implementation for Refractory Period LIF.
 

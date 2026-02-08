@@ -1,7 +1,13 @@
 """
-Filename: sops.py
-Author: Wentao Tong <toldzera@zju.edu.cn>
-Date Created: 2025-05-17
+Filename:
+    sops.py
+
+Author:
+    Wentao Tong <toldzera@zju.edu.cn>
+
+Date Created:
+    2025-05-17
+
 Description:
     implementation of counting SOPs for SNN inference.
 
@@ -70,14 +76,16 @@ import torch.nn.functional as F
 def torch_img2col_grouped(X, kernel_size, stride=1, pad=0, dilation=1, groups=1):
     """
     支持分组卷积的img2col实现
-    参数:
+
+    Args:
         X: 输入张量 (N, C, H, W)
         kernel_size: 卷积核大小 (int or tuple)
         stride: 步长 (int or tuple)
         pad: 填充大小
         dilation: 空洞大小
         groups: 分组数
-    返回:
+
+    Returns:
         展开后的张量 (N, groups * kernel_size[0] * kernel_size[1], OH * OW * C//groups)
     """
     # 解析参数
@@ -114,7 +122,8 @@ def grouped_conv2d_forward_with_sparsity(
     X, W, b, stride=1, pad=0, dilation=1, groups=1):
     """
     完全并行化的分组卷积前向传播，带向量化稀疏度检测
-    参数:
+
+    Args:
         X: 输入数据 (N, C, H, W)
         W: 卷积核 (F, C//groups, KH, KW)
         b: 偏置 (F,)
@@ -122,7 +131,8 @@ def grouped_conv2d_forward_with_sparsity(
         pad: 填充
         dilation: 空洞大小
         groups: 分组数
-    返回:
+
+    Returns:
         output: 卷积结果 (N, F, OH, OW)
         effective_ratio: 有效计算比例 (0.0-1.0)
     """
@@ -286,13 +296,15 @@ def ops_hook_fc(module_name,is_sop=True):
 def conv1d_forward_with_sparsity(X, W, b, stride=1, pad=0):
     """
     计算1D卷积的有效操作比例（考虑稀疏性）
-    参数:
+
+    Args:
         X: 输入数据 (N, C, L)
         W: 卷积核 (F_out, C_in, K)
         b: 偏置
         stride: 步长
         pad: 填充
-    返回:
+
+    Returns:
         effective_ratio: 有效计算比例 (0.0-1.0)
     """
     N, C, L = X.shape
@@ -326,7 +338,8 @@ def grouped_conv1d_forward_with_sparsity(
     X, W, b, stride=1, pad=0, dilation=1, groups=1):
     """
     分组1D卷积前向传播，带向量化稀疏度检测
-    参数:
+
+    Args:
         X: 输入数据 (N, C, L)
         W: 卷积核 (F_out, C//groups, K)
         b: 偏置 (F_out,)
@@ -334,7 +347,8 @@ def grouped_conv1d_forward_with_sparsity(
         pad: 填充
         dilation: 空洞大小
         groups: 分组数
-    返回:
+
+    Returns:
         effective_ratio: 有效计算比例 (0.0-1.0)
     """
     N, C, L = X.shape

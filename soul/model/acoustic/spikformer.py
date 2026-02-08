@@ -1,7 +1,13 @@
 """
-Filename: spikformer.py
-Author: Weisong Zhang <22551070@zju.edu.cn>
-Date Created: 2026-01-02
+Filename:
+    spikformer.py
+
+Author:
+    Weisong Zhang <22551070@zju.edu.cn>
+
+Date Created:
+    2026-01-02
+
 Description:
     Adaptation for a transformer-structured SNN model for audio classification.
 

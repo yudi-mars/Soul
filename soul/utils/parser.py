@@ -25,6 +25,7 @@ WIRELESS_APPLICATIONS = [
 ]
 
 def parse_args():
+    """设置通用参数"""
     parser = argparse.ArgumentParser(description='arguments for soul')
     # Basic Settings
     parser.add_argument(
@@ -204,6 +205,7 @@ def parse_args():
 
 
 def init_config():
+    """初始化参数"""
     current_path = os.path.dirname(os.path.realpath(__file__))
     
     # load default basic yaml
