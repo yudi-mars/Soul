@@ -171,6 +171,6 @@ This project was supported by the National Key Research and Development Program 
 
 ## Contact the Team
 
-If there are any questions, please feel free to propose new features by opening an issue or contacting the authors: **Di Yu**([yudi2023@zju.edu.cn](mailto:yudi2023@zju.edu.cn)), **Changze Lv**([czlv24@m.fudan.edu.cn](mailto:czlv24@m.fudan.edu.cn)), **Zhuo Chen**([chenzhuocs@zju.edu.cn](mailto:chenzhuocs@zju.edu.cn)), and **Wentao Tong**([toldzera@zju.edu.cn](mailto:toldzera@zju.edu.cn)).
+If there are any questions, please feel free to propose new features by opening an issue or contacting the authors: **Di Yu**([yudi2023@zju.edu.cn](mailto:yudi2023@zju.edu.cn)) and **Changze Lv**([czlv24@m.fudan.edu.cn](mailto:czlv24@m.fudan.edu.cn)).
 
 Enjoy the code!
