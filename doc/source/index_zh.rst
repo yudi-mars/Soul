@@ -1,3 +1,5 @@
+.. image:: _static/code-logo.jpg
+
 欢迎来到Soul的文档
 ============================
 EN document: :doc:`./index`
@@ -17,21 +19,16 @@ EN document: :doc:`./index`
 
     git clone https://github.com/yudi-mars/Soul.git
 
-入门
-----------------
 
 .. toctree::
    :maxdepth: 2
-   :caption: 目录
+   :caption: 入门
    
    getting_started
 
-使用指南
-----------------
-
 .. toctree::
    :maxdepth: 2
-   :caption: 目录
+   :caption: 使用指南
 
    concepts
    params
@@ -43,12 +40,9 @@ EN document: :doc:`./index`
    metrics
    app/index
 
-编程指南
-----------------
-
 .. toctree::
    :maxdepth: 2
-   :caption: 目录
+   :caption: 编程指南
    
    FAQs/add_dataset
    FAQs/add_coding
@@ -56,11 +50,9 @@ EN document: :doc:`./index`
    FAQs/add_neuron
    FAQs/deployment
 
-APIs
-----------------
 
 .. toctree::
    :maxdepth: 2
-   :caption: 目录
+   :caption: APIs
 
    api/modules

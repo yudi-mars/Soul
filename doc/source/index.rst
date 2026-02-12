@@ -1,3 +1,5 @@
+.. image:: _static/code-logo.jpg
+
 Welcome to the Soul Documentation
 ============================
 中文版文档: :doc:`./index_zh`
@@ -17,21 +19,17 @@ You can install the latest version from the source code via `GitHub <https://git
 
     git clone https://github.com/yudi-mars/Soul.git
 
-GET_STARTED
-----------------
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents
+   :caption: GET_STARTED
 
    getting_started_en
 
-USER GUIDE
-----------------
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents
+   :caption: USER GUIDE
 
    concepts_en
    params_en
@@ -43,12 +41,10 @@ USER GUIDE
    metrics_en
    app/index_en
 
-DEVELOPER GUIDE
-----------------
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents
+   :caption: DEVELOPER GUIDE
 
    FAQs/add_dataset_en
    FAQs/add_coding_en
@@ -56,11 +52,9 @@ DEVELOPER GUIDE
    FAQs/add_neuron_en
    FAQs/deployment
 
-APIs
-----------------
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents
+   :caption: APIs
 
    api/modules
