@@ -1,6 +1,8 @@
 $(document).ready(function(){
-    let div_logo = document.getElementsByClassName("wy-side-nav-search")[0];
-    let a_logo = div_logo.getElementsByTagName("a");
-    a_logo[0].href = "https://github.com/yudi-mars/Soul";
-    a_logo[0].target = "_blank";
+    let div_logo = document.getElementsByClassName("icon")[0];
+    console.log(div_logo);
+    console.log(div_logo.text);
+    div_logo.href = "https://github.com/yudi-mars/Soul";
+    div_logo.target = "_blank";
+    div_logo.text = "    Soul    ";
 });

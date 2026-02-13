@@ -52,7 +52,7 @@ language = 'zh_CN'
 html_theme = 'sphinx_rtd_theme'
 html_theme_options = {
     'analytics_anonymize_ip': False,
-    'logo_only': True,
+    'logo_only': False,
     'display_version': True,
     'prev_next_buttons_location': 'bottom',
     'style_external_links': False,
@@ -63,12 +63,12 @@ html_theme_options = {
     'titles_only': False,
 }
 
-html_logo = "./_static/logo.png"
+# html_logo = "./_static/logo.png"
 html_static_path = ['_static']
 html_js_files = [
     'my_custom.js',
 ]
 
-html_css_files = [
-    'custom.css',
-]
+# html_css_files = [
+#     'custom.css',
+# ]
