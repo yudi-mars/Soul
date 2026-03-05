@@ -1,0 +1,4 @@
+patch_size: 4                     # (int) patch size for input
+mlp_ratio: 4                      # (float) expand ratio for hidden dimension in MLP intermediate layers
+num_heads: 8                        # (int) number of heads for attention output
+alpha_loss: 0.5                   # (float) loss function hyper-parameter
