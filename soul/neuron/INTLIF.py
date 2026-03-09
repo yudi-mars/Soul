@@ -73,6 +73,7 @@ class INTLIFNode(INTLIF_BaseNode):
         surrogate_function = config['surrogate_function']
         detach_reset = config['detach_reset']
         norm = config["norm"] 
+        self.tau = config['tau']
 
         super().__init__(v_threshold, v_reset, surrogate_function, detach_reset, norm)
         
@@ -86,7 +87,7 @@ class INTLIFNode(INTLIF_BaseNode):
             raise ValueError(self.step_mode)
         
     def neuronal_charge(self, x: torch.Tensor):
-        self.v = self.v + x
+        self.v = self.v / self.tau + x
 
     def forward(self, x: torch.Tensor):
         return super().forward(x)
