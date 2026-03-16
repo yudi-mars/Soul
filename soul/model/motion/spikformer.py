@@ -9,7 +9,7 @@ Date Created:
     2025-06-10
 
 Description:
-    implementation for a transformer-structured SNN model for image classification.
+    implementation for a transformer-structured SNN model for motion classification.
 
 References:
     - Zhaokun Zhou et al., "Spikformer: when spiking neural network meets transformer", ICLR'2023.

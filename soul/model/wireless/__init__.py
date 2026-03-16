@@ -1,4 +1,3 @@
-from .spikingtcn import SpikingTCN
 from .general import SpikingMLP, SpikingLeNet, SpikingRNN, SpikingConvRNN
 from .spikingvgg import SpikingVGG9, SpikingVGG16
 from .sewresnet import SEWResNet18, SEWResNet34, SEWResNet50
@@ -13,7 +12,6 @@ wireless_model_map = {
     'lenet': SpikingLeNet,
     'rnn': SpikingRNN,
     'convrnn': SpikingConvRNN,
-    'spikingtcn': SpikingTCN,
     'spikingvgg9': SpikingVGG9,
     'spikingvgg16': SpikingVGG16,
     'sewresnet18': SEWResNet18,

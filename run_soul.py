@@ -151,10 +151,15 @@ for epoch in range(1, config['epochs'] + 1):
         # default data shape (B, T, input_size) -> (T, B, input_size)
         inputs = inputs.transpose(0, 1)
 
-        outputs = model(inputs)
+        if config['model'].lower() in ['spiliformer256', 'spiliformer384', 'spiliformer512']:
+            outputs, x1 = model(inputs)
+            loss = (1 - config['alpha_loss']) * criterion(x1, targets) + config['alpha_loss'] * criterion(outputs, targets) 
+        else:
+            outputs = model(inputs)
+            loss = criterion(outputs, targets)
+
         acc1 = accuracy(outputs, targets, topk=(1,))[0]
 
-        loss = criterion(outputs, targets)
         loss.backward()
         optimizer.step()
 
