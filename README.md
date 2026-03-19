@@ -38,42 +38,6 @@ You can run the library directly from the command line. For example:
 
 If you want to dive deeper into all the available command-line options, configuration settings, and parameters, please check out our [complete documentation](https://soul-docs.readthedocs.io/en/latest/).
 
-## Results
-
-<details>
-  <summary><b>Performance of different LIF variants</b></summary>
-
-<p align="center">
-    <img src="./assets/cmp-lif-sensing.png" width="100%">
-</p>
-
-</details>
-
-
-<details>
-  <summary><b>Performance of different SNNs</b></summary>
-
-  <p align="center">
-    <img src="./assets/cmp-topology-sensing.png" width="100%">
-  </p>
-
-</details>
-
-<!-- <p align="center">
-    <img src="./assets/cmp-topology-performance-cd.png" width="75%">
-</p> -->
-
-<details>
-  <summary><b>Performance of different input encoding strategies</b></summary>
-
-  <p align="center">
-      <img src="./assets/cmp-encoding-sensing.png" width="100%">
-  </p>
-
-</details>
-
-
-
 ## Dataset Support
 
 For each dataset, we provide both a **Research/Reference Link** (to a paper or dataset description) and a **Download Link** to facilitate integration with the toolkit.
@@ -164,13 +128,3 @@ If you find SOUL useful for your research or development, please cite the follow
 ## License
 
 SOUL is released under the [Apache-2.0 License](./LICENSE). All datasets used in this project are intended for academic research purposes only.
-
-## Acknowledgments
-
-This project was supported by the National Key Research and Development Program of China under Grant 2022YFB4500100, the National Natural Science Foundation of China under Grant 62125206, the Zhejiang Provincial Natural Science Foundation of China under Grant No. LD24F020014, the National Key Research and Development Program of China No. 2024YDLN0005, and the Regional Innovation and Development Joint Fund of the National Natural Science Foundation of China No. U22A6001.
-
-## Contact the Team
-
-If there are any questions, please feel free to propose new features by opening an issue or contacting the authors: **Di Yu**([yudi2023@zju.edu.cn](mailto:yudi2023@zju.edu.cn)) and **Changze Lv**([czlv24@m.fudan.edu.cn](mailto:czlv24@m.fudan.edu.cn)).
-
-Enjoy the code!
