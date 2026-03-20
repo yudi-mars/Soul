@@ -26,6 +26,7 @@ class CompileResult:
     num_cores: int
     num_params: int
     position: np.ndarray
+    topology_size: tuple
     mapping_l2p: np.ndarray
     phy_position: np.ndarray
     phy_core_conns: np.ndarray
@@ -39,11 +40,12 @@ class CompileResult:
             num_cores=self.num_cores,
             num_params=self.num_params,
             position=self.position,
+            topology_size=self.topology_size,
             mapping_l2p=self.mapping_l2p,
             phy_position=self.phy_position,
             phy_core_conns=self.phy_core_conns,
         )
-    
+
     def load(self, file):
         file = Path(file)
         data = np.load(file)
@@ -51,6 +53,7 @@ class CompileResult:
         self.num_synapses = int(data["num_synapses"])
         self.num_cores = int(data["num_cores"])
         self.num_params = int(data["num_params"])
+        self.topology_size = tuple(data["topology_size"])
         self.position = data["position"]
         self.mapping_l2p = data["mapping_l2p"]
         self.phy_position = data["phy_position"]
@@ -839,7 +842,21 @@ def partition(neuron_graph, core_capacity=4096):
     num_cores = int(np.ceil(num_neurons / core_capacity))
     # print(f"Num cores: {num_cores}")
     num_neurons_core = np.ceil(num_neurons / num_cores).astype(np.int32)
-    position = np.arange(num_neurons) // num_neurons_core
+    neuron_idx = np.zeros(num_neurons, dtype=np.int32)
+    for nl, shape, ns in zip(num_neurons_layer, neuron_shapes, neuron_start):
+        # 1. plain partition
+        idx = np.arange(nl)
+        # 2. hilbert curve partition
+        # if len(shape) == 3 and shape[1] == shape[2]:
+        #     from .hsc import HSCMapper
+        #     hsc = HSCMapper(shape)
+        #     hsc.build()
+        #     assert len(hsc.h2n) == nl, f"Expected hsc.h2n length {nl}, got {len(hsc.h2n)}"
+        #     idx = np.empty_like(hsc.h2n)
+        #     idx[hsc.h2n] = np.arange(nl)
+
+        neuron_idx[ns : ns + nl] = idx + ns
+    position = neuron_idx // num_neurons_core
 
     core_conns = np.zeros([num_neurons, num_cores], dtype=np.uint8)
     for edge in neuron_graph.edges(data=True):
@@ -861,14 +878,30 @@ def partition(neuron_graph, core_capacity=4096):
     return (num_neurons, num_synapses, num_cores), position, core_conns
 
 
-def mapping(num_cores, position, core_conns):
+def mapping(topology_size, position, core_conns):
+    num_neurons, num_cores = core_conns.shape
+    meshy, meshx = topology_size
+    phy_num_cores = meshy * meshx
+    # 1. plain mapping
     mapping_l2p = np.arange(num_cores)
-    mapping_p2l = np.arange(num_cores)
-    for i in range(num_cores):
-        mapping_p2l[mapping_l2p[i]] = i
+    # 2. hilbert curve mapping
+    # from .hsc import HSCMapper
+    # hsc = HSCMapper((1, meshx, meshx))
+    # hsc.build()
+    # mapping_l2p = hsc.h2n[:num_cores]
+
     phy_position = mapping_l2p[position].astype(np.uint32)
-    phy_core_conns = core_conns[:, mapping_p2l].astype(np.uint8)
+    phy_core_conns = np.zeros([num_neurons, phy_num_cores], dtype=np.uint8)
+    for i in range(num_cores):
+        phy_core_conns[:, mapping_l2p[i]] = core_conns[:, i].astype(np.uint8)
     return mapping_l2p, phy_position, phy_core_conns
+
+
+def mesh2d_alloc(num_cores):
+    meshy = int(np.sqrt(num_cores))
+    meshx = (num_cores // meshy) + (1 if num_cores % meshy != 0 else 0)
+    d= max(meshy, meshx)
+    return (d, d)
 
 
 def compile(
@@ -905,7 +938,11 @@ def compile(
     res.num_cores = num_cores
     res.position = position
 
-    mapping_l2p, phy_position, phy_core_conns = mapping(num_cores, position, core_conns)
+    res.topology_size = mesh2d_alloc(num_cores)
+
+    mapping_l2p, phy_position, phy_core_conns = mapping(
+        res.topology_size, position, core_conns
+    )
     res.mapping_l2p = mapping_l2p
     res.phy_position = phy_position
     res.phy_core_conns = phy_core_conns
