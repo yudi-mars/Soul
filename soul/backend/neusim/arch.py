@@ -56,17 +56,12 @@ class NeuSimArch:
                 "NeuSim backend is not properly installed. Please follow the installation guide in soul/backend/neusim/README.md"
             )
 
-        meshy = int(np.sqrt(compile_res.num_cores))
-        meshx = (compile_res.num_cores // meshy) + (
-            1 if compile_res.num_cores % meshy != 0 else 0
-        )
-
         res = sim.run(
             position=compile_res.phy_position,
             core_conns=compile_res.phy_core_conns,
             spikes=spikes,
             packet_size=packet_size,
-            topology_size=(meshy, meshx),
+            topology_size=compile_res.topology_size,
             num_threads=num_threads,
         )
         if self.arch_name == "truenorth":
