@@ -6,6 +6,7 @@ from .spikformer import Spikformer256, Spikformer384, SpikformerPrototype
 from .metaspikeformer import MetaSpikeformer256, MetaSpikeformer384, MetaSpikeformerPrototype
 from .spikingresformer import SpikingResformer256, SpikingResformer384, SpikingResformerPrototype
 from .qkformer import QKFormer256, QKFormer384, QKFormerPrototype
+from .spiliformer import SpiLiFormer256, SpiLiFormer384, SpiLiFormer512
 
 wireless_model_map = {
     'mlp': SpikingMLP,
@@ -32,4 +33,7 @@ wireless_model_map = {
     'spikingresformer': SpikingResformerPrototype,
     'spikingresformer256': SpikingResformer256,
     'spikingresformer384': SpikingResformer384,
+    'spiliformer256': SpiLiFormer256, 
+    'spiliformer384': SpiLiFormer384, 
+    'spiliformer512': SpiLiFormer512,
 }

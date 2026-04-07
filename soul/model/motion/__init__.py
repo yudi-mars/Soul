@@ -9,6 +9,7 @@ from .general import SpikingMLP, SpikingLeNet, SpikingRNN, SpikingConvRNN
 from .sewresnet import SEWResNet34, SEWResNet50
 from .spikingresformer import SpikingResformer256, SpikingResformer384
 from .spikingvgg import SpikingVGG9, SpikingVGG16
+from .spiliformer import SpiLiFormer256, SpiLiFormer384, SpiLiFormer512
 
 motion_model_map = {
     'mlp': SpikingMLP,
@@ -32,4 +33,7 @@ motion_model_map = {
     'spikingresformer384': SpikingResformer384,
     'qkformer256': QKFormer256,
     'qkformer384': QKFormer384,
+    'spiliformer256': SpiLiFormer256, 
+    'spiliformer384': SpiLiFormer384, 
+    'spiliformer512': SpiLiFormer512,
 }

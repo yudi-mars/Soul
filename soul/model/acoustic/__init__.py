@@ -6,6 +6,7 @@ from .spikformer import Spikformer256, Spikformer384, Spikformer512
 from .metaspikeformer import MetaSpikeformer256, MetaSpikeformer384, MetaSpikeformer512
 from .spikingresformer import SpikingResformer192, SpikingResformer384, SpikingResformer512, SpikingResformer256
 from .qkformer import QKFormer256, QKFormer384, QKFormer512
+from .spiliformer import SpiLiFormer256, SpiLiFormer384, SpiLiFormer512
 
 acoustic_model_map = {
     'mlp': SpikingMLP,
@@ -31,4 +32,7 @@ acoustic_model_map = {
     'qkformer256': QKFormer256, 
     'qkformer384': QKFormer384, 
     'qkformer512': QKFormer512,
+    'spiliformer256': SpiLiFormer256, 
+    'spiliformer384': SpiLiFormer384, 
+    'spiliformer512': SpiLiFormer512,
 }
