@@ -117,13 +117,23 @@ For each dataset, we provide both a **Research/Reference Link** (to a paper or d
 If you find SOUL useful for your research or development, please cite the following papers:
 
 ```
+
+```
+
+This code may not be used, copied, or distributed without prior written permission from the authors.
+
+
+
+<!-- ```
 @article{deng2025edge,
   title={Edge Intelligence with Spiking Neural Networks},
   author={Deng, Shuiguang and Yu, Di and Lv, Changze and Du, Xin and Jiang, Linshan and Zhao, Xiaofan and Tong, Wentao and Zheng, Xiaoqing and Fang, Weijia and Zhao, Peng and others},
   journal={arXiv preprint arXiv:2507.14069},
   year={2025}
 }
-```
+``` -->
+
+
 
 ## License
 
