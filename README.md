@@ -120,7 +120,7 @@ If you find SOUL useful for your research or development, please cite the follow
 
 ```
 
-This code may not be used, copied, or distributed without prior written permission from the authors.
+**This code may not be used, copied, or distributed without prior written permission from the authors.**
 
 
 
