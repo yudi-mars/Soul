@@ -1,0 +1,3 @@
+patch_size: 4                       # (int) patch size for tokenizer (4 for CIFAR-10, 16 for ImageNet)
+mlp_ratio: 4                        # (float) expand ratio for hidden dimension in MLP intermediate layers
+num_heads: 12                       # (int) number of heads for self-attention

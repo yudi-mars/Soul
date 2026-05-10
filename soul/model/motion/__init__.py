@@ -5,6 +5,7 @@ from .qkformer import QKFormer256, QKFormer384
 from .sensehar import SenseHAR
 from .dcl import DCL
 from .spikformer import Spikformer256, Spikformer384
+from .spikingformer import Spikingformer256, Spikingformer384, Spikingformer512
 from .general import SpikingMLP, SpikingLeNet, SpikingRNN, SpikingConvRNN
 from .sewresnet import SEWResNet34, SEWResNet50
 from .spikingresformer import SpikingResformer256, SpikingResformer384
@@ -21,6 +22,9 @@ motion_model_map = {
     'dcl': DCL,
     'spikformer256': Spikformer256,
     'spikformer384': Spikformer384,
+    'spikingformer256': Spikingformer256,
+    'spikingformer384': Spikingformer384,
+    'spikingformer512': Spikingformer512,
     'spikingvgg9': SpikingVGG9,
     'spikingvgg16': SpikingVGG16,
     'sewresnet34': SEWResNet34,

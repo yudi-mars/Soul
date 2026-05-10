@@ -3,6 +3,7 @@ from .sewresnet import SEWResNet34, SEWResNet50
 from .msresnet import MSResNet34, MSResNet50
 from .general import SpikingMLP, SpikingLeNet, SpikingRNN, SpikingConvRNN
 from .spikformer import Spikformer256, Spikformer384, Spikformer512
+from .spikingformer import Spikingformer256, Spikingformer384, Spikingformer512
 from .metaspikeformer import MetaSpikeformer256, MetaSpikeformer384, MetaSpikeformer512
 from .spikingresformer import SpikingResformer192, SpikingResformer384, SpikingResformer512, SpikingResformer256
 from .qkformer import QKFormer256, QKFormer384, QKFormer512
@@ -19,9 +20,12 @@ acoustic_model_map = {
     'sewresnet50': SEWResNet50,
     'msresnet34': MSResNet34, 
     'msresnet50': MSResNet50,
-    'spikformer256': Spikformer256, 
-    'spikformer384': Spikformer384, 
+    'spikformer256': Spikformer256,
+    'spikformer384': Spikformer384,
     'spikformer512': Spikformer512,
+    'spikingformer256': Spikingformer256,
+    'spikingformer384': Spikingformer384,
+    'spikingformer512': Spikingformer512,
     'metaspikeformer256': MetaSpikeformer256, 
     'metaspikeformer384': MetaSpikeformer384, 
     'metaspikeformer512': MetaSpikeformer512,
