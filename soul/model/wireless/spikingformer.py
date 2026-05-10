@@ -189,14 +189,16 @@ class SpikingformerTokenizer(nn.Module):
         x = self.block3_lif(x).flatten(0, 1)
         x = self.block3_mp(x)
         x = self.block3_conv(x)
-        x = self.block3_bn(x).reshape(T, B, -1, H // 2, W // 2)
+        H3, W3 = x.shape[2], x.shape[3]
+        x = self.block3_bn(x).reshape(T, B, -1, H3, W3)
 
         x = self.block4_lif(x).flatten(0, 1)
         x = self.block4_mp(x)
         x = self.block4_conv(x)
-        x = self.block4_bn(x).reshape(T, B, -1, H // 4, W // 4)
+        H4, W4 = x.shape[2], x.shape[3]
+        x = self.block4_bn(x).reshape(T, B, -1, H4, W4)
 
-        return x, (H // self.patch_size[0], W // self.patch_size[1])
+        return x, (H4, W4)
 
 
 class Spikingformer(nn.Module):
@@ -206,7 +208,7 @@ class Spikingformer(nn.Module):
     Wireless input: (T, B, C, H, W) -- same 5D format as vision.
     No reshaping needed.
     """
-    def __init__(self, config, depths=4, embed_dims=384, drop_path_rate=0., norm_layer=nn.LayerNorm):
+    def __init__(self, config, depths=4, embed_dims=384, num_heads=None, drop_path_rate=0., norm_layer=nn.LayerNorm):
         super().__init__()
         num_classes = config['num_classes']
         self.T = config['time_step']
@@ -216,7 +218,7 @@ class Spikingformer(nn.Module):
         lif = config['neuron']
         patch_size = config['patch_size']
         mlp_ratio = config['mlp_ratio']
-        num_heads = config['num_heads']
+        num_heads = num_heads or config['num_heads']
 
         self.num_classes = num_classes
         self.embed_dims = embed_dims
@@ -270,10 +272,10 @@ class Spikingformer(nn.Module):
 
 
 def Spikingformer256(config):
-    return Spikingformer(config, depths=2, embed_dims=256)
+    return Spikingformer(config, depths=2, embed_dims=256, num_heads=8)
 
 def Spikingformer384(config):
-    return Spikingformer(config, depths=4, embed_dims=384)
+    return Spikingformer(config, depths=4, embed_dims=384, num_heads=12)
 
 def Spikingformer512(config):
-    return Spikingformer(config, depths=8, embed_dims=512)
+    return Spikingformer(config, depths=8, embed_dims=512, num_heads=8)
