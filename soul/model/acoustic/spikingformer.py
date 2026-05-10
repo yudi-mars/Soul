@@ -17,11 +17,27 @@ References:
 import torch
 import torch.nn as nn
 from copy import deepcopy
-from timm.models.layers import trunc_normal_, DropPath
 
 from soul.neuron import functional
 
 __all__ = ['Spikingformer', 'Spikingformer256', 'Spikingformer384', 'Spikingformer512']
+
+
+class DropPath(nn.Module):
+    """Stochastic depth (drop path) per sample."""
+    def __init__(self, drop_prob=0.):
+        super().__init__()
+        self.drop_prob = drop_prob
+
+    def forward(self, x):
+        if not self.training or self.drop_prob == 0.:
+            return x
+        keep_prob = 1 - self.drop_prob
+        shape = (x.shape[0],) + (1,) * (x.ndim - 1)
+        random_tensor = x.new_empty(shape).bernoulli_(keep_prob)
+        if keep_prob > 0.0:
+            random_tensor.div_(keep_prob)
+        return x * random_tensor
 
 
 class SpikingformerMLP(nn.Module):
@@ -233,7 +249,7 @@ class Spikingformer(nn.Module):
 
     def _init_weights(self, m):
         if isinstance(m, nn.Linear):
-            trunc_normal_(m.weight, std=.02)
+            torch.nn.init.trunc_normal_(m.weight, std=.02)
             if m.bias is not None:
                 nn.init.constant_(m.bias, 0)
         elif isinstance(m, nn.LayerNorm):
