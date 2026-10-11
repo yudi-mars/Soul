@@ -20,6 +20,7 @@ import torch.nn as nn
 from copy import deepcopy
 
 from soul.neuron import functional
+from soul.utils import set_v_threshold
 
 __all__ = ['Spikformer', 'Spikformer256', 'Spikformer384', 'Spikformer512']
 
@@ -72,7 +73,7 @@ class SSA(nn.Module):
         self.v_lif = deepcopy(lif)
 
         self.attn_lif = deepcopy(lif)
-        self.attn_lif.v_threshold = 0.5
+        set_v_threshold(self.attn_lif, 0.5)
 
         self.proj_linear = nn.Linear(dim, dim)
         self.proj_bn = nn.BatchNorm1d(dim)

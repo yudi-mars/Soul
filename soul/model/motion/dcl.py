@@ -157,6 +157,10 @@ class SpikingRNNBase(nn.Module):
     def base_cell():
         raise NotImplementedError
 
+    @staticmethod
+    def states_num():
+        raise NotImplementedError
+
     def forward(self, x: torch.Tensor, states=None):
         # x.shape=[T, batch_size, input_size]
         # states states_num 个 [num_layers * num_directions, batch, hidden_size]
@@ -313,6 +317,10 @@ class SpikingLSTM(SpikingRNNBase):
     @staticmethod
     def base_cell():
         return SpikingLSTMCell
+
+    @staticmethod
+    def states_num():
+        return 2
 
 class DCL(nn.Module):
     def __init__(self, config):

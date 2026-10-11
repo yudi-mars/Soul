@@ -143,25 +143,27 @@ class DSSA(nn.Module):
         x = x.reshape(T, B, self.num_heads, C // self.num_heads, L)
 
         if self.training:
-            firing_rate_x = x.detach().mean((0, 1, 3, 4), keepdim=True)
+            # spikes can be negative (e.g. ternary spikes), so the firing rate counts |x|
+            firing_rate_x = x.detach().abs().mean((0, 1, 3, 4), keepdim=True)
             if not self.init_firing_rate_x and torch.all(self.firing_rate_x == 0):
                 self.firing_rate_x = firing_rate_x
             self.init_firing_rate_x = True
             self.firing_rate_x = self.firing_rate_x * self.momentum + firing_rate_x * (1 - self.momentum)
 
-        scale1 = 1. / torch.sqrt(self.firing_rate_x * (self.dim // self.num_heads))
+        # a silent head, or a model evaluated before training, has a zero firing rate
+        scale1 = 1. / torch.sqrt(self.firing_rate_x.clamp_min(1e-12) * (self.dim // self.num_heads))
         attn = self.matmul1(y1.transpose(-1, -2), x)
         attn = attn * scale1
         attn = self.activation_attn(attn)
 
         if self.training:
-            firing_rate_attn = attn.detach().mean((0, 1, 3, 4), keepdim=True)
+            firing_rate_attn = attn.detach().abs().mean((0, 1, 3, 4), keepdim=True)
             if not self.init_firing_rate_attn and torch.all(self.firing_rate_attn == 0):
                 self.firing_rate_attn = firing_rate_attn
             self.init_firing_rate_attn = True
             self.firing_rate_attn = self.firing_rate_attn * self.momentum + firing_rate_attn * (1 - self.momentum)
 
-        scale2 = 1. / torch.sqrt(self.firing_rate_attn * self.lenth)
+        scale2 = 1. / torch.sqrt(self.firing_rate_attn.clamp_min(1e-12) * self.lenth)
         out = self.matmul2(y2, attn)
         out = out * scale2
         out = out.reshape(T, B, C, L)

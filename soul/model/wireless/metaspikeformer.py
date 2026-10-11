@@ -22,8 +22,8 @@ References:
 """
 import torch.nn as nn
 from copy import deepcopy
-import torch
 from soul.neuron import functional
+from soul.utils import set_v_threshold
 
 __all__ = ['MetaSpikeformer', 'MetaSpikeformer256', 'MetaSpikeformer384', 'MetaSpikeformer512', 'MetaSpikeformerPrototype']
     
@@ -180,10 +180,7 @@ class Attention(nn.Module):
         self.v_lif = deepcopy(lif)
 
         self.attn_lif = deepcopy(lif)
-        # self.attn_lif.v_threshold = 0.5
-        if hasattr(self.attn_lif, "v_threshold") and isinstance(self.attn_lif.v_threshold, nn.Parameter):
-            with torch.no_grad():
-                self.attn_lif.v_threshold.fill_(0.5)
+        set_v_threshold(self.attn_lif, 0.5)
 
         self.proj_linear = nn.Linear(dim, dim)
         self.proj_bn = nn.BatchNorm1d(dim)

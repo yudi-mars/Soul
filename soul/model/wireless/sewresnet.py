@@ -155,13 +155,13 @@ class Bottleneck(nn.Module):
 def zero_init_blocks(net: nn.Module, connect_f: str):
     for m in net.modules():
         if isinstance(m, Bottleneck):
-            nn.init.constant_(m.conv3.module[1].weight, 0)
+            nn.init.constant_(m.conv3[1].weight, 0)
             if connect_f == 'AND':
-                nn.init.constant_(m.conv3.module[1].bias, 1)
+                nn.init.constant_(m.conv3[1].bias, 1)
         elif isinstance(m, BasicBlock):
-            nn.init.constant_(m.conv2.module[1].weight, 0)
+            nn.init.constant_(m.conv2[1].weight, 0)
             if connect_f == 'AND':
-                nn.init.constant_(m.conv2.module[1].bias, 1)
+                nn.init.constant_(m.conv2[1].bias, 1)
 
 class SEWResNet(nn.Module):
     def __init__(

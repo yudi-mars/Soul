@@ -19,6 +19,7 @@ import torch.nn as nn
 from copy import deepcopy
 
 from soul.neuron import functional
+from soul.utils import set_v_threshold
 
 __all__ = ['Spikingformer', 'Spikingformer256', 'Spikingformer384', 'Spikingformer512']
 
@@ -89,7 +90,7 @@ class SpikingformerAttention(nn.Module):
         self.v_lif = deepcopy(lif)
 
         self.attn_lif = deepcopy(lif)
-        self.attn_lif.v_threshold = 0.5
+        set_v_threshold(self.attn_lif, 0.5)
 
         self.proj_conv = nn.Conv1d(dim, dim, kernel_size=1, stride=1)
         self.proj_bn = nn.BatchNorm1d(dim)

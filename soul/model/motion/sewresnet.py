@@ -19,10 +19,19 @@ import torch
 import torch.nn as nn
 
 from copy import deepcopy
-from soul.utils import conv3x3, multi_time_forward, sew_function, conv1x1
+from soul.utils import multi_time_forward, sew_function
 from soul.neuron import functional
 
 __all__ = ['SEWResNet', 'SEWResNet34', 'SEWResNet50']
+
+
+def conv1d_k3(in_planes, out_planes, stride=1, groups=1, dilation=1):
+    """1-D convolution with kernel size 3 and padding"""
+    return nn.Conv1d(in_planes, out_planes, kernel_size=3, stride=stride, padding=dilation, groups=groups, bias=False, dilation=dilation)
+
+def conv1d_k1(in_planes, out_planes, stride=1):
+    """1-D convolution with kernel size 1"""
+    return nn.Conv1d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False)
 
 
 class BasicBlock(nn.Module):
@@ -48,20 +57,20 @@ class BasicBlock(nn.Module):
         self.connect_f = connect_f
 
         if norm_layer is None:
-            norm_layer = nn.BatchNorm2d
+            norm_layer = nn.BatchNorm1d
         if groups != 1 or base_width != 64:
             raise ValueError('BasicBlock only supports groups=1 and base_width=64')
         if dilation > 1:
             raise NotImplementedError("Dilation > 1 not supported in BasicBlock")
         # Both self.conv1 and self.downsample layers downsample the input when stride != 1
         self.conv1 = nn.Sequential(
-            conv3x3(inplanes, planes, stride),
+            conv1d_k3(inplanes, planes, stride),
             norm_layer(planes)
         )
         self.sn1 = deepcopy(lif)
 
         self.conv2 = nn.Sequential(
-            conv3x3(planes, planes),
+            conv1d_k3(planes, planes),
             norm_layer(planes)
         )
         self.sn2 = deepcopy(lif)
@@ -107,24 +116,24 @@ class Bottleneck(nn.Module):
         self.stride = stride
 
         if norm_layer is None:
-            norm_layer = nn.BatchNorm2d
+            norm_layer = nn.BatchNorm1d
 
         width = int(planes * (base_width / 64.)) * groups
 
         self.conv1 = nn.Sequential(
-            conv1x1(inplanes, width),
+            conv1d_k1(inplanes, width),
             norm_layer(width)
         )
         self.sn1 = deepcopy(lif)
 
         self.conv2 = nn.Sequential(
-            conv3x3(width, width, stride, groups, dilation),
+            conv1d_k3(width, width, stride, groups, dilation),
             norm_layer(width)
         )
         self.sn2 = deepcopy(lif)
 
         self.conv3 = nn.Sequential(
-            conv1x1(width, planes * self.expansion),
+            conv1d_k1(width, planes * self.expansion),
             norm_layer(planes * self.expansion)
         )
         self.sn3 = deepcopy(lif)
@@ -154,13 +163,13 @@ class Bottleneck(nn.Module):
 def zero_init_blocks(net: nn.Module, connect_f: str):
     for m in net.modules():
         if isinstance(m, Bottleneck):
-            nn.init.constant_(m.conv3.module[1].weight, 0)
+            nn.init.constant_(m.conv3[1].weight, 0)
             if connect_f == 'AND':
-                nn.init.constant_(m.conv3.module[1].bias, 1)
+                nn.init.constant_(m.conv3[1].bias, 1)
         elif isinstance(m, BasicBlock):
-            nn.init.constant_(m.conv2.module[1].weight, 0)
+            nn.init.constant_(m.conv2[1].weight, 0)
             if connect_f == 'AND':
-                nn.init.constant_(m.conv2.module[1].bias, 1)
+                nn.init.constant_(m.conv2[1].bias, 1)
 
 class SEWResNet(nn.Module):
     def __init__(
@@ -235,7 +244,7 @@ class SEWResNet(nn.Module):
             stride = 1
         if stride != 1 or self.inplanes != planes * block.expansion:
             downsample = nn.Sequential(
-                conv1x1(self.inplanes, planes * block.expansion, stride),
+                conv1d_k1(self.inplanes, planes * block.expansion, stride),
                 norm_layer(planes * block.expansion),
             )
 

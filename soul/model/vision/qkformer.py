@@ -21,6 +21,7 @@ from copy import deepcopy
 from functools import partial
 
 from soul.neuron import functional
+from soul.utils import set_v_threshold
 
 __all__ = ['QKFormer', 'QKFormer256', 'QKFormer384', 'QKFormer512']
 
@@ -97,7 +98,7 @@ class Token_QK_Attention(nn.Module):
         self.k_lif = deepcopy(lif)
 
         self.attn_lif = deepcopy(lif)
-        self.attn_lif.v_threshold = 0.5
+        set_v_threshold(self.attn_lif, 0.5)
 
         self.proj_conv = nn.Conv1d(dim, dim, kernel_size=1, stride=1)
         self.proj_bn = nn.BatchNorm1d(dim)
@@ -243,7 +244,7 @@ class SSA(nn.Module):
         self.v_lif = deepcopy(lif)
 
         self.attn_lif = deepcopy(lif)
-        self.attn_lif.v_threshold = 0.5
+        set_v_threshold(self.attn_lif, 0.5)
 
         self.proj_conv = nn.Conv1d(dim, dim, kernel_size=1, stride=1)
         self.proj_bn = nn.BatchNorm1d(dim)
@@ -277,7 +278,8 @@ class SSA(nn.Module):
         x = x.transpose(3, 4).reshape(T, B, C, N).contiguous()
         x = self.attn_lif(x)
         x = x.flatten(0, 1)
-        x = self.proj_lif(self.proj_bn(self.proj_conv(x))).reshape(T, B, C, H, W)
+        x = self.proj_bn(self.proj_conv(x)).reshape(T, B, C, H, W)
+        x = self.proj_lif(x)
 
         return x
     

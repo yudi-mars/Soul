@@ -22,6 +22,7 @@ import torch.nn.functional as F
 from copy import deepcopy
 
 from soul.neuron import functional
+from soul.utils import set_v_threshold
 
 __all__ = ['Spike_Lateral_Transformer', 'SpiLiFormer256', 'SpiLiFormer384', 'SpiLiFormer512']
 
@@ -66,7 +67,7 @@ class FF_LiDiff_Attention(nn.Module):
         self.k_lif = deepcopy(lif)
 
         self.attn_lif = deepcopy(lif)
-        self.attn_lif.v_threshold = 0.5
+        set_v_threshold(self.attn_lif, 0.5)
 
         self.proj_conv = nn.Conv1d(dim, dim, kernel_size=1, stride=1)
         self.proj_bn = nn.BatchNorm1d(dim)
@@ -122,7 +123,7 @@ class FB_LiDiff_Attention(nn.Module):
         self.v_bn = nn.BatchNorm1d(dim)
         self.v_lif = deepcopy(lif)
         self.attn_lif = deepcopy(lif)
-        self.attn_lif.v_threshold = 0.5
+        set_v_threshold(self.attn_lif, 0.5)
 
         self.proj_conv = nn.Conv1d(dim, dim, kernel_size=1, stride=1)
         self.proj_bn = nn.BatchNorm1d(dim)
@@ -161,7 +162,8 @@ class FB_LiDiff_Attention(nn.Module):
         x = x.transpose(3, 4).reshape(T, B, C, N).contiguous()
         x = self.attn_lif(x)
         x = x.flatten(0,1)
-        x = self.proj_lif(self.proj_bn(self.proj_conv(x))).reshape(T,B,C,W,H)
+        x = self.proj_bn(self.proj_conv(x)).reshape(T, B, C, H, W)
+        x = self.proj_lif(x)
 
         return x
 
