@@ -15,76 +15,17 @@ References:
     - Yufei Guo et al., "Ternary spike: Learning ternary spikes for spiking neural networks", AAAI'2024.
     https://github.com/yfguo91/Ternary-Spike
 """
-import torch
-from typing import Callable
-from abc import abstractmethod
-from soul.neuron.base import MemoryModule
-from soul.utils.surrogate import Quant
+from collections import ChainMap
 
-class TLIF_BaseNode(MemoryModule):
-    def __init__(self, v_threshold: float = 1., v_reset: float = 0.,
-                 surrogate_function: Callable = Quant(), detach_reset: bool = False):
-        assert isinstance(v_reset, float) or v_reset is None
-        assert isinstance(v_threshold, float)
-        assert isinstance(detach_reset, bool)
-        super().__init__()
-
-        if v_reset is None:
-            self.register_memory('v', 0.)
-        else:
-            self.register_memory('v', v_reset)
-
-        self.register_memory('v_threshold', v_threshold)
-        self.register_memory('v_reset', v_reset)
-
-        self.detach_reset = detach_reset
-        self.surrogate_function = surrogate_function
-
-    @abstractmethod
-    def neuronal_charge(self, x: torch.Tensor):
-        raise NotImplementedError
-
-    def neuronal_fire(self):
-        return self.surrogate_function(self.v)
-
-    def neuronal_reset(self, spike):
-        if self.detach_reset:
-            spike_d = spike.detach()
-        else:
-            spike_d = spike
-        self.v = self.v - spike_d * self.v_threshold
-
-    def extra_repr(self):
-        return f'v_threshold={self.v_threshold}, v_reset={self.v_reset}, detach_reset={self.detach_reset}'
-
-    def forward(self, x: torch.Tensor):
-        self.neuronal_charge(x)
-        spike = self.neuronal_fire()
-        self.neuronal_reset(spike)
-        return spike / 8
+from soul.neuron.INTLIF import INTLIFNode
 
 
-class TLIFNode(TLIF_BaseNode):
+class TLIFNode(INTLIFNode):
+    """
+    三值脉冲 LIF 神经元：脉冲 surrogate_function(v)（如 Ternary: round(clamp(v, -1, 1))）取值 {-1, 0, 1}，
+    膜电位不泄漏（tau 固定为 1），输出 spike / 8，其余行为同 INTLIFNode。
+
+    配置项：v_threshold, v_reset, surrogate, detach_reset
+    """
     def __init__(self, config):
-        
-        v_threshold = config['v_threshold']
-        v_reset = config['v_reset']
-        surrogate_function = config['surrogate_function']
-        detach_reset = config['detach_reset']
-
-        super().__init__(v_threshold, v_reset, surrogate_function, detach_reset)
-        
-    @property
-    def supported_backends(self):
-        if self.step_mode == 's':
-            return ('torch',)
-        elif self.step_mode == 'm':
-            return ('torch', 'cupy')
-        else:
-            raise ValueError(self.step_mode)
-        
-    def neuronal_charge(self, x: torch.Tensor):
-        self.v = self.v + x
-
-    def forward(self, x: torch.Tensor):
-        return super().forward(x)
+        super().__init__(ChainMap({'tau': 1., 'norm': 8}, config))

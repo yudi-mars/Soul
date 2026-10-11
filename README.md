@@ -40,6 +40,11 @@ You can run the library directly from the command line. For example:
     CUDA_VISIBLE_DEVICES=[GPU-ID1],[GPU-ID2],... torchrun --nproc_per_node=[Number of used GPU] run_soul.py -dataset=[Dataset Name] -data_dir=[Dataset Directory] -T=[Number of timesteps] -m=[Model Name] -n=[Neuron Type]
     ```
 
+- Run the tests of the spiking neurons and their integration with the models:
+    ```shell
+    python -m pytest tests
+    ```
+
 If you want to dive deeper into all the available command-line options, configuration settings, and parameters, please check out our [complete documentation](https://soul-docs.readthedocs.io/en/latest/).
 
 ## Dataset Support

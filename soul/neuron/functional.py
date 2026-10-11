@@ -32,8 +32,7 @@ def reset_net(net: nn.Module):
     for m in net.modules():
         if hasattr(m, 'reset'):
             if not isinstance(m, base.MemoryModule):
-                logging.warning(f'Trying to call `reset()` of {m}, which is not spikingjelly.activation_based.base'
-                                f'.MemoryModule')
+                logging.warning(f'Trying to call `reset()` of {m}, which is not soul.neuron.base.MemoryModule')
             m.reset()
 
 def set_step_mode(net: nn.Module, step_mode: str):
@@ -49,6 +48,5 @@ def set_step_mode(net: nn.Module, step_mode: str):
     """
     for m in net.modules():
         if not isinstance(m, (base.StepModule)):
-            logging.warning(f'Trying to set the step mode for {m}, which is not spikingjelly.activation_based'
-                            f'.base.StepModule')
+            logging.warning(f'Trying to set the step mode for {m}, which is not soul.neuron.base.StepModule')
         m.step_mode = step_mode

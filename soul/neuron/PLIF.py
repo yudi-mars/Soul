@@ -20,39 +20,29 @@ import math
 import torch
 import torch.nn as nn
 
-from .LIF import BaseNode
+from soul.neuron.base import BaseNode
+
 
 class ParametricLIFNode(BaseNode):
-    def __init__(self, config):
-        
-        init_tau = config['init_tau']
-        v_threshold = config['v_threshold']
-        v_reset = config['v_reset']
-        surrogate_function = config['surrogate_function']
-        detach_reset = config['detach_reset']
-        step_mode = 'm'
-        backend = 'torch'
-        store_v_seq = config['store_v_seq']
+    """
+    膜时间常数可学习的 LIF 神经元，1 / tau = sigmoid(w)：
+        decay_input=True:  v <- v + (x - (v - v_reset)) * sigmoid(w)
+        decay_input=False: v <- v - (v - v_reset) * sigmoid(w) + x
 
+    额外配置项：init_tau（tau 的初值，> 1）, decay_input（缺省 True）
+    """
+    def __init__(self, config):
+        super().__init__(config)
+        init_tau = config['init_tau']
         assert isinstance(init_tau, float) and init_tau > 1.
-        super().__init__(v_threshold, v_reset, surrogate_function, detach_reset, step_mode, backend, store_v_seq)
-        self.decay_input = config['decay_input']
+        self.decay_input = config.get('decay_input', True)
         init_w = - math.log(init_tau - 1.)
         self.w = nn.Parameter(torch.as_tensor(init_w))
 
-    @property
-    def supported_backends(self):
-        if self.step_mode == 's':
-            return ('torch', )
-        elif self.step_mode == 'm':
-            return ('torch', 'cupy')
-        else:
-            raise ValueError(self.step_mode)
-
     def extra_repr(self):
         with torch.no_grad():
-            tau = 1. - self.w.sigmoid()
-        return super().extra_repr() + f', tau={tau}, sg={self.surrogate_function}'
+            tau = 1. / self.w.sigmoid().item()
+        return super().extra_repr() + f', tau={tau:.4f}, decay_input={self.decay_input}'
 
     def neuronal_charge(self, x: torch.Tensor):
         if self.decay_input:

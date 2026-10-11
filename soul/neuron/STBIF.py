@@ -15,66 +15,49 @@ References:
     - Kang You et al., "VISTREAM: Improving Computation Efficiency of Visual Streaming Perception via Law-of-Charge-Conservation Inspired Spiking Neural Network", CVPR'2025.
     https://github.com/Intelligent-Computing-Research-Group/ViStream
 """
+from collections import ChainMap
+
 import torch
-from soul.neuron.LIF import BaseNode
+
+from soul.neuron.base import BaseNode
+
 
 class STBIF(BaseNode):
     """
-    改进版 Integrate-and-Fire 神经元，兼容 BaseNode 训练 / 推理接口。
-    支持量化门限和共享显存缓存。
+    ST-BIF（Integrate-and-Fire）神经元：膜电位 v 保存按 q_threshold 归一化后的电荷，从 0.5 开始积分，
+    v >= 1 时发放并减 1（相当于对累积输入四舍五入），输出 spike * q_threshold。
+    反向传播时脉冲对 v 的梯度由 surrogate_function(v - 1) 给出；v_threshold / v_reset 不起作用。
+
+    额外配置项：q_threshold（量化门限）, level（量化等级）, sym（是否对称量化，缺省 False，目前未使用）,
+              detach_reset（缺省 True）
     """
-
     def __init__(self, config):
-        """
-        config 应包含以下字段：
-            - q_threshold: float or torch.Tensor, 量化门限
-            - level: int, 量化等级
-            - sym: bool, 是否对称量化（目前未使用）
-            - store_v_seq: bool, 是否记录 v 序列（可选）
-        """
-        surrogate_function = config['surrogate_function']  # 仅作兼容，实际上 IF 无需 surrogate
-
-        super().__init__(
-            v_threshold=1.0,              # 实际门限由 q_threshold 决定，不直接用
-            v_reset=0.0,                  # 充当硬重置行为，但已在内部控制
-            surrogate_function=surrogate_function,
-            detach_reset=True,
-            step_mode='m',
-            backend='torch',
-            store_v_seq=config.get('store_v_seq', False)
-        )
-
-        self.q_threshold = torch.as_tensor(config['q_threshold'], dtype=torch.float32)
+        super().__init__(ChainMap(config, {'detach_reset': True}))
+        self.q_threshold = float(config['q_threshold'])
         self.level = config['level']
         self.sym = config.get('sym', False)
-        self.pos_max = self.level - 1
-        self.neg_min = 0
-        self.eps = 0.0
+        self.v = 0.5
+        self.set_reset_value('v', 0.5)
 
-        self.register_memory('q', None)          # 电荷积分
-        self.register_memory('cur_output', None) # 输出脉冲
+    def v_float_to_tensor(self, x: torch.Tensor):
+        if isinstance(self.v, float) or self.v.shape != x.shape:
+            self.v = torch.full_like(x, 0.5, dtype=torch.float32)
 
     def neuronal_charge(self, x: torch.Tensor):
-        """懒初始化，并执行电荷积分（in-place）"""
-        x_norm = x / self.q_threshold
-
-        if self.q is None or self.q.shape != x.shape:
-            self.q = torch.zeros_like(x, dtype=torch.float32) + 0.5
-            self.cur_output = torch.zeros_like(x, dtype=x.dtype)
-
-        with torch.no_grad():
-            self.q.add_(x_norm)
+        self.v = self.v + x / self.q_threshold
 
     def neuronal_fire(self):
-        """生成脉冲，并更新 cur_output"""
-        with torch.no_grad():
-            spike_pos = self.q >= 1
-            self.cur_output.zero_()
-            self.cur_output[spike_pos] = 1
-        return self.cur_output * self.q_threshold
+        spike = self.surrogate_function(self.v - 1.)
+        # the surrogate fires at v > 1, ST-BIF fires at v >= 1: keep the exact spikes and the surrogate gradient
+        return spike + ((self.v >= 1.).to(spike) - spike).detach()
 
-    def neuronal_reset(self, spike):
-        """电荷回落(in-place), 无需 surrogate 重参数化"""
-        with torch.no_grad():
-            self.q[self.cur_output.bool()] -= 1
-            
+    def neuronal_reset(self, spike: torch.Tensor):
+        if self.detach_reset:
+            spike = spike.detach()
+        self.v = self.v - spike
+
+    def single_step_forward(self, x: torch.Tensor):
+        return super().single_step_forward(x).to(x.dtype) * self.q_threshold
+
+    def extra_repr(self):
+        return f'q_threshold={self.q_threshold}, level={self.level}, detach_reset={self.detach_reset}, step_mode={self.step_mode}, backend={self.backend}'

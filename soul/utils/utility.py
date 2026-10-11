@@ -7,7 +7,7 @@ from torch import nn
 
 def set_v_threshold(neuron, value: float):
     """
-    设置神经元激发阈值
+    设置神经元激发阈值，神经元自带 set_v_threshold 方法时（如以 logit 形式存储阈值的 GatedLIFNode）交由其处理
 
     Args:
         neuron: 神经元对象
@@ -16,6 +16,9 @@ def set_v_threshold(neuron, value: float):
     Returns:
         None
     """
+    if hasattr(neuron, "set_v_threshold"):
+        neuron.set_v_threshold(value)
+        return
     vt = getattr(neuron, "v_threshold", None)
     if isinstance(vt, torch.nn.Parameter) or torch.is_tensor(vt):
         with torch.no_grad():

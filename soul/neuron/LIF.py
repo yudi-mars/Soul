@@ -15,128 +15,30 @@ References:
     - Wei Fang et al., "SpikingJelly: An open-source machine learning infrastructure platform for spike-based intelligence", Science Advances'2023.
     https://github.com/fangwei123456/spikingjelly
 """
-from abc import abstractmethod
 import torch
-from soul.neuron import base
 
-class BaseNode(base.MemoryModule):
-    def __init__(self, v_threshold, v_reset, surrogate_function, detach_reset=False,
-                 step_mode='m', backend='torch', store_v_seq=False):
-        assert isinstance(v_reset, float) or v_reset is None
-        assert isinstance(v_threshold, float)
-        assert isinstance(detach_reset, bool)
-        super().__init__()
-
-        if v_reset is None:
-            self.register_memory('v', 0.)
-        else:
-            self.register_memory('v', v_reset)
-
-        self.v_threshold = v_threshold
-        self.v_reset = v_reset
-
-        self.detach_reset = detach_reset
-        self.surrogate_function = surrogate_function
-
-        self.step_mode = step_mode
-        self.backend = backend
-
-        self.store_v_seq = store_v_seq
-
-    @property
-    def store_v_seq(self):
-        return self._store_v_seq
-
-    @store_v_seq.setter
-    def store_v_seq(self, value: bool):
-        self._store_v_seq = value
-        if value:
-            if not hasattr(self, 'v_seq'):
-                self.register_memory('v_seq', None)
-
-    @staticmethod
-    @torch.jit.script
-    def jit_hard_reset(v: torch.Tensor, spike: torch.Tensor, v_reset: float):
-        v = (1. - spike) * v + spike * v_reset
-        return v
-
-    @staticmethod
-    @torch.jit.script
-    def jit_soft_reset(v: torch.Tensor, spike: torch.Tensor, v_threshold: float):
-        v = v - spike * v_threshold
-        return v
-
-    @abstractmethod
-    def neuronal_charge(self, x: torch.Tensor):
-        raise NotImplementedError
-
-    def neuronal_fire(self):
-        return self.surrogate_function(self.v - self.v_threshold)
-
-    def neuronal_reset(self, spike):
-        if self.detach_reset:
-            spike_d = spike.detach()
-        else:
-            spike_d = spike
-
-        if self.v_reset is None:
-            # soft reset
-            self.v = self.jit_soft_reset(self.v, spike_d, self.v_threshold)
-        else:
-            # hard reset
-            self.v = self.jit_hard_reset(self.v, spike_d, self.v_reset)
-
-    def extra_repr(self):
-        return f'v_threshold={self.v_threshold}, v_reset={self.v_reset}, detach_reset={self.detach_reset}, step_mode={self.step_mode}, backend={self.backend}'
-
-    def single_step_forward(self, x: torch.Tensor):
-        self.v_float_to_tensor(x)
-        self.neuronal_charge(x)
-        spike = self.neuronal_fire()
-        self.neuronal_reset(spike)
-        return spike
-
-    def multi_step_forward(self, x_seq: torch.Tensor):
-        T = x_seq.shape[0]
-        y_seq = []
-        if self.store_v_seq:
-            v_seq = []
-        for t in range(T):
-            y = self.single_step_forward(x_seq[t])
-            y_seq.append(y)
-            if self.store_v_seq:
-                v_seq.append(self.v)
-
-        if self.store_v_seq:
-            self.v_seq = torch.stack(v_seq)
-
-        return torch.stack(y_seq)
-
-    def v_float_to_tensor(self, x: torch.Tensor):
-        if isinstance(self.v, float):
-            v_init = self.v
-            self.v = torch.full_like(x.data, v_init)
+from soul.neuron.base import BaseNode
 
 
 class LIFNode(BaseNode):
+    """
+    Leaky Integrate-and-Fire 神经元，以 v_reset 为静息电位（软重置时为 0）：
+        decay_input=True:  v <- v + (v_reset - v + x) / tau
+        decay_input=False: v <- v + (v_reset - v) / tau + x
+
+    额外配置项：tau（膜时间常数）, decay_input（缺省 True）
+    """
     def __init__(self, config):
-        
-        v_threshold = config['v_threshold']
-        v_reset = config['v_reset']
-        detach_reset = config['detach_reset']
-        backend = 'torch'
-        step_mode = 'm'
-        store_v_seq = config['store_v_seq']
-        surrogate_function = config['surrogate_function']
-        
-        super().__init__(v_threshold, v_reset, surrogate_function, detach_reset, step_mode, backend, store_v_seq)
-        
+        super().__init__(config)
         self.tau = config['tau']
-        self.decay_input = config['decay_input']
+        self.decay_input = config.get('decay_input', True)
 
     def neuronal_charge(self, x: torch.Tensor):
+        v_rest = 0. if self.v_reset is None else self.v_reset
         if self.decay_input:
-            self.v = self.v + (self.v_reset - self.v + x) / self.tau
+            self.v = self.v + (v_rest - self.v + x) / self.tau
         else:
-            self.v = self.v + (self.v_reset - self.v) / self.tau + x
-       
+            self.v = self.v + (v_rest - self.v) / self.tau + x
+
+    def extra_repr(self):
+        return super().extra_repr() + f', tau={self.tau}, decay_input={self.decay_input}'

@@ -18,22 +18,13 @@ References:
 import torch
 import torch.nn as nn
 
-class ReLUX(nn.Module):
-    def __init__(self, thre=8):
-        super(ReLUX, self).__init__()
-        self.thre = thre
-
-    def forward(self, input):
-        return torch.clamp(input, 0, self.thre)
-
-relu4 = ReLUX(4)
 
 class multispike(torch.autograd.Function):
     @staticmethod
     def forward(ctx, input, lens):
         ctx.save_for_backward(input)
         ctx.lens = lens
-        return torch.floor(relu4(input) + 0.5)
+        return torch.floor(torch.clamp(input, 0, 4) + 0.5)
 
     @staticmethod
     def backward(ctx, grad_output):
@@ -43,12 +34,20 @@ class multispike(torch.autograd.Function):
         temp2 = input < ctx.lens
         return grad_input * temp1.float() * temp2.float(), None
 
+
 class IELIFNode(nn.Module):
+    """
+    整数值脉冲神经元（无状态）：spike = round(clamp(4x, 0, 4)) / 4，
+    反向传播时只在 0 < 4x < lens 范围内传递梯度。
+
+    配置项：lens
+    """
     def __init__(self, config):
         super().__init__()
-        self.lens = config["lens"]
-        self.spike = multispike
+        self.lens = config['lens']
 
-    def forward(self, inputs):
-        return self.spike.apply(4 * inputs, self.lens) / 4
-    
+    def extra_repr(self):
+        return f'lens={self.lens}'
+
+    def forward(self, inputs: torch.Tensor):
+        return multispike.apply(4 * inputs, self.lens) / 4

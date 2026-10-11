@@ -1,5 +1,5 @@
 Neurons
-======
+=======
 
 Neurons in Spiking Neural Networks (SNNs) are the core units for information processing and transmission in the network. Essentially, 
 they simulate the spatiotemporal dynamic characteristics of biological neurons—by receiving and integrating input signals,
@@ -25,7 +25,7 @@ Configurations：
 * store_v_seq：Whether to store the membrane potential sequence
 
 ParametricLIFNode
-----------------
+-----------------
 Introduction:
     Implementation of a variant leaky integrate-and-fire (LIF) neuron for Spiking Neural Networks (SNNs)
 Citation:
@@ -60,35 +60,40 @@ GatedLIFNode
 ----------------
 Introduction:
     Implementation of a variant leaky integrate-and-fire (LIF) neuron for Spiking Neural Networks (SNNs)
+    Multi-step mode only; the number of input time steps must equal time_step
 Citation:
     Xingting Yao et al., "GLIF: A Uniﬁed Gated Leaky Integrate-and-Fire Neuron for Spiking Neural Networks", NeurIPS'2022. https://github.com/CAS-CLab/Gated-LIF
 Configurations：
 
-* v_threshold：Firing threshold of the neuron
 * surrogate：Surrogate function for backpropagation
 * init_tau：Initial value of the membrane time constant
 * init_v_threshold： Initial value of the neuron's firing threshold
 * init_conduct： Initial value of conductance
-* init_linear_decay：Initial value of linear decay
-* init_v_subreset： Initial value of sub-reset membrane potential
+* init_linear_decay：Initial value of linear decay, init_v_threshold / (2 * time_step) by default
+* init_v_subreset： Initial value of sub-reset membrane potential, init_v_threshold by default
 
 INTLIFNode
 ----------------
 Introduction:
     Implementation of a variant leaky integrate-and-fire (LIF) neuron for Spiking Neural Networks (SNNs)
+    Fires quantized integer spikes and outputs spike / norm. It runs in single-step mode by default: the whole input is integrated
+    as one time step, i.e. every time step is quantized independently; set step_mode: m to integrate along the time dimension
 Citation:
     Zhenxin Lei et al., "Spike2former: Efficient spiking transformer for high-performance image segmentation", AAAI'2025. https://github.com/BICLab/Spike2Former
 Configurations：
 
 * v_threshold：Firing threshold of the neuron
 * surrogate：Surrogate function for backpropagation
-* v_reset：Reset value of the membrane potential
+* v_reset：Initial membrane potential (the reset always subtracts v_threshold)
 * detach_reset：Whether to detach the reset operation from the computation graph
+* tau：Decay time constant of the membrane potential
+* norm：Normalization factor of the output spikes
 
 ParallelSpikingNode
-----------------
+-------------------
 Introduction:
     Implementation of a variant leaky integrate-and-fire (LIF) neuron for Spiking Neural Networks (SNNs)
+    Stateless, processes the whole sequence at once; the number of input time steps must equal time_step
 Citation:
     Wei Fang et al., "Parallel Spiking Neurons with High Efficiency and Ability to Learn Long-term Dependencies", NeurIPS'2023. https://github.com/fangwei123456/Parallel-Spiking-Neuron
 Configurations：
@@ -99,6 +104,8 @@ TLIFNode
 ----------------
 Introduction:
     Implementation of a variant leaky integrate-and-fire (LIF) neuron for Spiking Neural Networks (SNNs)
+    Fires ternary spikes {-1, 0, 1} and outputs spike / 8; the membrane potential does not leak, otherwise (including the default
+    single-step mode) it behaves like INTLIFNode
 Citation:
     Yufei Guo et al., "Ternary spike: Learning ternary spikes for spiking neural networks", AAAI'2024. https://github.com/yfguo91/Ternary-Spike
 Configurations：
@@ -123,17 +130,18 @@ LTMD
 ----------------
 Introduction:
     Implementation of a variant leaky integrate-and-fire (LIF) neuron for Spiking Neural Networks (SNNs)
+    Learnable threshold, stateless: every call processes the whole input sequence from a zero state
 Citation:
     Siqi Wang et al., "LTMD: Learning Improvement of Spiking Neural Networks with Learnable Thresholding Neurons and Moderate Dropout", NeurIPS'2022. https://github.com/sq117/LTMD
 Configurations：
 
-* steps：Time step for running the LTM-D model
 * kappa：Kappa value of the LTM-D model
 
 STBIF
 ----------------
 Introduction:
     Implementation of a variant leaky integrate-and-fire (LIF) neuron for Spiking Neural Networks (SNNs)
+    Fires when the charge normalized by q_threshold reaches 1 and then subtracts 1; gradients come from the surrogate function
 Citation:
     Kang You et al., "VISTREAM: Improving Computation Efficiency of Visual Streaming Perception via Law-of-Charge-Conservation Inspired Spiking Neural Network", CVPR'2025. https://github.com/Intelligent-Computing-Research-Group/ViStream
 Configurations：
@@ -141,6 +149,7 @@ Configurations：
 * surrogate：Surrogate function for backpropagation
 * q_threshold： Quantization threshold
 * level：Quantization level
+* detach_reset：Whether to detach the reset operation from the computation graph (optional, True by default)
 
 ILIFNeuron
 ----------------
@@ -173,4 +182,27 @@ Configurations：
 * v_reset：Reset value of the membrane potential
 * detach_reset：Whether to detach the reset operation from the computation graph
 * store_v_seq：Whether to store the membrane potential sequence
-* alpha：Scaling factor for gradient surrogate
+* alpha：Scaling factor of the dynamic threshold after each spike
+
+IzhikevichNode
+----------------
+Introduction:
+    Implementation of the Izhikevich neuron with an adaptation current for Spiking Neural Networks (SNNs)
+Citation:
+    E. M. Izhikevich, "Simple model of spiking neurons," in IEEE Transactions on Neural Networks, vol. 14, no. 6, pp. 1569-1572, Nov. 2003.
+Configurations：
+
+* tau：Membrane time constant
+* v_c：Critical voltage of the quadratic term
+* a0：Coefficient of the quadratic term
+* v_threshold：Firing threshold of the neuron
+* v_reset：Reset value of the membrane potential
+* v_rest：Resting membrane potential
+* w_rest：Initial value of the adaptation current
+* tau_w：Time constant of the adaptation current
+* a：Subthreshold coupling of the adaptation current
+* b：Increment of the adaptation current after each spike
+* surrogate：Surrogate function for backpropagation
+* detach_reset：Whether to detach the reset operation from the computation graph
+* step_mode：Step mode, 'm' for multi-step and 's' for single-step
+* store_v_seq：Whether to store the membrane potential sequence

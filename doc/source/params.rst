@@ -110,6 +110,7 @@ soul.utils.parser.parse_args方法
     * STBIF
     * ILIFNeuron
     * RPLIFNode
+    * IzhikevichNode
 
 关于神经元的更加详细的介绍，请参考 :doc:`../neuron`
 
@@ -195,6 +196,7 @@ soul.config.basic.yaml基础配置
     * STBIF
     * ILIFNeuron
     * RPLIFNode
+    * IzhikevichNode
 
 * time_step：脉冲神经网络的时间步长
 * dataset_name：所用数据集类型，目前Soul支持的数据集如下：

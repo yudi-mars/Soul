@@ -17,6 +17,7 @@ References:
 import torch
 import torch.nn as nn
 
+
 class SpikeAct(torch.autograd.Function):
 
     @staticmethod
@@ -42,19 +43,20 @@ def state_update(u_t_n1, o_t_n1, W_mul_o_t1_n1, thre):
     return u_t1_n1, o_t1_n1
 
 class LTMD(nn.Module):
-    def __init__(self, cofig):
-        super(LTMD, self).__init__()
-        init_w = cofig['kappa']
-        self.steps = cofig['steps']
-        self.w = nn.Parameter(torch.tensor(init_w, dtype=torch.float))
-        
-    def forward(self, x):
-        # x = x.permute(1, 2, 3, 4, 0)
-        x = x.movedim(0, -1)  # move timestep dimension to the end
-        u = torch.zeros(x.shape[:-1] , device=x.device)
+    """
+    可学习阈值的脉冲神经元（无状态）：阈值为 tanh(w)，膜电位按 u <- 0.25 * u * (1 - o) + x 更新，
+    每次调用都从零状态开始处理整段 [T, N, *] 序列。
+
+    配置项：kappa（w 的初值）
+    """
+    def __init__(self, config):
+        super().__init__()
+        self.w = nn.Parameter(torch.tensor(config['kappa'], dtype=torch.float))
+
+    def forward(self, x_seq: torch.Tensor):
+        x = x_seq.movedim(0, -1)  # move timestep dimension to the end
+        u = torch.zeros(x.shape[:-1], device=x.device)
         out = torch.zeros(x.shape, device=x.device)
-        for step in range(self.steps):
+        for step in range(x.shape[-1]):
             u, out[..., step] = state_update(u, out[..., max(step-1, 0)], x[..., step], self.w.tanh())
-        # out = out.permute(4, 0, 1, 2, 3)
-        out = out.movedim(-1, 0)  # move timestep dimension back to the front
-        return out
+        return out.movedim(-1, 0)  # move timestep dimension back to the front
