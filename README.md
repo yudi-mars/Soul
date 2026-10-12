@@ -135,7 +135,7 @@ year={2026}
 }
 
 @inproceedings{
-anonymous2026shiftlif,
+tang2026shiftlif,
 title={ShiftLIF: Efficient Multi-Level Spiking Neurons with Power-of-Two Quantization},
 author={Kaiwen Tang, Di Yu, Jiaqi Zheng, Changze Lv, Qianhui Liu, Zhanglu Yan, Weng-Fai Wong},
 booktitle={34th ACM International Conference on Multimedia},
