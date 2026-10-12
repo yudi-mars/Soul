@@ -1,4 +1,4 @@
-from .general import SpikingMLP, SpikingLeNet, SpikingRNN, SpikingConvRNN
+from .general import SpikingMLP, SpikingLeNet, SpikingLeNetDLIF, SpikingLeNetDGN, SpikingRNN, SpikingConvRNN
 from .spikingvgg import SpikingVGG9, SpikingVGG16
 from .sewresnet import SEWResNet18, SEWResNet34, SEWResNet50
 from .msresnet import MSResNet18, MSResNet34, MSResNet50
@@ -12,6 +12,8 @@ from .spiliformer import SpiLiFormer256, SpiLiFormer384, SpiLiFormer512
 wireless_model_map = {
     'mlp': SpikingMLP,
     'lenet': SpikingLeNet,
+    'lenet_dlif': SpikingLeNetDLIF,
+    'lenet_dgn': SpikingLeNetDGN,
     'rnn': SpikingRNN,
     'convrnn': SpikingConvRNN,
     'spikingvgg9': SpikingVGG9,

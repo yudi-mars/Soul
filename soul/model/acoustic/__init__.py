@@ -1,7 +1,7 @@
 from .spikingvgg import SpikingVGG9, SpikingVGG16
 from .sewresnet import SEWResNet34, SEWResNet50
 from .msresnet import MSResNet34, MSResNet50
-from .general import SpikingMLP, SpikingLeNet, SpikingRNN, SpikingConvRNN
+from .general import SpikingMLP, SpikingLeNet, SpikingLeNetDLIF, SpikingLeNetDGN, SpikingRNN, SpikingConvRNN
 from .spikformer import Spikformer256, Spikformer384, Spikformer512
 from .spikingformer import Spikingformer256, Spikingformer384, Spikingformer512
 from .metaspikeformer import MetaSpikeformer256, MetaSpikeformer384, MetaSpikeformer512
@@ -12,6 +12,8 @@ from .spiliformer import SpiLiFormer256, SpiLiFormer384, SpiLiFormer512
 acoustic_model_map = {
     'mlp': SpikingMLP,
     'lenet': SpikingLeNet,
+    'lenet_dlif': SpikingLeNetDLIF,
+    'lenet_dgn': SpikingLeNetDGN,
     'rnn': SpikingRNN,
     'convrnn': SpikingConvRNN,
     'spikingvgg9': SpikingVGG9, 

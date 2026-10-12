@@ -202,3 +202,53 @@ IzhikevichNode
 * detach_reset：是否将重置操作从计算图中分离
 * step_mode：推理模式，m 为多步，s 为单步
 * store_v_seq：是否存储膜电位序列
+
+DGNNode
+--------------
+介绍：
+    动态门控神经元（Dynamic Gated Neuron）：膜电位的衰减系数由随输入变化的动态电导门控
+    在通用模型中按 s-DGN 运行（所有突触共享可学习的平衡电位 E）；lenet_dgn 为每个突触层增加电导支路，即完整的 DGN
+引用：
+    Qianyi Bai et al., "A Brain-Inspired Gating Mechanism Unlocks Robust Computation in Spiking Neural Networks", ICLR'2026.
+配置：
+
+* v_threshold：神经元的发放阈值
+* surrogate：反向传播的替代函数
+* g_l：漏电导，膜电位的衰减系数为 sigmoid(1 - g_l - 电导输入)
+* tau_s：突触电流迹的时间常数，~ 表示不做突触滤波
+* init_equilibrium：共享平衡电位 E 的初值，只在没有电导输入时使用
+* v_reset：膜电位的重置值，~ 表示软重置
+* detach_reset：是否将重置操作从计算图中分离
+* store_v_seq：是否存储膜电位序列
+
+DLIFNode
+--------------
+介绍：
+    树突 LIF 神经元：胞体为 LIF 动力学，树突对输入通道做两两相乘的双线性整合（不含自身平方项）
+    树突整合由 lenet_dlif 中的 DendriticBilinear 层完成，在其他模型中等同于下述参数的 LIF
+配置：
+
+* v_threshold：神经元的发放阈值
+* surrogate：反向传播的替代函数
+* tau：膜时间常数
+* decay_input：是否采用衰减输入
+* v_reset：膜电位的重置值，~ 表示软重置
+* detach_reset：是否将重置操作从计算图中分离
+* store_v_seq：是否存储膜电位序列
+
+POLARANode
+--------------
+介绍：
+    极化感知神经元：用时间核函数描述去极化、复极化与超极化，没有发放后的重置；阈下膜电位被随机放大，阈值逐步自适应
+    发放的脉冲取 0 或 [0.5, 1) 内的连续值
+引用：
+    Matthew Lai and Longbing Cao, "Stabilizing Spiking Neurons Through Biologically Inspired Polarization", AAAI'2026.
+配置：
+
+* v_threshold：发放阈值的初值，之后逐步自适应
+* surrogate：反向传播的替代函数
+* A：膜电位衰减核的幅度
+* alpha：膜电位衰减核的衰减速率
+* window：时间核的窗口长度
+* noise：阈下随机放大的幅度，0 表示不加噪声
+* store_v_seq：是否存储膜电位序列

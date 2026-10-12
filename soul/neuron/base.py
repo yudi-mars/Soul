@@ -386,13 +386,14 @@ class BaseNode(MemoryModule):
         self.neuronal_reset(spike)
         return spike
 
-    def multi_step_forward(self, x_seq: torch.Tensor):
+    def multi_step_forward(self, x_seq: torch.Tensor, *args):
         T = x_seq.shape[0]
         y_seq = []
         if self.store_v_seq:
             v_seq = []
         for t in range(T):
-            y = self.single_step_forward(x_seq[t])
+            # extra inputs (e.g. a second synaptic pathway) are sequences aligned with x_seq
+            y = self.single_step_forward(x_seq[t], *[a[t] for a in args])
             y_seq.append(y)
             if self.store_v_seq:
                 v_seq.append(self.v)

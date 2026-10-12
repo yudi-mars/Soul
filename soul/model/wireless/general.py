@@ -21,8 +21,9 @@ from soul.utils import multi_time_forward
 from copy import deepcopy
 
 from soul.neuron import functional
+from soul.model.lenet_variants import DendriticLeNet, DualPathLeNet
 
-__all__ = ['SpikingMLP', 'SpikingLeNet', 'SpikingRNN', 'SpikingConvRNN']
+__all__ = ['SpikingMLP', 'SpikingLeNet', 'SpikingLeNetDLIF', 'SpikingLeNetDGN', 'SpikingRNN', 'SpikingConvRNN']
 
 
 class SpikeRNNCell(nn.Module):
@@ -137,6 +138,12 @@ class SpikingLeNet(nn.Module):
 
         return x
         
+class SpikingLeNetDLIF(DendriticLeNet, SpikingLeNet):
+    """SpikingLeNet with the dendritic bilinear integration of DLIF"""
+
+class SpikingLeNetDGN(DualPathLeNet, SpikingLeNet):
+    """SpikingLeNet with the separate current and conductance pathways of DGN"""
+
 class SpikingRNN(nn.Module):
     def __init__(self, config):
         super().__init__()

@@ -6,7 +6,7 @@ from .sensehar import SenseHAR
 from .dcl import DCL
 from .spikformer import Spikformer256, Spikformer384
 from .spikingformer import Spikingformer256, Spikingformer384, Spikingformer512
-from .general import SpikingMLP, SpikingLeNet, SpikingRNN, SpikingConvRNN
+from .general import SpikingMLP, SpikingLeNet, SpikingLeNetDLIF, SpikingLeNetDGN, SpikingRNN, SpikingConvRNN
 from .sewresnet import SEWResNet34, SEWResNet50
 from .spikingresformer import SpikingResformer256, SpikingResformer384
 from .spikingvgg import SpikingVGG9, SpikingVGG16
@@ -15,6 +15,8 @@ from .spiliformer import SpiLiFormer256, SpiLiFormer384, SpiLiFormer512
 motion_model_map = {
     'mlp': SpikingMLP,
     'lenet': SpikingLeNet,
+    'lenet_dlif': SpikingLeNetDLIF,
+    'lenet_dgn': SpikingLeNetDGN,
     'rnn': SpikingRNN,
     'convrnn': SpikingConvRNN,
     'dcnn': DCNN,

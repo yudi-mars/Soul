@@ -7,11 +7,13 @@ from .metaspikeformer import MetaSpikeformer256, MetaSpikeformer384, MetaSpikefo
 from .spikingresformer import SpikingResformer192, SpikingResformer384, SpikingResformer512, SpikingResformer256
 from .qkformer import QKFormer256, QKFormer384, QKFormer512
 from .spiliformer import SpiLiFormer256, SpiLiFormer384, SpiLiFormer512
-from .general import SpikingMLP, SpikingLeNet, SpikingRNN, SpikingConvRNN
+from .general import SpikingMLP, SpikingLeNet, SpikingLeNetDLIF, SpikingLeNetDGN, SpikingRNN, SpikingConvRNN
 
 vision_model_map = {
     'mlp': SpikingMLP,
     'lenet': SpikingLeNet,
+    'lenet_dlif': SpikingLeNetDLIF,
+    'lenet_dgn': SpikingLeNetDGN,
     'rnn': SpikingRNN,
     'convrnn': SpikingConvRNN,
     'spikingvgg5': SpikingVGG5, 

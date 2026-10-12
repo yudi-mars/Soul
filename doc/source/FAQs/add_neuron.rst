@@ -12,11 +12,14 @@
     │   ├── LIFNode
     │   │   ├── CLIFNode
     │   │   ├── ILIFNeuron
-    │   │   └── RPLIFNode
+    │   │   ├── RPLIFNode
+    │   │   └── DLIFNode
     │   ├── ParametricLIFNode
     │   ├── INTLIFNode
     │   │   └── TLIFNode
     │   ├── STBIF
+    │   ├── DGNNode
+    │   ├── POLARANode
     │   └── AdaptBaseNode
     │       └── IzhikevichNode
     └── GatedLIFNode                  只支持多步模式
@@ -66,6 +69,9 @@
         'ilif': ILIFNeuron,
         'rplif': RPLIFNode,
         'izhikevich': IzhikevichNode,
+        'dgn': DGNNode,
+        'dlif': DLIFNode,
+        'polara': POLARANode,
         # add your neuron
         'neuron_name': MyNode,
     }

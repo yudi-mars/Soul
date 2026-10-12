@@ -111,6 +111,9 @@ For a more detailed introduction to encoding, please refer to :doc:`../encoding`
     * ILIFNeuron
     * RPLIFNode
     * IzhikevichNode
+    * DGNNode
+    * DLIFNode
+    * POLARANode
 
 For a more detailed introduction to neurons, please refer to :doc:`../neuron`
 
@@ -197,6 +200,9 @@ soul.config.basic.yaml Basic Configuration
     * ILIFNeuron
     * RPLIFNode
     * IzhikevichNode
+    * DGNNode
+    * DLIFNode
+    * POLARANode
 
 * time_step：Time step of the spiking neural network
 * dataset_name：Type of dataset used. Currently, Soul supports the following datasets:

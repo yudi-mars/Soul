@@ -6,11 +6,14 @@ Spiking neurons of Soul. Every neuron is built from the global config dict: ``ne
     │   ├── LIFNode
     │   │   ├── CLIFNode
     │   │   ├── ILIFNeuron
-    │   │   └── RPLIFNode
+    │   │   ├── RPLIFNode
+    │   │   └── DLIFNode              dendritic bilinear integration: DendriticBilinear in lenet_dlif
     │   ├── ParametricLIFNode
     │   ├── INTLIFNode
     │   │   └── TLIFNode
     │   ├── STBIF
+    │   ├── DGNNode                   optional conductance input: full DGN in lenet_dgn
+    │   ├── POLARANode
     │   └── AdaptBaseNode
     │       └── IzhikevichNode
     └── GatedLIFNode                  multi-step only
@@ -24,10 +27,13 @@ from .LIF import LIFNode
 from .CLIF import CLIFNode
 from .ILIF import ILIFNeuron
 from .RPLIF import RPLIFNode
+from .DLIF import DLIFNode, DendriticBilinear
 from .PLIF import ParametricLIFNode
 from .INTLIF import INTLIFNode
 from .TLIF import TLIFNode
 from .STBIF import STBIF
+from .DGN import DGNNode
+from .POLARA import POLARANode
 from .Izhikevich import IzhikevichNode
 from .GLIF import GatedLIFNode
 from .PSN import ParallelSpikingNode
@@ -48,4 +54,7 @@ neuron_map = {
     'ilif': ILIFNeuron,
     'rplif': RPLIFNode,
     'izhikevich': IzhikevichNode,
+    'dgn': DGNNode,
+    'dlif': DLIFNode,
+    'polara': POLARANode,
 }

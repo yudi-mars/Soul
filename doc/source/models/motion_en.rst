@@ -27,6 +27,24 @@ Number of Parameters:：
 Special Configurations：
     * hidden_dim:512 （int）hidden dimension for the intermediate layers in full connection part
 
+SpikingLeNetDLIF
+-------------------------------------------
+Usage:
+    Set the --model or -m parameter to: lenet_dlif
+Description:
+    Adds the dendritic bilinear integration of DLIF (pairwise products of the input channels, without self terms; skipped in the first layer for single-channel inputs) to the first two convolutions of SpikingLeNet. With the dlif neuron it is DLIF; other neurons can be used as well.
+Special Configurations：
+    * hidden_dim:512 （int）hidden dimension for the intermediate layers in full connection part
+
+SpikingLeNetDGN
+-------------------------------------------
+Usage:
+    Set the --model or -m parameter to: lenet_dgn
+Description:
+    Adds a conductance pathway (same shape, no BN) next to every synaptic layer of SpikingLeNet, so that the neurons receive both current and conductance inputs, i.e. the full DGN. Only works with the dgn neuron.
+Special Configurations：
+    * hidden_dim:512 （int）hidden dimension for the intermediate layers in full connection part
+
 SpikingRNN
 -------------------------------------------
 Citation:

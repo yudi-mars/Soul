@@ -12,11 +12,14 @@ The neurons in ``soul.neuron`` are organized as follows:
     │   ├── LIFNode
     │   │   ├── CLIFNode
     │   │   ├── ILIFNeuron
-    │   │   └── RPLIFNode
+    │   │   ├── RPLIFNode
+    │   │   └── DLIFNode
     │   ├── ParametricLIFNode
     │   ├── INTLIFNode
     │   │   └── TLIFNode
     │   ├── STBIF
+    │   ├── DGNNode
+    │   ├── POLARANode
     │   └── AdaptBaseNode
     │       └── IzhikevichNode
     └── GatedLIFNode                  multi-step only
@@ -69,6 +72,9 @@ subsequent training processes with ``-n neuron_name``.
         'ilif': ILIFNeuron,
         'rplif': RPLIFNode,
         'izhikevich': IzhikevichNode,
+        'dgn': DGNNode,
+        'dlif': DLIFNode,
+        'polara': POLARANode,
         # add your neuron
         'neuron_name': MyNode,
     }

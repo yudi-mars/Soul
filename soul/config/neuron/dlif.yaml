@@ -1,0 +1,7 @@
+v_threshold: 1.0              # (float) firing threshold for neuron
+surrogate: quandratic         # (str) surrogate function for back-propagation
+tau: 1.1                      # (float) membrane time constant
+decay_input: false            # (bool) whether to decay input
+v_reset: ~                    # (float) reset value for membrane potential, ~ for soft reset
+detach_reset: false           # (bool) whether to detach reset from computation graph
+store_v_seq: false            # (bool) whether to store membrane potential sequence

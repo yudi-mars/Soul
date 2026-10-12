@@ -1,0 +1,7 @@
+v_threshold: 1.0              # (float) initial firing threshold, adapted at every time step
+surrogate: quandratic         # (str) surrogate function for back-propagation
+A: 0.1                        # (float) magnitude of the membrane decay kernel
+alpha: 2.0                    # (float) rate of the membrane decay kernel
+window: 5                     # (int) length of the temporal kernel window
+noise: 0.1                    # (float) amplitude of the stochastic sub-threshold amplification, 0 to disable
+store_v_seq: false            # (bool) whether to store membrane potential sequence

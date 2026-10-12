@@ -206,3 +206,53 @@ Configurations：
 * detach_reset：Whether to detach the reset operation from the computation graph
 * step_mode：Step mode, 'm' for multi-step and 's' for single-step
 * store_v_seq：Whether to store the membrane potential sequence
+
+DGNNode
+--------------
+Introduction:
+    Dynamic Gated Neuron: the decay of the membrane potential is gated by an activity-dependent dynamic conductance
+    It runs as s-DGN (all synapses share a learnable equilibrium potential E) in the general models; lenet_dgn adds a conductance pathway to every synaptic layer, i.e. the full DGN
+Citation:
+    Qianyi Bai et al., "A Brain-Inspired Gating Mechanism Unlocks Robust Computation in Spiking Neural Networks", ICLR'2026.
+Configurations：
+
+* v_threshold：Firing threshold of the neuron
+* surrogate：Surrogate function for backpropagation
+* g_l：Leak conductance; the decay factor of the membrane potential is sigmoid(1 - g_l - conductance input)
+* tau_s：Time constant of the synaptic current traces, ~ to disable the traces
+* init_equilibrium：Initial value of the shared equilibrium potential E, only used without a conductance input
+* v_reset：Reset value of the membrane potential, ~ for soft reset
+* detach_reset：Whether to detach the reset operation from the computation graph
+* store_v_seq：Whether to store the membrane potential sequence
+
+DLIFNode
+--------------
+Introduction:
+    Dendritic LIF neuron: LIF dynamics at the soma, while the dendrites integrate pairwise products of the input channels (without self terms)
+    The dendritic integration is done by the DendriticBilinear layers of lenet_dlif; in other models it is a LIF neuron with the settings below
+Configurations：
+
+* v_threshold：Firing threshold of the neuron
+* surrogate：Surrogate function for backpropagation
+* tau：Membrane time constant
+* decay_input：Whether to adopt decaying input
+* v_reset：Reset value of the membrane potential, ~ for soft reset
+* detach_reset：Whether to detach the reset operation from the computation graph
+* store_v_seq：Whether to store the membrane potential sequence
+
+POLARANode
+--------------
+Introduction:
+    Polarization-aware neuron: depolarization, repolarization and hyperpolarization are described by temporal kernels and there is no reset after firing; sub-threshold potentials are stochastically amplified and the threshold adapts at every step
+    The spikes are 0 or continuous values in [0.5, 1)
+Citation:
+    Matthew Lai and Longbing Cao, "Stabilizing Spiking Neurons Through Biologically Inspired Polarization", AAAI'2026.
+Configurations：
+
+* v_threshold：Initial firing threshold, adapted at every time step
+* surrogate：Surrogate function for backpropagation
+* A：Magnitude of the membrane decay kernel
+* alpha：Rate of the membrane decay kernel
+* window：Length of the temporal kernel window
+* noise：Amplitude of the stochastic sub-threshold amplification, 0 to disable
+* store_v_seq：Whether to store the membrane potential sequence

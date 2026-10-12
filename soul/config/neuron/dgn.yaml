@@ -1,0 +1,8 @@
+v_threshold: 1.0              # (float) firing threshold for neuron
+surrogate: quandratic         # (str) surrogate function for back-propagation
+g_l: 1.01                     # (float) leak conductance, the decay factor is sigmoid(1 - g_l - conductance input)
+tau_s: 1.1                    # (float) synaptic time constant of the input traces, ~ to disable the traces
+init_equilibrium: 1.0         # (float) initial shared equilibrium potential E, used without a conductance input (s-DGN)
+v_reset: ~                    # (float) reset value for membrane potential, ~ for soft reset
+detach_reset: false           # (bool) whether to detach reset from computation graph
+store_v_seq: false            # (bool) whether to store membrane potential sequence
